@@ -22,6 +22,28 @@ build tools are required.
 - CSV output that preserves the original roster columns and row order
 - External configuration through `config.properties`
 
+## To-add (maybe lol)
+
+- Token-based plagiarism detection across submissions.
+
+- Dynamic, randomized test-case generation to reduce hardcoding.
+
+- HTML diagnostic report with anomaly summaries and per-question results.
+
+- Multiple assessment profiles selectable from configuration.
+
+- GUI dashboard for uploading submissions and viewing grading progress.
+
+- Manual review queue for compilation failures, timeouts, or identity conflicts.
+
+- Email-ready feedback reports per student.
+
+- Parallel grading with a configurable worker limit.
+
+- Grade analytics: score distributions, pass rates, and common failures.
+
+- Export detailed results to JSON/Excel alongside the required CSV.
+
 ## Instructor quick start
 
 ### 1. Install the prerequisites
@@ -86,17 +108,17 @@ are ready to run with the repository's `Project/` directory.
 
 Common settings include:
 
-| Property | Purpose | Default |
-|---|---|---|
-| `submissions.directory` | Directory containing student ZIP files | `Project/student-submission` |
-| `testers.directory` | Trusted testers and data fixtures | `Project/Tester-Files` |
-| `scoresheet.input` | Roster and scoresheet template | `Project/IS442-ScoreSheet.csv` |
-| `scoresheet.output` | Generated scoresheet | `Project/IS442-ScoreSheet-graded.csv` |
-| `test.timeout.seconds` | Maximum runtime for one test case | `5` |
-| `compile.timeout.seconds` | Maximum compilation time per question | `30` |
-| `java.compiler.command` | Java compiler executable | `javac` |
-| `java.runtime.command` | Java runtime executable | `java` |
-| `working.cleanup` | Remove temporary run files afterward | `true` |
+| Property                  | Purpose                                | Default                               |
+| ------------------------- | -------------------------------------- | ------------------------------------- |
+| `submissions.directory`   | Directory containing student ZIP files | `Project/student-submission`          |
+| `testers.directory`       | Trusted testers and data fixtures      | `Project/Tester-Files`                |
+| `scoresheet.input`        | Roster and scoresheet template         | `Project/IS442-ScoreSheet.csv`        |
+| `scoresheet.output`       | Generated scoresheet                   | `Project/IS442-ScoreSheet-graded.csv` |
+| `test.timeout.seconds`    | Maximum runtime for one test case      | `5`                                   |
+| `compile.timeout.seconds` | Maximum compilation time per question  | `30`                                  |
+| `java.compiler.command`   | Java compiler executable               | `javac`                               |
+| `java.runtime.command`    | Java runtime executable                | `java`                                |
+| `working.cleanup`         | Remove temporary run files afterward   | `true`                                |
 
 Question filenames, tester filenames, fixtures, supporting classes, and maximum marks
 are also defined in this file instead of being hard-coded in the application.
@@ -270,13 +292,3 @@ the same filesystem and network permissions as the instructor account.
 For real assessments, run the grader in a disposable virtual machine, container, or
 restricted operating-system account that contains no personal files, saved credentials,
 or sensitive network access.
-
-## Publishing this repository
-
-Before making a school-project repository public, remove or anonymize student
-submissions, names, email addresses, scoresheets, and any documents marked restricted.
-Confirm that you have permission to redistribute the exam materials and tester files.
-Public examples should use synthetic submissions and fictional identities.
-
-Add an appropriate `LICENSE` file before inviting third parties to copy, modify, or
-redistribute the project.
