@@ -30,6 +30,10 @@ is never the oracle.
    `DynamicRunner` reflects the student's `public static` method, generates `TRIALS = 25` random inputs,
    checks the property for each, and writes `PASSED`, `FAILED`, or `ERROR` (capped at `MAX_RESULT_BYTES`).
 
+`CombinedTestCaseProvider` distributes each question's existing maximum across all its fixed and
+dynamic cases. The five question maxima remain 3, 3, 5, 5 and 4 points (20 overall); passed dynamic
+cases contribute to those marks without allowing a score above the roster denominator.
+
 ## Per-question invariants
 
 | Question | Student method (all `public static`) | Property asserted (no expected answer) |
@@ -54,12 +58,24 @@ classes dir; `GradingPipelineTest.java` updated to assert dynamic cases now exec
 
 ## Verification
 
-- `GradingPipelineTest` — both methods **PASS**. The full pipeline compiles and runs all 45 cases
-  (20 fixed + 25 dynamic) end-to-end, including Q3 with the reference support classes, without breaking
-  existing behavior.
+- `GradingPipelineTest` checks all 45 cases (20 fixed + 25 dynamic) end-to-end and verifies that the
+  original question maxima and 20-point assessment maximum are preserved.
 - Standalone harness (`scratch/verify.sh`) — for **every** question and seeds 7 / 42 / 99:
   - Correct reference implementations → `PASSED`
   - Hard-coded "memorized" implementations → `FAILED`
+
+### Scoring correction verification (2026-10-20)
+
+`CombinedTestCaseProvider` now distributes each question's original maximum across its fixed and
+dynamic cases, retaining the five maxima 3, 3, 5, 5 and 4 points. The focused pipeline integration
+test passed and asserts a 20-point maximum. All 82 production Java sources and 25 test Java sources
+compiled with `javac --release 17`. A packaged six-submission run exited 0, wrote 270 case records
+(45 per submission), and each submission's case maxima summed to exactly 20. It produced score,
+case, submission, similarity, starter-analysis, HTML and six Markdown feedback reports. The observed
+sample scores were Chee 9, David 8, Fen 7.375, Jing 0, Ping 15.277777777777777 and Xing 0.5. All
+supplied `Project/` hashes matched the pre-run snapshot. A clean Maven verification was unavailable
+because Maven is not installed in this environment; the human clean-build confirmation remains
+pending.
 
 ## Build / run
 

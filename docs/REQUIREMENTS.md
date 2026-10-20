@@ -34,7 +34,7 @@ Bonus credit depends on usefulness, correctness, and design quality; there is no
 | 1: token similarity | Kiya | Known similar and unrelated pairs; starter-code exclusion; evidence; configurable warning threshold; no automatic accusation |
 | 2: offline HTML report | Boey | Opens without a server/network; trace a result to the failed case or anomaly; escape student-controlled content |
 | 3: starter-code comparison | Sera | Unchanged starter submission detected; genuine changes distinguished; explain comparison limitations |
-| 4: parameterized cases | William | New inputs catch a hard-coded solution; invalid case data gives useful errors; retain intended mark weights |
+| 4: parameterized cases | William | New inputs catch a hard-coded solution; invalid case data gives useful errors; retain each question's maximum and the 20-point assessment total |
 | 5: Markdown feedback | Gabriel | Explain compilation failure, timeout, mismatch, and missing files using recorded evidence; no invented diagnosis |
 | 6: terminal dashboard | Unclaimed | Progress and cancellation; readable non-ANSI fallback; one display failure cannot stop grading |
 

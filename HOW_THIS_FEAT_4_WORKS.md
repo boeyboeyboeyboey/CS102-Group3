@@ -38,6 +38,7 @@ GradingPipeline
    │  builds the case list from CombinedTestCaseProvider
    │     ├─ InstructorTestCaseProvider  (fixed:  20 cases, from instructor testers)
    │     └─ DynamicTestCaseProvider     (dynamic: 25 cases, 5 per question, seeded)
+   │  CombinedTestCaseProvider shares each question's existing maximum across its cases
    │
    ├─ StudentCompiler
    │     compiles, per submission part:
@@ -74,9 +75,15 @@ TestCaseDefinition(
     questionId= "<questionId>",
     runner    = "DynamicRunner",
     arguments = [ "<questionId>", "<seed>" ],    // seed is deterministic, see below
-    points    = question.getPointsPerCase()      // same weight as a fixed case
+    points    = question.getPointsPerCase()      // provisional; combined provider applies final weights
 )
 ```
+
+`CombinedTestCaseProvider` keeps the original question maximum and divides it evenly across that
+question's fixed and dynamic cases. The final case receives any decimal remainder, so the maximum
+adds back to exactly 3, 3, 5, 5 and 4 points (20 overall). A passing fixed or dynamic case earns its
+share; failures earn zero. Dynamic checks affect scores without making any submission exceed the
+score-sheet denominator.
 
 The seed is **deterministic and reproducible** (same submission ⇒ same dynamic inputs every run):
 
@@ -174,7 +181,9 @@ mvn clean verify                                                          # comp
 java -jar target/auto-grading-system-1.0-SNAPSHOT.jar config.properties   # grades the 6 sample archives
 ```
 
-Each submission now receives **45 cases = 20 fixed + 25 dynamic** (5 per question).
+Each submission receives **45 cases = 20 fixed + 25 dynamic** (5 per question). Their combined
+maximum remains **20 points**. Individual test cases have fractional marks because each question's
+original maximum is shared across all of its cases.
 
 ### B. Prove it catches hard-coding (fastest, JDK only, no build)
 `scratch/verify.sh` compiles a *correct* and a *hard-coded* reference solution per question and runs
@@ -195,8 +204,8 @@ On a normal machine this is simply `mvn test`.
 
 ## 8. Verification status
 
-- `GradingPipelineTest` (both methods) **PASS** — the full pipeline compiles and runs all 45 cases
-  end-to-end, including Q3 with the reference support classes, without breaking existing behavior.
+- `GradingPipelineTest` checks all 45 cases end-to-end and verifies that the question maxima remain
+  3, 3, 5, 5 and 4 points (20 overall), including Q3 with the reference support classes.
 - `scratch/verify.sh` confirms, for every question and seeds 7/42/99:
   correct → `PASSED`, hard-coded → `FAILED`.
 - No supplied `Project/` inputs were modified; the oracle-free design is compatible with

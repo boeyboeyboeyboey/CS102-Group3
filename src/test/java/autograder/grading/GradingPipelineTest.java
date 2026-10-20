@@ -18,6 +18,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -111,11 +112,15 @@ class GradingPipelineTest {
         assertEquals(TestStatus.PASSED, loopingCases.get("Q1a-3"));
         var loopingGrade = run.batch().getGrades().stream()
                 .filter(grade -> grade.getSubmission() == looping).findFirst().orElseThrow();
-        // Q1a has 3 fixed + 5 dynamic cases (each worth 1 point). The fixed cases are checked above
-        // by id; here we assert the fixed-only sub-score is still 2.0 (the two "ellen"-free cases pass,
-        // the "ellen" case times out). The dynamic cases now actually execute and may add points, so we
-        // do not assert the whole-question total.
-        assertEquals(2.0, fixedQuestionScore(loopingGrade, "Q1a"));
+        // Q1a's three marks are shared evenly across its fixed and dynamic cases.
+        assertEquals(0.75, fixedQuestionScore(loopingGrade, "Q1a"));
+        assertEquals(3.0, questionMaximum(loopingGrade, "Q1a"));
+        assertEquals(3.0, questionMaximum(loopingGrade, "Q1b"));
+        assertEquals(5.0, questionMaximum(loopingGrade, "Q2a"));
+        assertEquals(5.0, questionMaximum(loopingGrade, "Q2b"));
+        assertEquals(4.0, questionMaximum(loopingGrade, "Q3"));
+        assertEquals(20.0, totalMaximum(loopingGrade));
+        assertTrue(loopingGrade.getTotalScore() <= 20.0);
         // Dynamic cases now run (previously they all errored before this fix).
         assertTrue(loopingCases.get("Q1a-dynamic-1") != TestStatus.NOT_RUN);
         assertTrue(loopingCases.get("Q1a-dynamic-1") != TestStatus.COMPILE_ERROR);
@@ -124,7 +129,7 @@ class GradingPipelineTest {
         assertEquals(TestStatus.COMPILE_ERROR, brokenCases.get("Q1a-1"));
         assertEquals(TestStatus.COMPILE_ERROR, brokenCases.get("Q1a-3"));
         assertEquals(TestStatus.PASSED, brokenCases.get("Q1b-1"));
-        // Each submission should now have 45 test results (20 fixed + 25 dynamic)
+        // Each submission has 45 results, but the original 20-point maximum is preserved.
         assertEquals(45, run.batch().getGrades().get(0).getTestResults().size());
         assertEquals(45, run.batch().getGrades().get(1).getTestResults().size());
 
@@ -364,6 +369,24 @@ class GradingPipelineTest {
             }
         }
         return total;
+    }
+
+    private static double questionMaximum(StudentGrade grade, String questionId) {
+        BigDecimal total = BigDecimal.ZERO;
+        for (TestCaseResult result : grade.getTestResults()) {
+            if (result.getTestCase().getQuestionId().equals(questionId)) {
+                total = total.add(BigDecimal.valueOf(result.getTestCase().getMaximumScore()));
+            }
+        }
+        return total.doubleValue();
+    }
+
+    private static double totalMaximum(StudentGrade grade) {
+        BigDecimal total = BigDecimal.ZERO;
+        for (TestCaseResult result : grade.getTestResults()) {
+            total = total.add(BigDecimal.valueOf(result.getTestCase().getMaximumScore()));
+        }
+        return total.doubleValue();
     }
 
     private static Map<String, TestStatus> statuses(GradingRun run, String username) {
