@@ -17,7 +17,7 @@ import autograder.model.GradingReportContext;
 import autograder.model.StudentGrade;
 import autograder.model.SubmissionResult;
 import autograder.model.SubmissionStatus;
-import autograder.plagiarism.NGramPlagiarismDetector;
+import autograder.plagiarism.PlagiarismDetectorFactory;
 import autograder.report.feedback.MarkdownFeedbackGenerator;
 import autograder.report.html.OfflineHtmlReportGenerator;
 import autograder.submission.SubmissionProcessor;
@@ -25,6 +25,7 @@ import autograder.ui.ConsoleProgressListener;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -53,10 +54,7 @@ public final class App {
             AppConfig config = AppConfig.load(Path.of(args[0]));
             ExecutionConfig execution = ExecutionConfig.load(Path.of(args[0]), config);
             PlagiarismConfig plagiarism = PlagiarismConfig.load(Path.of(args[0]));
-            PlagiarismDetector detector = (submissions, assessment) -> List.of();
-            if (plagiarism.enabled()) {
-                detector = new NGramPlagiarismDetector(plagiarism);
-            }
+            PlagiarismDetector detector = PlagiarismDetectorFactory.create(plagiarism);
             GradingPipeline grading = new GradingPipeline(config, execution, detector);
             HtmlReportConfig html = HtmlReportConfig.load(Path.of(args[0]));
             FeedbackConfig feedback = FeedbackConfig.load(Path.of(args[0]));
@@ -187,11 +185,16 @@ public final class App {
             System.out.println("Similarity check: disabled in configuration");
             return;
         }
+        List<String> thresholds = new ArrayList<>();
+        if (plagiarism.uses(PlagiarismConfig.NGRAM)) {
+            thresholds.add(String.format(Locale.ROOT, "n-gram >= %.2f", plagiarism.threshold()));
+        }
+        if (plagiarism.uses(PlagiarismConfig.JPLAG)) {
+            thresholds.add(String.format(Locale.ROOT, "JPlag >= %.2f", plagiarism.jplagThreshold()));
+        }
         int pairs = run.batch().getSimilarities().size();
-        System.out.println("Similarity review: " + pairs + " question pair(s) at or above "
-                + String.format(Locale.ROOT, "%.2f", plagiarism.threshold())
-                + " similarity, starter code excluded: "
-                + run.directory().resolve(GradingPipeline.SIMILARITY_REPORT));
+        System.out.println("Similarity review: " + pairs + " finding(s) (" + String.join(", ", thresholds)
+                + "), starter code excluded: " + run.directory().resolve(GradingPipeline.SIMILARITY_REPORT));
         if (pairs > 0) {
             System.out.println("Similarity needs instructor judgement and is not proof of copying");
         }

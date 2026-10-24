@@ -74,10 +74,11 @@ final class GradingDiagnosticsWriter {
             usernames.put(submission.getArchivePath(), student == null ? "" : student.getUsername());
         }
         List<List<String>> rows = new ArrayList<>();
-        rows.add(List.of("FirstArchive", "FirstUsername", "SecondArchive", "SecondUsername",
-                "Similarity", "Evidence"));
+        rows.add(List.of("Question", "Algorithm", "FirstArchive", "FirstUsername", "SecondArchive",
+                "SecondUsername", "Similarity", "Evidence"));
         for (SimilarityFinding finding : run.batch().getSimilarities()) {
-            rows.add(List.of(finding.getFirstArchive().getFileName().toString(),
+            rows.add(List.of(finding.getQuestion(), finding.getAlgorithm(),
+                    finding.getFirstArchive().getFileName().toString(),
                     usernames.getOrDefault(finding.getFirstArchive(), ""),
                     finding.getSecondArchive().getFileName().toString(),
                     usernames.getOrDefault(finding.getSecondArchive(), ""),

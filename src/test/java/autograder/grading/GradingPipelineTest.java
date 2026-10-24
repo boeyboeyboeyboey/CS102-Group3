@@ -138,8 +138,8 @@ class GradingPipelineTest {
         assertEquals(3, submissionRows.size());
         List<List<String>> similarityRows = CsvCodec.parse(
                 Files.readString(run.directory().resolve(GradingPipeline.SIMILARITY_REPORT)));
-        assertEquals(List.of("FirstArchive", "FirstUsername", "SecondArchive", "SecondUsername",
-                "Similarity", "Evidence"), similarityRows.get(0));
+        assertEquals(List.of("Question", "Algorithm", "FirstArchive", "FirstUsername", "SecondArchive",
+                "SecondUsername", "Similarity", "Evidence"), similarityRows.get(0));
         List<List<String>> reportRows = CsvCodec.parse(
                 Files.readString(run.directory().resolve("grade-report.csv")));
         int idColumn = reportRows.get(0).indexOf("OrgDefinedId");
@@ -220,7 +220,7 @@ class GradingPipelineTest {
         SubmissionResult second = submission("similar-second", null, false, null);
         List<SubmissionResult> submissions = List.of(first, second);
         SimilarityFinding finding = new SimilarityFinding(first.getArchivePath(), second.getArchivePath(),
-                0.87654, List.of("Q1a.java:4-8 <shared>"));
+                0.87654, List.of("Q1a.java:4-8 <shared>"), "Q1a", "test-algorithm");
 
         GradingRun run = new GradingPipeline(app, execution(), (actualSubmissions, assessment) -> {
             assertEquals(submissions, actualSubmissions);
@@ -232,9 +232,9 @@ class GradingPipelineTest {
         assertEquals(2, run.withheld().size());
         List<List<String>> similarityRows = CsvCodec.parse(
                 Files.readString(run.directory().resolve(GradingPipeline.SIMILARITY_REPORT)));
-        assertEquals(List.of("FirstArchive", "FirstUsername", "SecondArchive", "SecondUsername",
-                "Similarity", "Evidence"), similarityRows.get(0));
-        assertEquals(List.of("similar-first.zip", "", "similar-second.zip", "", "0.877",
+        assertEquals(List.of("Question", "Algorithm", "FirstArchive", "FirstUsername", "SecondArchive",
+                "SecondUsername", "Similarity", "Evidence"), similarityRows.get(0));
+        assertEquals(List.of("Q1a", "test-algorithm", "similar-first.zip", "", "similar-second.zip", "", "0.877",
                 "Q1a.java:4-8 <shared>"), similarityRows.get(1));
 
         Path html = new OfflineHtmlReportGenerator("dashboard.html").generate(
