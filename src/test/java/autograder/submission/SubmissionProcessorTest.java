@@ -13,6 +13,8 @@ import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.zip.CRC32;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -27,6 +29,26 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class SubmissionProcessorTest {
     @TempDir
     Path temporaryDirectory;
+
+    @Test
+    void cancellationStopsIntakeBeforeProcessingTheNextArchive() throws Exception {
+        Path submissions = Files.createDirectories(temporaryDirectory.resolve("submissions"));
+        createArchive(submissions.resolve("boey.tan.2026.zip"), validSubmission("boey"));
+        AppConfig config = createConfig(temporaryDirectory);
+        AtomicInteger updates = new AtomicInteger();
+        SubmissionProcessor processor = new SubmissionProcessor(config,
+                (stage, item, completed, total) -> {
+                    updates.incrementAndGet();
+                    Thread.currentThread().interrupt();
+                });
+
+        try {
+            assertThrows(CancellationException.class, processor::processBatch);
+            assertEquals(1, updates.get());
+        } finally {
+            Thread.interrupted();
+        }
+    }
 
     @Test
     void rejectsTraversalAndContinuesAfterCorruptArchive() throws Exception {

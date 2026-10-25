@@ -1,6 +1,7 @@
 package autograder.grading;
 
 import autograder.api.PlagiarismDetector;
+import autograder.api.ProgressListener;
 import autograder.api.TestCaseProvider;
 import autograder.config.AppConfig;
 import autograder.config.ExecutionConfig;
@@ -25,6 +26,7 @@ public final class GradingPipeline {
     private final ExecutionConfig execution;
     private final List<TestCaseDefinition> cases;
     private final PlagiarismDetector plagiarismDetector;
+    private ProgressListener progressListener;
 
     public GradingPipeline(AppConfig app, ExecutionConfig execution) throws IOException {
         this(app, execution, (submissions, assessment) -> List.of());
@@ -32,9 +34,16 @@ public final class GradingPipeline {
 
     public GradingPipeline(AppConfig app, ExecutionConfig execution,
                            PlagiarismDetector plagiarismDetector) throws IOException {
+        this(app, execution, plagiarismDetector, null);
+    }
+
+    public GradingPipeline(AppConfig app, ExecutionConfig execution,
+                           PlagiarismDetector plagiarismDetector,
+                           ProgressListener progressListener) throws IOException {
         this.app = app;
         this.execution = execution;
         this.plagiarismDetector = plagiarismDetector;
+        this.progressListener = progressListener;
         TestCaseProvider fixedProvider = new InstructorTestCaseProvider();
         TestCaseProvider dynamicProvider = new DynamicTestCaseProvider();
         TestCaseProvider combinedProvider = new CombinedTestCaseProvider(fixedProvider, dynamicProvider);
@@ -71,14 +80,42 @@ public final class GradingPipeline {
         List<StudentGrade> grades = new ArrayList<>();
         int index = 0;
         for (SubmissionResult submission : submissions) {
+            checkCancelled();
+            String archive = submission.getArchivePath().getFileName().toString();
+            notifyProgress("grading", archive, index, submissions.size());
             index++;
             grades.add(gradeSubmission(submission, identities, run, index, submissions.size(), withheld));
+            checkCancelled();
+            notifyProgress("grading", archive, index, submissions.size());
         }
+        checkCancelled();
         BatchResult batch = new BatchResult(app.getAssessment(), grades, List.of(),
                 compareSimilarity(submissions));
         GradingRun result = new GradingRun(batch, run, withheld);
+        checkCancelled();
+        notifyProgress("reporting", "Writing score and diagnostic CSV files", 0, 2);
         new GradingDiagnosticsWriter(app, execution).write(result);
+        notifyProgress("reporting", "Score and diagnostic CSV files ready", 1, 2);
         return result;
+    }
+
+    private static void checkCancelled() throws InterruptedException {
+        if (Thread.currentThread().isInterrupted()) {
+            throw new InterruptedException("grading cancelled");
+        }
+    }
+
+    private void notifyProgress(String stage, String item, int completed, int total) {
+        if (progressListener == null) {
+            return;
+        }
+        try {
+            progressListener.onProgress(stage, item, completed, total);
+        } catch (RuntimeException exception) {
+            System.err.println("progress listener failed; continuing without progress updates: "
+                    + exception.getMessage());
+            progressListener = null;
+        }
     }
 
     // similarity is advisory, so a detector failure must not block score export
@@ -118,6 +155,7 @@ public final class GradingPipeline {
         } else {
             Path studentDirectory = Files.createDirectory(run.resolve("submission-" + index));
             for (QuestionDefinition question : app.getAssessment().getQuestions()) {
+                checkCancelled();
                 gradeQuestion(submission, question, studentDirectory, results, withheld);
             }
         }
@@ -140,6 +178,7 @@ public final class GradingPipeline {
                 recordCompilationFailure(results, questionCases, compilation);
             } else {
                 for (TestCaseDefinition test : questionCases) {
+                    checkCancelled();
                     results.add(new CaseExecutor().execute(test, question, part,
                             execution.javaExecutable(), execution.caseTimeoutMillis(),
                             execution.maxOutputBytes()));

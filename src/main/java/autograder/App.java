@@ -5,6 +5,7 @@ import autograder.api.BoilerplateDetector;
 import autograder.api.FeedbackGenerator;
 import autograder.api.HtmlReportGenerator;
 import autograder.api.PlagiarismDetector;
+import autograder.api.ProgressListener;
 import autograder.config.AppConfig;
 import autograder.config.BoilerplateConfig;
 import autograder.config.ExecutionConfig;
@@ -21,12 +22,16 @@ import autograder.plagiarism.NGramPlagiarismDetector;
 import autograder.report.feedback.MarkdownFeedbackGenerator;
 import autograder.report.html.OfflineHtmlReportGenerator;
 import autograder.submission.SubmissionProcessor;
-import autograder.ui.ConsoleProgressListener;
+import autograder.ui.DashboardSettings;
+import autograder.ui.TerminalCancellation;
+import autograder.ui.TerminalDashboard;
 
+import java.io.Console;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.CancellationException;
 
 public final class App {
     private App() {
@@ -49,22 +54,28 @@ public final class App {
             return 1;
         }
 
+        TerminalCancellation cancellation = null;
         try {
-            AppConfig config = AppConfig.load(Path.of(args[0]));
-            ExecutionConfig execution = ExecutionConfig.load(Path.of(args[0]), config);
-            PlagiarismConfig plagiarism = PlagiarismConfig.load(Path.of(args[0]));
+            Path configFile = Path.of(args[0]);
+            AppConfig config = AppConfig.load(configFile);
+            ExecutionConfig execution = ExecutionConfig.load(configFile, config);
+            PlagiarismConfig plagiarism = PlagiarismConfig.load(configFile);
+            DashboardSettings dashboard = DashboardSettings.load(configFile);
+            Console console = System.console();
+            ProgressListener progress = new TerminalDashboard(System.out, dashboard.mode(),
+                    console != null, System.getenv());
+            cancellation = TerminalCancellation.start(console, Thread.currentThread(), System.out);
             PlagiarismDetector detector = (submissions, assessment) -> List.of();
             if (plagiarism.enabled()) {
                 detector = new NGramPlagiarismDetector(plagiarism);
             }
-            GradingPipeline grading = new GradingPipeline(config, execution, detector);
-            HtmlReportConfig html = HtmlReportConfig.load(Path.of(args[0]));
-            FeedbackConfig feedback = FeedbackConfig.load(Path.of(args[0]));
-            BoilerplateConfig boilerplate = BoilerplateConfig.load(Path.of(args[0]));
+            GradingPipeline grading = new GradingPipeline(config, execution, detector, progress);
+            HtmlReportConfig html = HtmlReportConfig.load(configFile);
+            FeedbackConfig feedback = FeedbackConfig.load(configFile);
+            BoilerplateConfig boilerplate = BoilerplateConfig.load(configFile);
             grading.validateEnvironment();
             System.out.println("Preparing submissions for " + config.getAssessment().getName());
-            SubmissionProcessor processor = new SubmissionProcessor(config,
-                    new ConsoleProgressListener());
+            SubmissionProcessor processor = new SubmissionProcessor(config, progress);
             List<SubmissionResult> results = processor.processBatch();
             if (results.isEmpty()) {
                 System.err.println("No submission archives matched the configured input directory and pattern");
@@ -86,16 +97,44 @@ public final class App {
                     + run.directory().resolve("submissions.csv"));
             System.out.println("Withheld or absent students retain their original score-sheet rows");
             printSimilarity(run, plagiarism);
-            return generateReports(run, boilerplate, new StarterCodeDetector(config.getAssessment(), boilerplate),
+            checkCancelled();
+            reportProgress(progress, "reporting", "Generating optional reports", 1, 2);
+            int reportExit = generateReports(run, boilerplate,
+                    new StarterCodeDetector(config.getAssessment(), boilerplate),
                     html, new OfflineHtmlReportGenerator(html.file()), feedback, new MarkdownFeedbackGenerator(
                     config.getAssessment(), execution.caseTimeoutMillis(), feedback.maxDiagnosticLines(),
                     config.getRosterPrefix(), config.getRosterLastNamePlaceholder()));
+            checkCancelled();
+            reportProgress(progress, "reporting", reportExit == 0 ? "Reports ready"
+                    : "Reports completed with errors", 2, 2);
+            return reportExit;
+        } catch (InterruptedException | CancellationException exception) {
+            Thread.currentThread().interrupt();
+            System.err.println("grading cancelled");
+            return 130;
         } catch (Exception exception) {
-            if (exception instanceof InterruptedException) {
-                Thread.currentThread().interrupt();
-            }
             System.err.println("could not complete grading: " + exception.getMessage());
             return 1;
+        } finally {
+            if (cancellation != null) {
+                cancellation.close();
+            }
+        }
+    }
+
+    private static void checkCancelled() throws InterruptedException {
+        if (Thread.currentThread().isInterrupted()) {
+            throw new InterruptedException("grading cancelled");
+        }
+    }
+
+    private static void reportProgress(ProgressListener listener, String stage, String item,
+                                       int completed, int total) {
+        try {
+            listener.onProgress(stage, item, completed, total);
+        } catch (RuntimeException exception) {
+            System.err.println("progress listener failed; continuing without progress updates: "
+                    + exception.getMessage());
         }
     }
 
