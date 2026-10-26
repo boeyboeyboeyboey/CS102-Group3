@@ -47,16 +47,16 @@ After implementation and the appropriate checks, commit/push the reviewed featur
 
 ## For markers: compile and run
 
-Only a JDK 17 or newer is needed on PATH. The first compile downloads Maven 3.9.9 and the dependencies through the included Maven Wrapper, so it needs internet access. Run the scripts from any directory; they work from their own folder.
+Only a JDK 17 or newer is needed; `javac -version` should report 17 or later, and `JAVA_HOME`, if set, must point to that JDK. The first compile downloads Maven 3.9.9 and the dependencies through the included Maven Wrapper, so it needs internet access and can take a few minutes.
 
 | | macOS / Linux | Windows |
 | --- | --- | --- |
-| Compile | `./compile.sh` | `compile.bat` |
-| Open the instructor window | `./run.sh` | `run.bat` |
-| Grade from the command line | `./run.sh config.properties` | `run.bat config.properties` |
-| Command-line help | `./run.sh --help` | `run.bat --help` |
+| Compile | `sh compile.sh` | `compile.bat` |
+| Open the instructor window | `sh run.sh` | `run.bat` |
+| Grade from the command line | `sh run.sh config.properties` | `run.bat config.properties` |
+| Command-line help | `sh run.sh --help` | `run.bat --help` |
 
-With arguments, `run` passes them to the command-line application, for example `./run.sh --workers 4 config.properties`. The compile scripts skip the automated tests; run `./mvnw clean verify` (or `mvnw.cmd clean verify`) for the full test suite. The project uses the standard Maven layout (`src/main/java`) allowed by the brief instead of the `classes`/`lib` folders.
+The scripts can be started from any directory or by double-clicking (Windows), and always work from the project folder, so relative paths in arguments are resolved from the project folder; use absolute paths for files elsewhere. Keep the console open while the instructor window runs; closing it closes the window. With arguments, `run` passes them to the command-line application, for example `sh run.sh --workers 4 config.properties`. The compile scripts skip the automated tests; run `sh mvnw clean verify` (or `mvnw.cmd clean verify`) for the full test suite. The project uses the standard Maven layout (`src/main/java`) allowed by the brief instead of the `classes`/`lib` folders.
 
 ## Setup, build and run
 

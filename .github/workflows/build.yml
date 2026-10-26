@@ -1,0 +1,64 @@
+name: Build and sample run
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+
+      - name: Compile (Windows)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: compile.bat
+      - name: Compile (macOS)
+        if: runner.os != 'Windows'
+        run: sh compile.sh
+
+      - name: Tests (Windows)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: mvnw.cmd -B verify
+      - name: Tests (macOS)
+        if: runner.os != 'Windows'
+        run: sh mvnw -B verify
+
+      - name: Sample run (Windows)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: run.bat config.properties
+      - name: Sample run (macOS)
+        if: runner.os != 'Windows'
+        run: sh run.sh config.properties
+
+      - name: Check sample scores
+        shell: bash
+        run: |
+          report="$(ls -td build/grading/run-*/ | head -1)scorereport.csv"
+          got="$(tail -n +2 "$report" | tr -d '\r' | cut -d, -f6 | paste -sd, -)"
+          echo "scores: $got"
+          test "$got" = "20.00,11.50,10.50,9.88,0.00,0.50"
+
+      - name: Upload grading reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: grading-${{ matrix.os }}
+          path: |
+            build/grading/
+            target/surefire-reports/
+          if-no-files-found: ignore
