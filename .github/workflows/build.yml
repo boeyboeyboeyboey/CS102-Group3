@@ -35,7 +35,7 @@ jobs:
         run: mvnw.cmd -B verify
       - name: Tests (macOS)
         if: runner.os != 'Windows'
-        run: sh mvnw -B verify
+        run: sh ./mvnw -B verify
 
       - name: Sample run (Windows)
         if: runner.os == 'Windows'

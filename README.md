@@ -56,7 +56,7 @@ Only a JDK 17 or newer is needed; `javac -version` should report 17 or later, an
 | Grade from the command line | `sh run.sh config.properties` | `run.bat config.properties` |
 | Command-line help | `sh run.sh --help` | `run.bat --help` |
 
-The scripts can be started from any directory or by double-clicking (Windows), and always work from the project folder, so relative paths in arguments are resolved from the project folder; use absolute paths for files elsewhere. Keep the console open while the instructor window runs; closing it closes the window. With arguments, `run` passes them to the command-line application, for example `sh run.sh --workers 4 config.properties`. The compile scripts skip the automated tests; run `sh mvnw clean verify` (or `mvnw.cmd clean verify`) for the full test suite. The project uses the standard Maven layout (`src/main/java`) allowed by the brief instead of the `classes`/`lib` folders.
+The scripts can be started from any directory or by double-clicking (Windows), and always work from the project folder, so relative paths in arguments are resolved from the project folder; use absolute paths for files elsewhere. Keep the console open while the instructor window runs; closing it closes the window. With arguments, `run` passes them to the command-line application, for example `sh run.sh --workers 4 config.properties`. The compile scripts skip the automated tests; run `sh ./mvnw clean verify` (or `mvnw.cmd clean verify`) for the full test suite. The project uses the standard Maven layout (`src/main/java`) allowed by the brief instead of the `classes`/`lib` folders.
 
 ## Setup, build and run
 
