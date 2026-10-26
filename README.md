@@ -45,6 +45,19 @@ Everyone works on their own feature branch; keep one branch per feature or focus
 
 After implementation and the appropriate checks, commit/push the reviewed feature files and open a PR **from the feature branch into `main`**. The PR should explain the change, give exact build/run commands and actual verification evidence, and list remaining checks. Use a draft while required verification or human acceptance is pending. Tell the driver that the PR was created, share its URL, and ask them to contact the group for review; a teammate can use their AI assistant to help, while a human owns acceptance. Address feedback in the same PR. Merge only after another teammate's approval, required checks and human build/behavior acceptance, with explicit merge authorization. See [the detailed team workflow](docs/TEAM_WORKFLOW.md#feature-branches-and-pull-requests).
 
+## For markers: compile and run
+
+Only a JDK 17 or newer is needed on PATH. The first compile downloads Maven 3.9.9 and the dependencies through the included Maven Wrapper, so it needs internet access. Run the scripts from any directory; they work from their own folder.
+
+| | macOS / Linux | Windows |
+| --- | --- | --- |
+| Compile | `./compile.sh` | `compile.bat` |
+| Open the instructor window | `./run.sh` | `run.bat` |
+| Grade from the command line | `./run.sh config.properties` | `run.bat config.properties` |
+| Command-line help | `./run.sh --help` | `run.bat --help` |
+
+With arguments, `run` passes them to the command-line application, for example `./run.sh --workers 4 config.properties`. The compile scripts skip the automated tests; run `./mvnw clean verify` (or `mvnw.cmd clean verify`) for the full test suite. The project uses the standard Maven layout (`src/main/java`) allowed by the brief instead of the `classes`/`lib` folders.
+
 ## Setup, build and run
 
 ### Optional randomized question mode
