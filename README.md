@@ -314,7 +314,7 @@ The interfaces exist so implementations share common inputs and outputs. HTML re
 
 ## Latest verification
 
-Current agent verification on 2026-10-24 (`main` after PR #12, JDK 25 targeting Java 17): `mvn clean verify` passed **128 tests, zero failures/errors/skips**, and the packaged CLI graded the six supplied submissions with exit code 0. Each submission has **45 case records** (20 fixed instructor cases plus 25 seeded dynamic cases), and each question keeps its original maximum. The run wrote the score sheet, `cases.csv`, `submissions.csv`, `similarity.csv` (0 pairs at the 0.80 threshold), `starter-analysis.csv` (11 findings), `dashboard.html` and six feedback files. Human acceptance of features 1, 3, 4 and 5 is still pending.
+Current verification on 2026-10-27 (`main` after PR #20, 86452f5): `mvn clean verify` passed **222 tests, zero failures/errors/skips** on macOS (JDK 25 targeting Java 17), and GitHub Actions CI on PR #21 (main plus the submission scripts) passed the same 222 tests, the packaged sample run and the score check on **windows-latest and macos-latest with Temurin JDK 17**. The packaged CLI graded the six supplied submissions with exit code 0. Each submission has **45 case records** (20 fixed instructor cases plus 25 seeded dynamic cases), and each question keeps its original maximum. The run wrote the score sheet, `cases.csv`, `submissions.csv`, `similarity.csv` (0 pairs at the default thresholds), `starter-analysis.csv`, `sanity-checks.csv` (no findings), `dashboard.html` and six feedback files. Human acceptance of features 1, 3, 4 and 5 is still pending; feature 6 is not on main.
 
 | Student | Q1a | Q1b | Q2a | Q2b | Q3 | Total | Score sheet |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
@@ -325,7 +325,7 @@ Current agent verification on 2026-10-24 (`main` after PR #12, JDK 25 targeting 
 | Ping | 3 | 3 | 5 | 5 | 4 | 20 | 20.00 |
 | Xing | 0 | 0 | 0.5 | 0 | 0 | 0.5 | 0.50 |
 
-Question maxima are 3, 3, 5, 5 and 4. Each question's marks are shared equally across its fixed and dynamic cases, so case values such as 0.375 are expected. Actual Java 17 runtime and Windows behaviour remain untested.
+Question maxima are 3, 3, 5, 5 and 4. Each question's marks are shared equally across its fixed and dynamic cases, so case values such as 0.375 are expected. Java 17 and Windows evidence comes from CI; the Windows `compile.bat`/`run.bat` scripts and the GUI have not been run by a person on Windows.
 
 The following modularisation and MVP records are historical evidence.
 

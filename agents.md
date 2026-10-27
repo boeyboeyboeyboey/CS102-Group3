@@ -29,8 +29,8 @@ Before proposing any new implementation, review the relevant brief sections and 
 | 5: Markdown student feedback | Gabriel | REVIEW |
 | 6: ANSI terminal dashboard | Kai Cong | REVIEW |
 | Additional: Java Swing instructor GUI (not a numbered bonus) | Boey | DONE |
-| Additional: parallel grading (improvement idea 6, not bonus 6) | Boey | REVIEW |
-| Additional: score sanity checks (improvement idea 9) | Boey | REVIEW |
+| Additional: parallel grading (improvement idea 6, not bonus 6) | Boey | DONE |
+| Additional: score sanity checks (improvement idea 9) | Boey | DONE |
 
 Allowed statuses: TODO, IN_PROGRESS, REVIEW, DONE.
 
@@ -63,6 +63,8 @@ Use [docs/CODE_REVIEW.md](docs/CODE_REVIEW.md) for the merged-main review, propo
 Use [docs/BUGS.md](docs/BUGS.md) as the known-bug register before proposing fixes. It records B1 (shared grading/configuration; Boey coordinates, implementing human owner unassigned) and B2 (feature-2 dashboard fixture; Boey). Documentation does not assign another teammate or approve a fix; coordinate shared ownership and preserve the recorded evidence limits.
 
 ## Current Context
+
+- 2026-10-27 (overnight batch, driver Boey by the handover's kickoff; identity was not re-asked in chat): ideas 6 and 9 moved to DONE on Boey's clean-build confirmation of main + PR #20 (2026-10-27); architecture docs `parallel_grading_architecture.md` and `score_sanity_checks_architecture.md` in draft PR #22 (`idea-6-9-architecture-docs`). Draft PRs from origin/main 86452f5, each verified on macOS JDK 25 with `mvn clean verify` and, for Java changes, a sample run whose CSVs, verdicts and stderr matched a main-built run (scores 20.00, 11.50, 10.50, 9.88, 0.00, 0.50): #25 `gui-review-fixes` (report problems shown in the GUI, Stop during intake, late-Stop wording, friendly stage names, listener failures cannot discard a run; 231 tests); #24 `windows-robustness` (UTF-8 child JVM flags in CaseExecutor, bounded delete retry, Windows-invalid zip names as a per-submission anomaly; 229 tests; RandomizedGrader and JPlag cleanup left to William and Kiya); #23 `sanity-review-fixes` (gap check counts students, free-pass cases ignored by the mostly-zero check; 226 tests); #26 `fix-flaky-process-test` (test-only pid wait; 30/30 runs, 222 tests); this entry and the README verification block on `docs-sync-overnight`. No CI ran on these PRs because the workflow arrives with PR #21 (still open); no PR was merged; all need a teammate review
 
 - 2026-10-27: validated driver Boey approved the idea-6 worker-count follow-up on branch `parallel-workers-settings` (from origin/main c45a125). Adds `config.WorkerLimits` (logical processor probe, `auto` = min(4, processors), cap with stderr warning), `execution.workers=auto`, `ExecutionConfig.withWorkers`/`RunSettings.withWorkers`, an optional CLI `--workers <N|auto> <config>` (one-argument form unchanged; bad value prints usage, exit 1) and a GUI Workers dropdown (1..processors, preselected from config, never saved). Counts above the logical processor count are capped with a warning; above 32 still rejected; default stays 1. Agent verification: `mvn clean verify` 222 tests, zero failures/errors/skips; sample runs with no flag, `--workers 4` and `--workers 16` (capped to 10 with warning) all exit 0 with scorereport.csv byte-identical to main and other CSVs identical after dropping DurationMillis/paths; `--workers 64` exits 1. Project unchanged. Boey confirmed the clean build and checked the GUI dropdown on 2026-10-27; merged into main through PR #20 on 2026-10-27 as 42aa614 (merge commit; branch kept). Teammates approved outside GitHub; no review is recorded on the PR. Board status unchanged: parallel grading remains REVIEW
 
