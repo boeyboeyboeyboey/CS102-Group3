@@ -84,6 +84,73 @@ class GradingServiceTest {
         }
     }
 
+    @Test
+    void interruptDuringIntakeReturnsInterruptedInPreparation() throws Exception {
+        Path submissions = Files.createDirectories(temporaryDirectory.resolve("subs"));
+        RunSettings settings = settings(submissions);
+        Path sample = Path.of("").toAbsolutePath().resolve("Project/student-submission");
+        try (Stream<Path> zips = Files.list(sample)) {
+            for (Path zip : (Iterable<Path>) zips.limit(2)::iterator) {
+                Files.copy(zip, submissions.resolve(zip.getFileName()));
+            }
+        }
+        RecordingListener listener = new RecordingListener() {
+            @Override
+            public void onProgress(String stage, String item, int completed, int total) {
+                Thread.currentThread().interrupt();
+            }
+        };
+        try {
+            RunOutcome outcome = new GradingService().run(settings, listener);
+
+            assertEquals(RunOutcome.Status.INTERRUPTED, outcome.status());
+            assertEquals(RunOutcome.Stage.PREPARATION, outcome.failedStage());
+            assertFalse(listener.events.contains("prepared"));
+        } finally {
+            Thread.interrupted();
+        }
+    }
+
+    @Test
+    void listenerFailureWhilePreparingDoesNotFailTheRun() throws Exception {
+        RunSettings settings = settings(Files.createDirectories(temporaryDirectory.resolve("empty")));
+        RecordingListener listener = new RecordingListener() {
+            @Override
+            public void preparing(String assessmentName) {
+                throw new IllegalStateException("x", new java.nio.channels.ClosedByInterruptException());
+            }
+        };
+        try {
+            RunOutcome outcome = new GradingService().run(settings, listener);
+            assertEquals(RunOutcome.Status.NO_SUBMISSIONS, outcome.status());
+        } finally {
+            Thread.interrupted();
+        }
+    }
+
+    @Test
+    void listenerFailureDoesNotDiscardAGradedRun() throws Exception {
+        Path submissions = Files.createDirectories(temporaryDirectory.resolve("subs"));
+        RunSettings settings = settings(submissions);
+        Path sample = Path.of("").toAbsolutePath().resolve("Project/student-submission");
+        try (Stream<Path> zips = Files.list(sample)) {
+            Path zip = zips.sorted().findFirst().orElseThrow();
+            Files.copy(zip, submissions.resolve(zip.getFileName()));
+        }
+        RecordingListener listener = new RecordingListener() {
+            @Override
+            public void graded(GradingRun run, RunSettings runSettings) {
+                throw new IllegalStateException("display broke");
+            }
+        };
+
+        RunOutcome outcome = new GradingService().run(settings, listener);
+
+        assertTrue(outcome.graded());
+        assertTrue(outcome.run() != null);
+        assertTrue(outcome.status() != RunOutcome.Status.FAILED);
+    }
+
     private RunSettings settings(Path submissions) throws IOException {
         Path root = Path.of("").toAbsolutePath();
         Path copiedProject = temporaryDirectory.resolve("project");
@@ -107,7 +174,7 @@ class GradingServiceTest {
         }
     }
 
-    private static final class RecordingListener implements RunListener {
+    private static class RecordingListener implements RunListener {
         private final List<String> events = new ArrayList<>();
 
         @Override

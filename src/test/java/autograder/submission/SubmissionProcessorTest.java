@@ -260,6 +260,29 @@ class SubmissionProcessorTest {
     }
 
     @Test
+    void interruptDuringIntakeStopsFurtherArchivesAndKeepsFlag() throws Exception {
+        Path submissions = Files.createDirectories(temporaryDirectory.resolve("submissions"));
+        createArchive(submissions.resolve("boey.tan.2026.zip"), validSubmission("boey"));
+        createArchive(submissions.resolve("sera.lim.2026.zip"), validSubmission("sera"));
+        createArchive(submissions.resolve("kai.ng.2026.zip"), validSubmission("kai"));
+        AppConfig config = createConfig(temporaryDirectory);
+        SubmissionProcessor processor = new SubmissionProcessor(config,
+                (stage, item, completed, total) -> {
+                    if (completed == 1) {
+                        Thread.currentThread().interrupt();
+                    }
+                });
+        try {
+            List<SubmissionResult> results = processor.processBatch();
+
+            assertEquals(1, results.size());
+            assertTrue(Thread.currentThread().isInterrupted());
+        } finally {
+            Thread.interrupted();
+        }
+    }
+
+    @Test
     void progressListenerFailureDoesNotStopBatch() throws Exception {
         Path submissions = Files.createDirectories(temporaryDirectory.resolve("submissions"));
         createArchive(submissions.resolve("boey.tan.2026.zip"), validSubmission("boey"));

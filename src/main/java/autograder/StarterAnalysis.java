@@ -14,6 +14,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 final class StarterAnalysis {
     private StarterAnalysis() {
@@ -23,6 +24,11 @@ final class StarterAnalysis {
     }
 
     static Result analyze(GradingRun run, BoilerplateConfig config, BoilerplateDetector detector) {
+        return analyze(run, config, detector, System.err::println);
+    }
+
+    static Result analyze(GradingRun run, BoilerplateConfig config, BoilerplateDetector detector,
+                          Consumer<String> problems) {
         if (!config.enabled()) {
             return new Result(run, 0);
         }
@@ -42,7 +48,7 @@ final class StarterAnalysis {
         BatchResult batch = new BatchResult(run.batch().getAssessment(), run.batch().getGrades(),
                 findings, run.batch().getSimilarities());
         GradingRun analyzed = new GradingRun(batch, run.directory(), run.withheld());
-        return new Result(analyzed, writeReport(run.directory(), rows));
+        return new Result(analyzed, writeReport(run.directory(), rows, problems));
     }
 
     private static List<AnalysisFinding> compare(SubmissionResult submission, BoilerplateConfig config,
@@ -55,7 +61,7 @@ final class StarterAnalysis {
         }
     }
 
-    private static int writeReport(Path directory, List<List<String>> rows) {
+    private static int writeReport(Path directory, List<List<String>> rows, Consumer<String> problems) {
         Path report = directory.resolve("starter-analysis.csv");
         try {
             Files.writeString(report, CsvCodec.write(rows),
@@ -63,8 +69,8 @@ final class StarterAnalysis {
             System.out.println("Starter comparison: " + (rows.size() - 1) + " findings; " + report);
             return 0;
         } catch (IOException | RuntimeException exception) {
-            System.err.println("could not write starter analysis " + report + ": " + exception.getMessage());
-            System.err.println("Grading and CSV exports are complete in " + directory
+            problems.accept("could not write starter analysis " + report + ": " + exception.getMessage());
+            problems.accept("Grading and CSV exports are complete in " + directory
                     + "; continuing with HTML and Markdown reports");
             return 1;
         }

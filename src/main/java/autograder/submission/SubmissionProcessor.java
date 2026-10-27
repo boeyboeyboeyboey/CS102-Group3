@@ -64,6 +64,9 @@ public final class SubmissionProcessor {
         List<SubmissionResult> results = new ArrayList<>();
         int completed = 0;
         for (Path archive : archives) {
+            if (Thread.currentThread().isInterrupted()) {
+                break;
+            }
             notifyProgress("ingestion", archive.getFileName().toString(), completed,
                     archives.size());
             Path extractionPath = extractionRun.resolve(

@@ -13,6 +13,7 @@ import autograder.report.feedback.MarkdownFeedbackGenerator;
 import autograder.report.html.OfflineHtmlReportGenerator;
 import autograder.submission.SubmissionProcessor;
 
+import java.nio.channels.ClosedByInterruptException;
 import java.util.List;
 
 /**
@@ -22,7 +23,8 @@ import java.util.List;
 public final class GradingService {
     private static final String GRADING_STAGE = "grading";
 
-    public RunOutcome run(RunSettings settings, RunListener listener) {
+    public RunOutcome run(RunSettings settings, RunListener suppliedListener) {
+        RunListener listener = new GuardedListener(suppliedListener);
         if (Thread.currentThread().isInterrupted()) {
             return interrupted(RunOutcome.Stage.ENVIRONMENT, new InterruptedException("grading stopped"));
         }
@@ -49,6 +51,9 @@ public final class GradingService {
         } catch (Exception exception) {
             return failed(RunOutcome.Stage.PREPARATION, exception, List.of(), null);
         }
+        if (Thread.currentThread().isInterrupted()) {
+            return interrupted(RunOutcome.Stage.PREPARATION, new InterruptedException("grading stopped"));
+        }
         if (results.isEmpty()) {
             return new RunOutcome(RunOutcome.Status.NO_SUBMISSIONS, null, null, results, null, 1);
         }
@@ -70,7 +75,7 @@ public final class GradingService {
         listener.graded(run, settings);
         int reportExit;
         try {
-            reportExit = reports(settings, run);
+            reportExit = reports(settings, run, listener);
         } catch (Exception exception) {
             return failed(RunOutcome.Stage.REPORTS, exception, results, run);
         }
@@ -80,7 +85,7 @@ public final class GradingService {
         return new RunOutcome(RunOutcome.Status.REPORT_FAILURES, null, null, results, run, reportExit);
     }
 
-    private static int reports(RunSettings settings, GradingRun run) {
+    private static int reports(RunSettings settings, GradingRun run, RunListener listener) {
         AppConfig app = settings.app();
         return App.generateReports(run, settings.boilerplate(),
                 new StarterCodeDetector(app.getAssessment(), settings.boilerplate()),
@@ -88,7 +93,10 @@ public final class GradingService {
                 settings.feedback(), new MarkdownFeedbackGenerator(
                 app.getAssessment(), settings.execution().caseTimeoutMillis(),
                 settings.feedback().maxDiagnosticLines(), app.getRosterPrefix(),
-                app.getRosterLastNamePlaceholder()));
+                app.getRosterLastNamePlaceholder()), message -> {
+                    System.err.println(message);
+                    listener.reportFailed(message);
+                });
     }
 
     private static PlagiarismDetector detector(RunSettings settings) {
@@ -105,10 +113,22 @@ public final class GradingService {
 
     private static RunOutcome failed(RunOutcome.Stage stage, Exception exception,
                                      List<SubmissionResult> preparation, GradingRun run) {
-        if (exception instanceof InterruptedException) {
+        if (exception instanceof InterruptedException || stoppedByInterrupt(exception)) {
             return interrupted(stage, exception, preparation, run);
         }
         return new RunOutcome(RunOutcome.Status.FAILED, stage, exception, preparation, run, 1);
+    }
+
+    private static boolean stoppedByInterrupt(Throwable exception) {
+        if (Thread.currentThread().isInterrupted()) {
+            return true;
+        }
+        for (Throwable cause = exception; cause != null; cause = cause.getCause()) {
+            if (cause instanceof ClosedByInterruptException) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static RunOutcome interrupted(RunOutcome.Stage stage, Exception exception) {
@@ -119,5 +139,54 @@ public final class GradingService {
                                           List<SubmissionResult> preparation, GradingRun run) {
         Thread.currentThread().interrupt();
         return new RunOutcome(RunOutcome.Status.INTERRUPTED, stage, exception, preparation, run, 1);
+    }
+
+    /** Keeps a failing progress display from discarding the run it is watching. */
+    private static final class GuardedListener implements RunListener {
+        private final RunListener delegate;
+
+        GuardedListener(RunListener delegate) {
+            this.delegate = delegate;
+        }
+
+        @Override
+        public void onProgress(String stage, String item, int completed, int total) {
+            guard(() -> delegate.onProgress(stage, item, completed, total));
+        }
+
+        @Override
+        public void preparing(String assessmentName) {
+            guard(() -> delegate.preparing(assessmentName));
+        }
+
+        @Override
+        public void prepared(List<SubmissionResult> results, AppConfig app) {
+            guard(() -> delegate.prepared(results, app));
+        }
+
+        @Override
+        public void gradingProgress(String item, int completed, int total) {
+            guard(() -> delegate.gradingProgress(item, completed, total));
+        }
+
+        @Override
+        public void reportFailed(String message) {
+            guard(() -> delegate.reportFailed(message));
+        }
+
+        @Override
+        public void graded(GradingRun run, RunSettings settings) {
+            guard(() -> delegate.graded(run, settings));
+        }
+
+        private static void guard(Runnable callback) {
+            try {
+                callback.run();
+            } catch (RuntimeException exception) {
+                String message = exception.getMessage();
+                System.err.println("Progress display failed: "
+                        + (message == null || message.isBlank() ? exception.getClass().getSimpleName() : message));
+            }
+        }
     }
 }

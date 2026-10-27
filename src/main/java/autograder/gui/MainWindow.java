@@ -179,6 +179,7 @@ final class MainWindow extends JFrame {
     }
 
     private void onFinished(RunOutcome outcome) {
+        List<String> problems = worker == null ? List.of() : worker.reportProblems();
         worker = null;
         if (quitWhenFinished) {
             exit();
@@ -186,7 +187,7 @@ final class MainWindow extends JFrame {
         }
         bar.setIdle();
         bar.setStatus("");
-        results.show(outcome, activeSettings);
+        results.show(outcome, activeSettings, problems);
         setInputsEnabled(true);
         pack();
     }

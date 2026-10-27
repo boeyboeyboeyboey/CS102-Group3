@@ -21,4 +21,7 @@ public interface RunListener extends ProgressListener {
     }
 
     void graded(GradingRun run, RunSettings settings);
+
+    default void reportFailed(String message) {
+    }
 }

@@ -233,6 +233,36 @@ class AppTest {
     }
 
     @Test
+    void problemSinkReceivesExactlyTheLinesTheDefaultOverloadWritesToStderr() throws Exception {
+        GradingRun original = run(List.of(grade("first.zip")));
+        Files.createDirectory(temporaryDirectory.resolve("sanity-checks.csv"));
+        HtmlReportConfig html = new HtmlReportConfig(true, "dashboard.html");
+        autograder.api.HtmlReportGenerator failing =
+                (context, directory) -> { throw new IOException("disk unavailable"); };
+        autograder.config.SanityConfig sanity = new autograder.config.SanityConfig(true, 1, 90, 80, 50, 40);
+        autograder.config.BoilerplateConfig starter =
+                new autograder.config.BoilerplateConfig(false, temporaryDirectory, 0.98, 1024, 100);
+        FeedbackConfig noFeedback = new FeedbackConfig(false, "feedback", 10);
+        ByteArrayOutputStream errors = new ByteArrayOutputStream();
+        PrintStream previous = System.err;
+        try (PrintStream capture = new PrintStream(errors, true, StandardCharsets.UTF_8)) {
+            System.setErr(capture);
+            App.generateReports(original, starter, (submission, dir) -> List.of(), sanity, html, failing,
+                    noFeedback, null);
+        } finally {
+            System.setErr(previous);
+        }
+        List<String> sunk = new ArrayList<>();
+        App.generateReports(original, starter, (submission, dir) -> List.of(), sanity, html, failing,
+                noFeedback, null, sunk::add);
+
+        assertEquals(3, sunk.size());
+        assertTrue(sunk.get(0).startsWith("could not write sanity checks"));
+        assertEquals(String.join(System.lineSeparator(), sunk) + System.lineSeparator(),
+                errors.toString(StandardCharsets.UTF_8));
+    }
+
+    @Test
     void disabledSanityChecksWriteNoFile() {
         SanityAnalysis.Result result = SanityAnalysis.analyze(run(List.of(grade("first.zip"))),
                 autograder.config.SanityConfig.disabled());
