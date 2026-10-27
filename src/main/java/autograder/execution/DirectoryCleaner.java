@@ -11,7 +11,7 @@ import java.util.List;
  * Deletes a directory tree, retrying briefly when the file system reports a transient failure
  * such as a Windows file handle that a finished child process has not released yet.
  */
-final class DirectoryCleaner {
+public final class DirectoryCleaner {
     private static final long[] RETRY_DELAYS_MILLIS = {50, 150};
 
     /** Deletes a single path and may throw an IOException. */
@@ -29,7 +29,7 @@ final class DirectoryCleaner {
     private final Deleter deleter;
     private final Sleeper sleeper;
 
-    DirectoryCleaner() {
+    public DirectoryCleaner() {
         this(Files::deleteIfExists, Thread::sleep);
     }
 
@@ -38,7 +38,7 @@ final class DirectoryCleaner {
         this.sleeper = sleeper;
     }
 
-    void deleteRecursively(Path directory) throws IOException {
+    public void deleteRecursively(Path directory) throws IOException {
         if (!Files.exists(directory)) {
             return;
         }
