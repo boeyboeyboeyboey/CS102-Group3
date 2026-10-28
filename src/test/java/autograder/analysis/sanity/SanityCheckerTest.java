@@ -60,6 +60,35 @@ class SanityCheckerTest {
     }
 
     @Test
+    void mostlyZeroFiresWhenOnlyFreePassCaseIsExcluded() {
+        IntFunction<List<TestCaseResult>> onePasses = i -> List.of(
+                result("Q1-1", TestStatus.PASSED, "", ""),
+                result("Q1-2", i == 0 ? TestStatus.PASSED : TestStatus.TIMED_OUT, "", ""));
+        SanityFinding finding = checker.check(run(10, onePasses, Map.of()), CONFIG).stream()
+                .filter(f -> f.getCheck() == SanityCheck.QUESTION_MOSTLY_ZERO)
+                .findFirst().orElseThrow();
+        assertEquals(9, finding.getAffected());
+        assertEquals(10, finding.getGraded());
+    }
+
+    @Test
+    void mostlyZeroDoesNotFireWhenEveryCaseIsFreePass() {
+        IntFunction<List<TestCaseResult>> allPass = i -> List.of(
+                result("Q1-1", TestStatus.PASSED, "", ""),
+                result("Q1-2", TestStatus.PASSED, "", ""));
+        assertFalse(has(checker.check(run(10, allPass, Map.of()), CONFIG), SanityCheck.QUESTION_MOSTLY_ZERO));
+    }
+
+    @Test
+    void casePassedByOnlySomeStudentsIsNotFreePass() {
+        // Q1-1 is passed by 9 of 10, so excluding it would wrongly zero everyone
+        IntFunction<List<TestCaseResult>> almostAllPass = i -> List.of(
+                result("Q1-1", i < 9 ? TestStatus.PASSED : TestStatus.FAILED, "o" + i, ""),
+                result("Q1-2", TestStatus.TIMED_OUT, "", ""));
+        assertFalse(has(checker.check(run(10, almostAllPass, Map.of()), CONFIG), SanityCheck.QUESTION_MOSTLY_ZERO));
+    }
+
+    @Test
     void sharedFailureNeedsIdenticalStatusAndOutputAtThreshold() {
         IntFunction<List<TestCaseResult>> fourOfFive = i -> List.of(result("Q1-1",
                 i < 4 ? TestStatus.FAILED : TestStatus.PASSED, " same line\nsecond ", ""));
@@ -106,6 +135,30 @@ class SanityCheckerTest {
                 result("Q1-1", i < 2 ? TestStatus.PASSED : TestStatus.FAILED, "o" + i, ""),
                 result("Q1-dynamic-1", TestStatus.PASSED, "", ""));
         assertFalse(has(checker.check(run(5, dynamicBetter, Map.of()), CONFIG), SanityCheck.FIXED_DYNAMIC_GAP));
+    }
+
+    @Test
+    void gapCountsStudentsNotCaseResults() {
+        IntFunction<List<TestCaseResult>> students = i -> switch (i) {
+            case 0 -> List.of(result("Q1-1", TestStatus.PASSED, "", ""),
+                    result("Q1-dynamic-1", TestStatus.PASSED, "", ""),
+                    result("Q1-dynamic-2", TestStatus.PASSED, "", ""));
+            case 4 -> List.of(result("Q1-1", TestStatus.PASSED, "", ""),
+                    result("Q1-dynamic-1", TestStatus.COMPILE_ERROR, "", ""),
+                    result("Q1-dynamic-2", TestStatus.COMPILE_ERROR, "", ""));
+            case 5 -> List.of(result("Q1-1", TestStatus.PASSED, "", ""),
+                    result("Q1-dynamic-1", TestStatus.PASSED, "", ""),
+                    result("Q1-dynamic-2", TestStatus.FAILED, "o", ""));
+            default -> List.of(result("Q1-1", TestStatus.PASSED, "", ""),
+                    result("Q1-dynamic-1", TestStatus.FAILED, "o" + i, ""),
+                    result("Q1-dynamic-2", TestStatus.FAILED, "p" + i, ""));
+        };
+        SanityFinding gap = checker.check(run(6, students, Map.of()), CONFIG).stream()
+                .filter(f -> f.getCheck() == SanityCheck.FIXED_DYNAMIC_GAP)
+                .findFirst().orElseThrow();
+        // 10 non-compile dynamic case results, 3 passed; 5 graded students, 4 with a non-passing dynamic result
+        assertEquals(4, gap.getAffected());
+        assertEquals(5, gap.getGraded());
     }
 
     @Test
