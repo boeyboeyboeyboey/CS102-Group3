@@ -1,6 +1,7 @@
 package autograder;
 
 import autograder.api.BoilerplateDetector;
+import autograder.analysis.boilerplate.StarterComparisonReport;
 import autograder.config.BoilerplateConfig;
 import autograder.csv.CsvCodec;
 import autograder.grading.GradingRun;
@@ -48,7 +49,21 @@ final class StarterAnalysis {
         BatchResult batch = new BatchResult(run.batch().getAssessment(), run.batch().getGrades(),
                 findings, run.batch().getSimilarities());
         GradingRun analyzed = new GradingRun(batch, run.directory(), run.withheld());
-        return new Result(analyzed, writeReport(run.directory(), rows, problems));
+        int csvExit = writeReport(run.directory(), rows, problems);
+        int comparisonExit = writeMethodReport(analyzed, config, problems);
+        return new Result(analyzed, Math.max(csvExit, comparisonExit));
+    }
+
+    private static int writeMethodReport(GradingRun run, BoilerplateConfig config, Consumer<String> problems) {
+        try {
+            Path report = StarterComparisonReport.generate(run.batch(), config, run.directory());
+            System.out.println("Method comparison report: " + report);
+            return 0;
+        } catch (IOException | RuntimeException exception) {
+            problems.accept("could not write method comparison report: " + exception.getMessage());
+            problems.accept("Continuing with HTML and Markdown reports; marks unchanged");
+            return 1;
+        }
     }
 
     private static List<AnalysisFinding> compare(SubmissionResult submission, BoilerplateConfig config,

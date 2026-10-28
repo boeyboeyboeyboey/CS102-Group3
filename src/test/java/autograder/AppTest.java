@@ -320,6 +320,31 @@ class AppTest {
                 (submission, starter) -> { throw new AssertionError("disabled detector invoked"); });
         assertEquals(0, result.exitCode());
         assertFalse(Files.exists(temporaryDirectory.resolve("starter-analysis.csv")));
+        assertFalse(Files.exists(temporaryDirectory.resolve("starter-comparison")));
+    }
+
+    @Test
+    void methodReportFailurePreservesCsvAndStillAttemptsOtherReports() throws Exception {
+        GradingRun original = run(List.of(grade("first.zip")));
+        Files.writeString(temporaryDirectory.resolve("starter-comparison"), "keep this file");
+        Files.writeString(temporaryDirectory.resolve("scorereport.csv"), "keep scores");
+        List<String> attempted = new ArrayList<>();
+        int exit = App.generateReports(original,
+                new autograder.config.BoilerplateConfig(true, temporaryDirectory, 0.98, 1024, 100),
+                (submission, starter) -> List.of(), new HtmlReportConfig(true, "dashboard.html"),
+                (context, destination) -> {
+                    attempted.add("html");
+                    return destination.resolve("dashboard.html");
+                }, new FeedbackConfig(true, "feedback", 10), (grade, destination) -> {
+                    attempted.add("markdown");
+                    return destination.resolve("first.md");
+                });
+        assertEquals(1, exit);
+        assertEquals(List.of("html", "markdown"), attempted);
+        assertEquals("keep scores", Files.readString(temporaryDirectory.resolve("scorereport.csv")));
+        assertEquals("keep this file", Files.readString(temporaryDirectory.resolve("starter-comparison")));
+        assertTrue(Files.isRegularFile(temporaryDirectory.resolve("starter-analysis.csv")));
+        assertEquals(1, original.batch().getGrades().get(0).getTotalScore());
     }
 
     @Test
