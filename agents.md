@@ -29,8 +29,8 @@ Before proposing any new implementation, review the relevant brief sections and 
 | 5: Markdown student feedback | Gabriel | REVIEW |
 | 6: ANSI terminal dashboard | Kai Cong | REVIEW |
 | Additional: Java Swing instructor GUI (not a numbered bonus) | Boey | DONE |
-| Additional: parallel grading (improvement idea 6, not bonus 6) | Boey | REVIEW |
-| Additional: score sanity checks (improvement idea 9) | Boey | REVIEW |
+| Additional: parallel grading (improvement idea 6, not bonus 6) | Boey | DONE |
+| Additional: score sanity checks (improvement idea 9) | Boey | DONE |
 
 Allowed statuses: TODO, IN_PROGRESS, REVIEW, DONE.
 
@@ -64,6 +64,7 @@ Use [docs/BUGS.md](docs/BUGS.md) as the known-bug register before proposing fixe
 
 ## Current Context
 
+- 2026-10-28: at Boey's request, the overnight PRs were merged into main in this order, without a GitHub teammate review: #21 `submission-scripts` (Maven Wrapper, compile/run scripts, CI on windows-latest and macos-latest JDK 17), #22 architecture docs for ideas 6 and 9, #26 flaky pid-read test fix, #23 sanity review fixes (gap check counts students; cases every graded student passed are ignored by the mostly-zero check, rule confirmed by Boey), #24 Windows robustness (UTF-8 child JVM flags, bounded directory-delete retry via `execution.DirectoryCleaner`, Windows-invalid zip names as a per-submission anomaly), #28 RandomizedGrader UTF-8 flags and JPlag cleanup retry (William's and Kiya's files, edited with Boey's authorization; their review is still requested), #25 GUI review fixes (report problems shown in the results panel, Stop honoured during intake, accurate late-Stop wording, friendly stage names, listener failures cannot discard a run; merged with Sera's PR #29 so method-report failures also reach the GUI), then this entry (#27). Ideas 6 and 9 moved to DONE on Boey's clean-build confirmation of main + PR #20 (2026-10-27). Before merging, all branches were combined locally on top of main 97b53cb (after Sera's PR #29) and verified with `mvn clean verify` and a sample run (scores 20.00, 11.50, 10.50, 9.88, 0.00, 0.50); main's CI result after the merges is recorded in the morning report. Still pending: Boey's visual check of the GUI report-problems area, a person running compile.bat/run.bat on Windows, and teammate reviews of the merged PRs
 
 - Overview revision verification: clean Maven verify passed 140 tests (zero failures/errors/skips); sample Java exit 0, totals 12,10,10,0,20,1 and all 67 Project hashes preserved. Chrome passed 15 assertions plus Enter activation and narrow viewport checks for 36 unique overview links, with no script errors or external report requests. Commands, report paths and evidence limits are in docs/STARTER_CODE_TESTING.md. Sera acceptance remains pending; no commit/push performed.
 
