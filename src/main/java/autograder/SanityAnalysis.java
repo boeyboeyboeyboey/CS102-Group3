@@ -10,6 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.List;
+import java.util.function.Consumer;
 
 final class SanityAnalysis {
     static final String REPORT = "sanity-checks.csv";
@@ -21,6 +22,10 @@ final class SanityAnalysis {
     }
 
     static Result analyze(GradingRun run, SanityConfig config) {
+        return analyze(run, config, System.err::println);
+    }
+
+    static Result analyze(GradingRun run, SanityConfig config, Consumer<String> problems) {
         if (!config.enabled()) {
             return new Result(List.of(), 0);
         }
@@ -29,21 +34,21 @@ final class SanityAnalysis {
             findings = new SanityChecker().check(run, config);
         } catch (RuntimeException exception) {
             // no csv or "none" line, so a crashed check never reads as a clean pass
-            System.err.println("could not run sanity checks: " + exception.getMessage());
+            problems.accept("could not run sanity checks: " + exception.getMessage());
             return new Result(List.of(), 1);
         }
         Path report = run.directory().resolve(REPORT);
-        int exitCode = write(report, findings);
+        int exitCode = write(report, findings, problems);
         print(findings, exitCode == 0 ? report.toString() : "not saved");
         return new Result(findings, exitCode);
     }
 
-    private static int write(Path report, List<SanityFinding> findings) {
+    private static int write(Path report, List<SanityFinding> findings, Consumer<String> problems) {
         try {
             Files.writeString(report, SanityCsvWriter.format(findings),
                     StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
         } catch (IOException | RuntimeException exception) {
-            System.err.println("could not write sanity checks " + report + ": " + exception.getMessage());
+            problems.accept("could not write sanity checks " + report + ": " + exception.getMessage());
             return 1;
         }
         return 0;

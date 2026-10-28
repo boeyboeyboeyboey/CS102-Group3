@@ -27,6 +27,7 @@ final class ResultsPanel extends JPanel {
     private static final int MAX_SCORE_DIGITS = 2;
 
     private final JTextArea headline = new JTextArea();
+    private final JTextArea problems = new JTextArea();
     private final JTable table = new JTable();
     private final JScrollPane tableScroll = new JScrollPane(table);
     private final JPanel buttons = new JPanel(new FlowLayout(FlowLayout.LEFT, GAP, 0));
@@ -36,14 +37,26 @@ final class ResultsPanel extends JPanel {
         setBorder(BorderFactory.createEmptyBorder(GAP, 0, 0, 0));
         configureHeadline();
         configureTable();
-        add(headline, BorderLayout.NORTH);
+        configureProblems();
+        JPanel top = new JPanel(new BorderLayout());
+        top.setOpaque(false);
+        top.add(headline, BorderLayout.NORTH);
+        top.add(problems, BorderLayout.CENTER);
+        add(top, BorderLayout.NORTH);
         add(tableScroll, BorderLayout.CENTER);
         add(buttons, BorderLayout.SOUTH);
         setVisible(false);
     }
 
     void show(RunOutcome outcome, RunSettings settings) {
+        show(outcome, settings, List.of());
+    }
+
+    void show(RunOutcome outcome, RunSettings settings, List<String> reportProblems) {
         headline.setText(OutcomeText.headline(outcome));
+        String problemText = OutcomeText.reportProblems(reportProblems);
+        problems.setText(problemText);
+        problems.setVisible(!problemText.isEmpty());
         boolean hasRun = outcome.run() != null;
         tableScroll.setVisible(hasRun);
         table.setModel(hasRun ? ResultsTableModel.from(outcome.run())
@@ -71,6 +84,15 @@ final class ResultsPanel extends JPanel {
         headline.setOpaque(false);
         headline.setFont(headline.getFont().deriveFont(Font.BOLD));
         headline.getAccessibleContext().setAccessibleName("Result");
+    }
+
+    private void configureProblems() {
+        problems.setEditable(false);
+        problems.setLineWrap(true);
+        problems.setWrapStyleWord(true);
+        problems.setOpaque(false);
+        problems.setVisible(false);
+        problems.getAccessibleContext().setAccessibleName("Report problems");
     }
 
     private void configureTable() {

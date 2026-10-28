@@ -9,6 +9,8 @@ import autograder.grading.GradingRun;
 import autograder.model.SubmissionResult;
 
 import javax.swing.SwingWorker;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
@@ -27,12 +29,20 @@ final class GradingRunWorker extends SwingWorker<RunOutcome, GradingRunWorker.Up
     private final Consumer<RunOutcome> onFinished;
     private volatile Thread runner;
     private volatile boolean stopRequested;
+    private final List<String> reportProblems = Collections.synchronizedList(new ArrayList<>());
 
     GradingRunWorker(RunSettings settings, Consumer<Update> onProgress,
                      Consumer<RunOutcome> onFinished) {
         this.settings = settings;
         this.onProgress = onProgress;
         this.onFinished = onFinished;
+    }
+
+    /** Report failure messages collected so far; safe from any thread. */
+    List<String> reportProblems() {
+        synchronized (reportProblems) {
+            return List.copyOf(reportProblems);
+        }
     }
 
     /** Asks the run to stop; safe from the event thread. */
@@ -95,6 +105,11 @@ final class GradingRunWorker extends SwingWorker<RunOutcome, GradingRunWorker.Up
         @Override
         public void gradingProgress(String item, int completed, int total) {
             publish(new Update(OutcomeText.grading(item, completed, total), completed, total));
+        }
+
+        @Override
+        public void reportFailed(String message) {
+            reportProblems.add(message);
         }
 
         @Override

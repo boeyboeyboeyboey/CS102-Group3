@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.security.SecureRandom;
 import java.nio.file.Path;
 import java.util.OptionalInt;
+import java.util.function.Consumer;
 
 public final class App {
     private App() {
@@ -197,14 +198,27 @@ public final class App {
     static int generateReports(GradingRun run, BoilerplateConfig boilerplate, BoilerplateDetector detector,
                                SanityConfig sanity, HtmlReportConfig html, HtmlReportGenerator htmlGenerator,
                                FeedbackConfig feedback, FeedbackGenerator feedbackGenerator) {
-        StarterAnalysis.Result analysis = StarterAnalysis.analyze(run, boilerplate, detector);
-        int sanityExit = SanityAnalysis.analyze(analysis.run(), sanity).exitCode();
-        int htmlExit = generateHtmlReport(analysis.run(), html, htmlGenerator);
-        int feedbackExit = generateFeedback(analysis.run(), feedback, feedbackGenerator);
+        return generateReports(run, boilerplate, detector, sanity, html, htmlGenerator, feedback,
+                feedbackGenerator, System.err::println);
+    }
+
+    static int generateReports(GradingRun run, BoilerplateConfig boilerplate, BoilerplateDetector detector,
+                               SanityConfig sanity, HtmlReportConfig html, HtmlReportGenerator htmlGenerator,
+                               FeedbackConfig feedback, FeedbackGenerator feedbackGenerator,
+                               Consumer<String> problems) {
+        StarterAnalysis.Result analysis = StarterAnalysis.analyze(run, boilerplate, detector, problems);
+        int sanityExit = SanityAnalysis.analyze(analysis.run(), sanity, problems).exitCode();
+        int htmlExit = generateHtmlReport(analysis.run(), html, htmlGenerator, problems);
+        int feedbackExit = generateFeedback(analysis.run(), feedback, feedbackGenerator, problems);
         return Math.max(Math.max(analysis.exitCode(), sanityExit), Math.max(htmlExit, feedbackExit));
     }
 
     static int generateFeedback(GradingRun run, FeedbackConfig config, FeedbackGenerator generator) {
+        return generateFeedback(run, config, generator, System.err::println);
+    }
+
+    static int generateFeedback(GradingRun run, FeedbackConfig config, FeedbackGenerator generator,
+                                Consumer<String> problems) {
         if (!config.enabled()) {
             return 0;
         }
@@ -217,13 +231,13 @@ public final class App {
                 written++;
             } catch (IOException | RuntimeException exception) {
                 failed++;
-                System.err.println("could not write feedback for "
+                problems.accept("could not write feedback for "
                         + grade.getSubmission().getArchivePath().getFileName() + ": " + exception.getMessage());
             }
         }
         System.out.println("Student feedback: " + written + " Markdown files in " + directory);
         if (failed > 0) {
-            System.err.println(failed + " feedback files could not be written; grading and CSV exports "
+            problems.accept(failed + " feedback files could not be written; grading and CSV exports "
                     + "are complete in " + run.directory());
             return 1;
         }
@@ -232,6 +246,11 @@ public final class App {
 
     static int generateHtmlReport(GradingRun run, HtmlReportConfig config,
                                  HtmlReportGenerator generator) {
+        return generateHtmlReport(run, config, generator, System.err::println);
+    }
+
+    static int generateHtmlReport(GradingRun run, HtmlReportConfig config,
+                                 HtmlReportGenerator generator, Consumer<String> problems) {
         if (!config.enabled()) {
             return 0;
         }
@@ -241,9 +260,9 @@ public final class App {
             System.out.println("HTML dashboard: " + report);
             return 0;
         } catch (IOException exception) {
-            System.err.println("could not write HTML dashboard " + run.directory().resolve(config.file())
+            problems.accept("could not write HTML dashboard " + run.directory().resolve(config.file())
                     + ": " + exception.getMessage());
-            System.err.println("Grading and CSV exports are complete; reports remain in " + run.directory());
+            problems.accept("Grading and CSV exports are complete; reports remain in " + run.directory());
             return 1;
         }
     }
