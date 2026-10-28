@@ -2,6 +2,7 @@ package autograder.plagiarism;
 
 import autograder.api.PlagiarismDetector;
 import autograder.config.PlagiarismConfig;
+import autograder.execution.DirectoryCleaner;
 import autograder.model.AssessmentDefinition;
 import autograder.model.QuestionDefinition;
 import autograder.model.SimilarityFinding;
@@ -24,7 +25,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Stream;
 
 // uses jplag's greedy string tiling over java syntax tokens; starter files are passed as base code
 public final class JPlagPlagiarismDetector implements PlagiarismDetector {
@@ -166,12 +166,7 @@ public final class JPlagPlagiarismDetector implements PlagiarismDetector {
     }
 
     private void deleteRecursively(Path root) throws IOException {
-        try (Stream<Path> paths = Files.walk(root)) {
-            List<Path> ordered = new ArrayList<>(paths.toList());
-            ordered.sort(Comparator.reverseOrder());
-            for (Path path : ordered) {
-                Files.deleteIfExists(path);
-            }
-        }
+        // retries briefly when windows still holds a handle on a copied file
+        new DirectoryCleaner().deleteRecursively(root);
     }
 }
