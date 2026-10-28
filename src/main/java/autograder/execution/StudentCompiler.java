@@ -93,13 +93,7 @@ public final class StudentCompiler {
     }
 
     private static void recreateDirectory(Path directory) throws IOException {
-        if (Files.exists(directory)) {
-            try (var paths = Files.walk(directory)) {
-                for (Path path : paths.sorted((left, right) -> right.compareTo(left)).toList()) {
-                    Files.delete(path);
-                }
-            }
-        }
+        new DirectoryCleaner().deleteRecursively(directory);
         Files.createDirectories(directory);
     }
 }

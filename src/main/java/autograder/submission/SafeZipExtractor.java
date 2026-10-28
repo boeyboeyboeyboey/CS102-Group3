@@ -10,10 +10,15 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.zip.CRC32;
 import java.util.Enumeration;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 public final class SafeZipExtractor {
+    private static final String WINDOWS_INVALID_CHARACTERS = "<>:\"|?*";
+    private static final Pattern WINDOWS_RESERVED_NAME = Pattern.compile(
+            "(?i)(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])");
+
     private final AppConfig config;
 
     public SafeZipExtractor(AppConfig config) {
@@ -113,6 +118,7 @@ public final class SafeZipExtractor {
             throw new IOException("archive contains an empty entry path");
         }
         String portableEntryName = entryName.replace('\\', '/');
+        rejectWindowsInvalidNames(portableEntryName, entryName);
         Path relativePath = Path.of(portableEntryName);
         if (relativePath.isAbsolute()) {
             throw new IOException("archive contains an absolute entry path: " + entryName);
@@ -127,6 +133,43 @@ public final class SafeZipExtractor {
             throw new IOException("archive entry escapes extraction directory: " + entryName);
         }
         return outputPath;
+    }
+
+    private void rejectWindowsInvalidNames(String portableName, String entryName) throws IOException {
+        for (String segment : portableName.split("/")) {
+            if (segment.isEmpty() || segment.equals(".") || segment.equals("..")) {
+                continue;
+            }
+            if (hasWindowsInvalidName(segment)) {
+                throw new IOException("archive entry has a name that is invalid on Windows: "
+                        + sanitize(entryName));
+            }
+        }
+    }
+
+    private static boolean hasWindowsInvalidName(String segment) {
+        for (int index = 0; index < segment.length(); index++) {
+            char character = segment.charAt(index);
+            if (character < 0x20 || WINDOWS_INVALID_CHARACTERS.indexOf(character) >= 0) {
+                return true;
+            }
+        }
+        char last = segment.charAt(segment.length() - 1);
+        if (last == '.' || last == ' ') {
+            return true;
+        }
+        int dot = segment.indexOf('.');
+        String baseName = dot < 0 ? segment : segment.substring(0, dot);
+        return WINDOWS_RESERVED_NAME.matcher(baseName).matches();
+    }
+
+    private static String sanitize(String name) {
+        StringBuilder text = new StringBuilder();
+        for (int index = 0; index < name.length(); index++) {
+            char character = name.charAt(index);
+            text.append(character < 0x20 ? '?' : character);
+        }
+        return text.toString();
     }
 
     private void deleteTree(Path root) throws IOException {
