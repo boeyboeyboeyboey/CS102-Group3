@@ -299,7 +299,7 @@ The grading pipeline supplies scores only for eligible students after recording 
 
 ## Six bonus extension points
 
-Sera's starter-code comparison (feature 3) is implemented locally and in REVIEW, pending human build/run acceptance. It writes `starter-analysis.csv`, terminal warnings and HTML analysis findings without changing marks. See [the feature 3 testing guide](docs/STARTER_CODE_TESTING.md) for commands, configuration, expected outcomes and limitations. This status supersedes older blanket statements that other bonus implementations are TODO.
+Sera's starter-code comparison (feature 3) is implemented locally and in REVIEW, pending human build/run and visual acceptance. It writes `starter-analysis.csv`, terminal warnings and HTML analysis findings without changing marks. The approved method-comparison revision also generates `starter-comparison/index.html` inside each grading run: open the printed **Method comparison report** path, search a student/question/method, select changed or unchanged methods, and expand the side-by-side source differences and token-edit explanations. It works offline and requires no extra grading command. See [the feature 3 testing guide](docs/STARTER_CODE_TESTING.md) for commands, configuration, expected outcomes and limitations. This status supersedes older blanket statements that other bonus implementations are TODO.
 
 | Feature | Java interface | Owner |
 | --- | --- | --- |
