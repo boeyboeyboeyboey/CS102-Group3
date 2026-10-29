@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Starter method comparison</title>
+<style>
+:root{font-family:system-ui,sans-serif;color:#172b45;background:#f4f6fa;color-scheme:light}
+body{max-width:1500px;margin:auto;padding:24px}h1{margin-bottom:8px}h2{font-size:1.1rem;overflow-wrap:anywhere}
+.notice{border-left:4px solid #5262c5;padding:12px;background:#eaf0ff;line-height:1.6}
+.controls{position:sticky;top:0;background:#fff;padding:16px;border:1px solid #c3cedf;border-radius:8px;z-index:1;display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+input,select,button{font:inherit;padding:8px;border:1px solid #8293ac;border-radius:5px;background:white;color:inherit}
+button{cursor:pointer}button:hover{background:#eaf0ff}:focus-visible{outline:3px solid #4054b2;outline-offset:2px}
+section{background:white;padding:16px;margin:18px 0;border-radius:8px;border:1px solid #d2dbe8}
+details,article{margin:10px 0;border:1px solid #c3cedf;border-radius:5px;padding:12px}summary{cursor:pointer;overflow-wrap:anywhere}summary strong{display:inline-block;min-width:115px;font-size:.85rem}
+[data-status=UNCHANGED] summary strong{color:#46556b}[data-status=MODIFIED] summary strong{color:#805000}[data-status=ADDED] summary strong{color:#13602e}[data-status=REMOVED] summary strong{color:#9a2020}
+.scroll{overflow:auto}table{border-collapse:collapse;width:100%;table-layout:fixed;min-width:760px}caption{text-align:left;padding:8px 0;font-size:.9rem}th{background:#eaf0ff;padding:10px}td{border:1px solid #d7dfea;vertical-align:top}td.number{width:48px;text-align:right;color:#526078;background:#f2f4f8;padding:3px 8px}pre{white-space:pre-wrap;overflow-wrap:anywhere;margin:0;padding:3px 8px;font-size:13px;tab-size:4}.removed{background:#ffe3e3;color:#6f1515}.added{background:#ddf4e3;color:#124b24}[hidden]{display:none!important}.empty{padding:20px}
+.overview-table{table-layout:auto}.overview-table th,.overview-table td{padding:10px;text-align:left;overflow-wrap:anywhere}.overview-table tbody th{background:white;font-weight:500}.why{white-space:nowrap;color:#2543a3}section.file{scroll-margin-top:150px}section.file:target{border:2px solid #4054b2}h2:focus{outline:3px solid #4054b2;outline-offset:4px}
+@media print{.controls{display:none}details{break-inside:avoid}body{padding:0}}
+</style></head><body>
+<h1>Starter method comparison</h1>
+<p>Review each student's changes against the supplied starter code.</p>
+<p class="notice">Marks are unchanged. Method status ignores comments and formatting; highlighted lines show original text differences.</p>
+<details><summary>How to read this report</summary>
+<p>Matching uses enclosing class, method name and parameter types. Renamed methods or changed parameter types appear as removed and added. This report is review evidence; it does not establish correctness, effort or misconduct.</p>
+<p>Explicit methods and constructors in top-level and member classes are compared. Fields, initializers, local/anonymous-class methods, imports and implicit constructors are outside method comparison. The existing whole-file starter analysis remains separate.</p></details>
+<noscript><p>All comparisons are visible below. Filtering and expand/collapse buttons require JavaScript.</p></noscript>
+<div class="controls">
+<label>Student / question / method <input id="search" type="search" placeholder="e.g. ping, Q1a, calculate"></label>
+<label>Show <select id="status"><option value="ALL">All methods</option><option value="CHANGED">Changed methods</option><option value="UNCHANGED">Unchanged methods</option><option value="UNAVAILABLE">Unavailable comparisons</option></select></label>
+<button id="expand" type="button">Expand visible</button><button id="collapse" type="button">Collapse all</button>
+<span id="count" role="status" aria-live="polite"></span>
+</div><p id="empty" class="empty" hidden>No comparisons match these filters.</p>

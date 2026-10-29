@@ -188,8 +188,8 @@ class GradingPipelineTest {
         assertEquals(3, submissionRows.size());
         List<List<String>> similarityRows = CsvCodec.parse(
                 Files.readString(run.directory().resolve(GradingPipeline.SIMILARITY_REPORT)));
-        assertEquals(List.of("FirstArchive", "FirstUsername", "SecondArchive", "SecondUsername",
-                "Similarity", "Evidence"), similarityRows.get(0));
+        assertEquals(List.of("Question", "Algorithm", "FirstArchive", "FirstUsername", "SecondArchive",
+                "SecondUsername", "Similarity", "Evidence"), similarityRows.get(0));
         List<List<String>> reportRows = CsvCodec.parse(
                 Files.readString(run.directory().resolve("grade-report.csv")));
         int idColumn = reportRows.get(0).indexOf("OrgDefinedId");
@@ -270,7 +270,7 @@ class GradingPipelineTest {
         SubmissionResult second = submission("similar-second", null, false, null);
         List<SubmissionResult> submissions = List.of(first, second);
         SimilarityFinding finding = new SimilarityFinding(first.getArchivePath(), second.getArchivePath(),
-                0.87654, List.of("Q1a.java:4-8 <shared>"));
+                0.87654, List.of("Q1a.java:4-8 <shared>"), "Q1a", "test-algorithm");
 
         GradingRun run = new GradingPipeline(app, execution(), (actualSubmissions, assessment) -> {
             assertEquals(submissions, actualSubmissions);
@@ -282,9 +282,9 @@ class GradingPipelineTest {
         assertEquals(2, run.withheld().size());
         List<List<String>> similarityRows = CsvCodec.parse(
                 Files.readString(run.directory().resolve(GradingPipeline.SIMILARITY_REPORT)));
-        assertEquals(List.of("FirstArchive", "FirstUsername", "SecondArchive", "SecondUsername",
-                "Similarity", "Evidence"), similarityRows.get(0));
-        assertEquals(List.of("similar-first.zip", "", "similar-second.zip", "", "0.877",
+        assertEquals(List.of("Question", "Algorithm", "FirstArchive", "FirstUsername", "SecondArchive",
+                "SecondUsername", "Similarity", "Evidence"), similarityRows.get(0));
+        assertEquals(List.of("Q1a", "test-algorithm", "similar-first.zip", "", "similar-second.zip", "", "0.877",
                 "Q1a.java:4-8 <shared>"), similarityRows.get(1));
 
         Path html = new OfflineHtmlReportGenerator("dashboard.html").generate(
@@ -335,11 +335,50 @@ class GradingPipelineTest {
     }
 
     private ExecutionConfig execution() throws Exception {
-        Path output = temporaryDirectory.resolve("grading");
+        return execution(1);
+    }
+
+    @Test
+    void parallelGradingMatchesSequentialOutputsExceptDurations() throws Exception {
+        AppConfig app = AppConfig.load(PROJECT_ROOT.resolve("config.properties"));
+        List<SubmissionResult> submissions = List.of(
+                submission("par-a", student("#01400001", "par-a"), true, null),
+                submission("par-b", student("#01400002", "par-b"), true, "public class Q1a { broken }"),
+                submission("par-c", null, false, null),
+                submission("par-d", student("#01400005", "par-d"), true, null),
+                submission("par-e", student("#01400005", "par-e"), true, null));
+        GradingRun sequential = new GradingPipeline(app, execution(1)).grade(submissions);
+        GradingRun parallel = new GradingPipeline(app, execution(2)).grade(submissions);
+        for (String file : List.of("grade-report.csv", "submissions.csv")) {
+            assertEquals(Files.readString(sequential.directory().resolve(file)),
+                    Files.readString(parallel.directory().resolve(file)), file);
+        }
+        assertEquals(withoutDurations(sequential), withoutDurations(parallel));
+        assertEquals(List.copyOf(sequential.withheld().values()),
+                List.copyOf(parallel.withheld().values()));
+        assertEquals(sequential.withheld().keySet().stream().map(SubmissionResult::getArchivePath).toList(),
+                parallel.withheld().keySet().stream().map(SubmissionResult::getArchivePath).toList());
+    }
+
+    private static List<List<String>> withoutDurations(GradingRun run) throws Exception {
+        List<List<String>> rows = CsvCodec.parse(Files.readString(run.directory().resolve("cases.csv")));
+        int column = rows.get(0).indexOf("DurationMillis");
+        return rows.stream().map(row -> {
+            List<String> copy = new ArrayList<>();
+            for (String cell : row) {
+                copy.add(cell.replace(run.directory().toString(), "RUN"));
+            }
+            copy.set(column, "");
+            return copy;
+        }).toList();
+    }
+
+    private ExecutionConfig execution(int workers) throws Exception {
+        Path output = temporaryDirectory.resolve("grading-w" + workers);
         return new ExecutionConfig(output, "grade-report.csv",
                 Path.of(System.getProperty("java.home"), "bin", "java").toString(),
                 Path.of(System.getProperty("java.home"), "bin", "javac").toString(),
-                15000, 1000, 512);
+                15000, 1000, 512, workers);
     }
 
     private SubmissionResult submission(String archiveName, StudentRecord student,

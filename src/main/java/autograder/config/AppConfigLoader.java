@@ -47,6 +47,11 @@ final class AppConfigLoader {
         if (baseDirectory == null) {
             throw new IllegalArgumentException("configuration path must have a parent directory");
         }
+        return load(properties, baseDirectory);
+    }
+
+    static AppConfig load(Properties properties, Path baseDirectory)
+            throws IOException {
         return new AppConfigLoader(properties, baseDirectory).build();
     }
 

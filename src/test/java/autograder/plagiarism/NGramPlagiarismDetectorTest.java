@@ -95,7 +95,11 @@ class NGramPlagiarismDetectorTest {
         assertEquals(original.getArchivePath(), finding.getFirstArchive());
         assertEquals(copy.getArchivePath(), finding.getSecondArchive());
         assertEquals(1.0, finding.getSimilarity());
-        assertTrue(finding.getEvidence().get(0).startsWith("Q1a: 100.0% similar"));
+        assertEquals("Q1a", finding.getQuestion());
+        assertEquals("n-gram", finding.getAlgorithm());
+        assertEquals(finding.getEvidence().size(), new java.util.HashSet<>(finding.getEvidence()).size(),
+                "evidence lines should not repeat");
+        assertTrue(finding.getEvidence().get(0).startsWith("Q1a (n-gram): 100.0% similar"));
         assertTrue(finding.getEvidence().get(0).contains("starter code excluded"));
         assertTrue(finding.getEvidence().get(1).matches("first Q1a\\.java lines \\d+-\\d+ matches second Q1a\\.java lines \\d+-\\d+"),
                 finding.getEvidence().get(1));
@@ -150,7 +154,8 @@ class NGramPlagiarismDetectorTest {
     }
 
     private NGramPlagiarismDetector detector(Path starter, double threshold) {
-        return new NGramPlagiarismDetector(new PlagiarismConfig(true, 5, threshold, 10, starter));
+        return new NGramPlagiarismDetector(new PlagiarismConfig(true, List.of(PlagiarismConfig.NGRAM), 5,
+                threshold, 10, 0.6, 9, starter));
     }
 
     private AssessmentDefinition assessment() {

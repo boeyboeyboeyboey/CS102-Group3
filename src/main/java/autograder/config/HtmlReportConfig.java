@@ -19,6 +19,12 @@ public record HtmlReportConfig(boolean enabled, String file) {
         try (InputStream input = Files.newInputStream(file)) {
             properties.load(input);
         }
+        Path baseDirectory = file.toAbsolutePath().normalize().getParent();
+        return load(properties, baseDirectory);
+    }
+
+    static HtmlReportConfig load(Properties properties, Path baseDirectory)
+            throws IOException {
         String enabled = properties.getProperty("grading.html.enabled", "false").trim();
         if (!enabled.equalsIgnoreCase("true") && !enabled.equalsIgnoreCase("false")) {
             throw new IllegalArgumentException("grading.html.enabled must be true or false");

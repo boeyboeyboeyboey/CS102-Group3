@@ -22,6 +22,7 @@ import java.util.zip.ZipOutputStream;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -69,6 +70,25 @@ class SubmissionProcessorTest {
         assertFalse(Files.exists(config.getExtractionDirectory().resolve("escape.txt")));
         assertTrue(Files.readString(config.getAnomalyLog()).contains("broken.zip"));
         assertTrue(Files.readString(config.getAnomalyLog()).contains("traversal"));
+    }
+
+    @Test
+    void rejectsWindowsInvalidEntryNamesAndAcceptsNormalNames() throws Exception {
+        Path submissions = Files.createDirectories(temporaryDirectory.resolve("submissions"));
+        createArchive(submissions.resolve("reserved.zip"), mapOf("Q1/CON.java", "x"));
+        createArchive(submissions.resolve("colon.zip"), mapOf("Q1/a:b.java", "x"));
+        createArchive(submissions.resolve("boey.tan.2026.zip"), validSubmission("boey"));
+        AppConfig config = createConfig(temporaryDirectory);
+
+        List<SubmissionResult> results = new SubmissionProcessor(config).processBatch();
+
+        assertNotEquals(SubmissionStatus.READY, resultNamed(results, "reserved.zip").getStatus());
+        assertNotEquals(SubmissionStatus.READY, resultNamed(results, "colon.zip").getStatus());
+        assertEquals(SubmissionStatus.READY, resultNamed(results, "boey.tan.2026.zip").getStatus());
+        String log = Files.readString(config.getAnomalyLog());
+        assertTrue(log.contains("archive extraction failed"));
+        assertTrue(log.contains("invalid on Windows: Q1/CON.java"));
+        assertTrue(log.contains("invalid on Windows: Q1/a:b.java"));
     }
 
     @Test
@@ -279,6 +299,29 @@ class SubmissionProcessorTest {
         SubmissionResult validResult = new SubmissionProcessor(validConfig).processBatch().get(0);
         assertEquals(SubmissionStatus.READY, validResult.getStatus());
         assertTrue(validResult.getStudentRoot().endsWith("student"));
+    }
+
+    @Test
+    void interruptDuringIntakeStopsFurtherArchivesAndKeepsFlag() throws Exception {
+        Path submissions = Files.createDirectories(temporaryDirectory.resolve("submissions"));
+        createArchive(submissions.resolve("boey.tan.2026.zip"), validSubmission("boey"));
+        createArchive(submissions.resolve("sera.lim.2026.zip"), validSubmission("sera"));
+        createArchive(submissions.resolve("kai.ng.2026.zip"), validSubmission("kai"));
+        AppConfig config = createConfig(temporaryDirectory);
+        SubmissionProcessor processor = new SubmissionProcessor(config,
+                (stage, item, completed, total) -> {
+                    if (completed == 1) {
+                        Thread.currentThread().interrupt();
+                    }
+                });
+        try {
+            List<SubmissionResult> results = processor.processBatch();
+
+            assertEquals(1, results.size());
+            assertTrue(Thread.currentThread().isInterrupted());
+        } finally {
+            Thread.interrupted();
+        }
     }
 
     @Test

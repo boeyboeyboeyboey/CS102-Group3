@@ -7,9 +7,6 @@ import autograder.model.AssessmentDefinition;
 import autograder.model.QuestionDefinition;
 import autograder.model.SubmissionResult;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -70,19 +67,7 @@ public final class StarterCodeDetector implements BoilerplateDetector {
     }
 
     private List<String> read(Path directory, Path relative) throws IOException {
-        Path root = directory.toAbsolutePath().normalize();
-        Path file = root.resolve(relative).normalize();
-        if (!file.startsWith(root) || !Files.isRegularFile(file, LinkOption.NOFOLLOW_LINKS)
-                || !file.toRealPath().startsWith(root.toRealPath())) {
-            throw new IOException("missing or unsafe comparison file: " + relative);
-        }
-        try (var input = Files.newInputStream(file)) {
-            byte[] bytes = input.readNBytes(config.maxSourceBytes() + 1);
-            if (bytes.length > config.maxSourceBytes()) {
-                throw new IOException("source exceeds configured byte limit " + config.maxSourceBytes());
-            }
-            String source = StandardCharsets.UTF_8.newDecoder().decode(java.nio.ByteBuffer.wrap(bytes)).toString();
-            return JavaSourceTokens.read(source, config.maxTokens());
-        }
+        return JavaSourceTokens.read(ComparisonSourceReader.read(directory, relative, config),
+                config.maxTokens());
     }
 }

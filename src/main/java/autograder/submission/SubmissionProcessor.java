@@ -65,7 +65,9 @@ public final class SubmissionProcessor {
         List<SubmissionResult> results = new ArrayList<>();
         int completed = 0;
         for (Path archive : archives) {
-            checkCancelled();
+            if (Thread.currentThread().isInterrupted()) {
+                break;
+            }
             notifyProgress("ingestion", archive.getFileName().toString(), completed,
                     archives.size());
             checkCancelled();
@@ -75,11 +77,9 @@ public final class SubmissionProcessor {
                     scoreSheet.getStudents());
             results.add(result);
             completed++;
-            checkCancelled();
             notifyProgress("ingestion", archive.getFileName().toString(), completed,
                     archives.size());
         }
-        checkCancelled();
         markDuplicateStudents(results);
         return Collections.unmodifiableList(results);
     }

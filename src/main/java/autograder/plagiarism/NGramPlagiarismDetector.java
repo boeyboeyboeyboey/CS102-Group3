@@ -20,7 +20,9 @@ import java.util.Set;
 
 // flags pairs for instructor review; a high score is evidence to inspect, not proof of copying
 public final class NGramPlagiarismDetector implements PlagiarismDetector {
+    public static final String ALGORITHM_NAME = "n-gram";
     private static final int MAX_EVIDENCE_BLOCKS = 5;
+    private static final double PERCENT = 100.0;
 
     private final PlagiarismConfig config;
     private final JavaTokenizer tokenizer = new JavaTokenizer();
@@ -79,14 +81,17 @@ public final class NGramPlagiarismDetector implements PlagiarismDetector {
         int shared = calculator.sharedCount(first.keySet(), second.keySet());
         List<String> evidence = new ArrayList<>();
         evidence.add(String.format(Locale.ROOT,
-                "%s: %.1f%% similar; %d shared %d-token sequences out of %d distinct, starter code excluded",
-                question.getId(), similarity * 100, shared, config.ngramSize(),
+                "%s (%s): %.1f%% similar; %d shared %d-token sequences out of %d distinct, starter code excluded",
+                question.getId(), ALGORITHM_NAME, similarity * PERCENT, shared, config.ngramSize(),
                 first.size() + second.size() - shared));
         for (LineRange[] block : matchingBlocks(first, second)) {
-            evidence.add("first " + block[0].describe() + " matches second " + block[1].describe());
+            String line = "first " + block[0].describe() + " matches second " + block[1].describe();
+            if (!evidence.contains(line)) {
+                evidence.add(line);
+            }
         }
         return new SimilarityFinding(firstSubmission.getArchivePath(), secondSubmission.getArchivePath(),
-                similarity, evidence);
+                similarity, evidence, question.getId(), ALGORITHM_NAME);
     }
 
     private List<LineRange[]> matchingBlocks(Map<String, LineRange> first, Map<String, LineRange> second) {
@@ -115,34 +120,26 @@ public final class NGramPlagiarismDetector implements PlagiarismDetector {
     }
 
     // returns null when the main answer file is missing so absent work is never compared
-    private Map<String, LineRange> fingerprint(Path submissionRoot, QuestionDefinition question) {
-        Path root = submissionRoot.toAbsolutePath().normalize();
-        Path directory = root.resolve(question.getFolder()).normalize();
-        Map<String, LineRange> grams = readGrams(root, directory, question.getSourceFile());
-        if (grams == null) {
+    private Map<String, LineRange> fingerprint(Path root, QuestionDefinition question) {
+        List<Path> files = QuestionFiles.locate(root, question);
+        if (files.isEmpty()) {
             return null;
         }
-        for (String companion : question.getCompanionSourceFiles()) {
-            Map<String, LineRange> companionGrams = readGrams(root, directory, companion);
-            if (companionGrams != null) {
-                for (Map.Entry<String, LineRange> entry : companionGrams.entrySet()) {
+        Map<String, LineRange> grams = new LinkedHashMap<>();
+        for (Path file : files) {
+            try {
+                String source = new String(Files.readAllBytes(file), StandardCharsets.UTF_8);
+                Map<String, LineRange> fileGrams = builder.build(file.getFileName().toString(),
+                        tokenizer.tokenize(source));
+                for (Map.Entry<String, LineRange> entry : fileGrams.entrySet()) {
                     grams.putIfAbsent(entry.getKey(), entry.getValue());
+                }
+            } catch (IOException exception) {
+                if (file.equals(files.get(0))) {
+                    return null;
                 }
             }
         }
         return grams;
-    }
-
-    private Map<String, LineRange> readGrams(Path root, Path directory, String fileName) {
-        Path file = directory.resolve(fileName).normalize();
-        if (!file.startsWith(root) || !Files.isRegularFile(file)) {
-            return null;
-        }
-        try {
-            String source = new String(Files.readAllBytes(file), StandardCharsets.UTF_8);
-            return new LinkedHashMap<>(builder.build(fileName, tokenizer.tokenize(source)));
-        } catch (IOException exception) {
-            return null;
-        }
     }
 }
