@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CancellationException;
 
 public final class SubmissionProcessor {
     private final AppConfig config;
@@ -69,6 +70,7 @@ public final class SubmissionProcessor {
             }
             notifyProgress("ingestion", archive.getFileName().toString(), completed,
                     archives.size());
+            checkCancelled();
             Path extractionPath = extractionRun.resolve(
                     config.getRunDirectoryPrefix() + UUID.randomUUID());
             SubmissionResult result = processArchive(archive, extractionPath, workingRun,
@@ -80,6 +82,12 @@ public final class SubmissionProcessor {
         }
         markDuplicateStudents(results);
         return Collections.unmodifiableList(results);
+    }
+
+    private static void checkCancelled() {
+        if (Thread.currentThread().isInterrupted()) {
+            throw new CancellationException("submission preparation cancelled");
+        }
     }
 
     private SubmissionResult processArchive(Path archive, Path extractionPath,

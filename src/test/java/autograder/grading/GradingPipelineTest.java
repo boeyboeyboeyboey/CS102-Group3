@@ -26,11 +26,13 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class GradingPipelineTest {
     private static final Path PROJECT_ROOT = Path.of("").toAbsolutePath().normalize();
@@ -67,6 +69,53 @@ class GradingPipelineTest {
 
     @TempDir
     Path temporaryDirectory;
+
+    @Test
+    void reportsCompletedGradingAndCsvStagesFromRecordedWork() throws Exception {
+        AppConfig app = AppConfig.load(PROJECT_ROOT.resolve("config.properties"));
+        SubmissionResult unresolved = submission("unresolved", null, false, null);
+        List<String> updates = new ArrayList<>();
+        GradingRun run = new GradingPipeline(app, execution(),
+                (submissions, assessment) -> List.of(),
+                (stage, item, completed, total) -> updates.add(
+                        stage + " " + completed + "/" + total))
+                .grade(List.of(unresolved));
+
+        assertEquals(List.of("grading 0/1", "grading 1/1", "reporting 0/2",
+                "reporting 1/2"), updates);
+        assertTrue(Files.exists(run.directory().resolve("cases.csv")));
+        assertTrue(run.withheld().containsKey(unresolved));
+    }
+
+    @Test
+    void displayFailureDoesNotPreventCsvExport() throws Exception {
+        AppConfig app = AppConfig.load(PROJECT_ROOT.resolve("config.properties"));
+        AtomicInteger updates = new AtomicInteger();
+        GradingRun run = new GradingPipeline(app, execution(),
+                (submissions, assessment) -> List.of(),
+                (stage, item, completed, total) -> {
+                    updates.incrementAndGet();
+                    throw new IllegalStateException("display failure");
+                }).grade(List.of(submission("unresolved", null, false, null)));
+
+        assertEquals(1, updates.get());
+        assertTrue(Files.exists(run.directory().resolve("grade-report.csv")));
+    }
+
+    @Test
+    void cancellationStopsBeforeExportingACompletedRun() throws Exception {
+        AppConfig app = AppConfig.load(PROJECT_ROOT.resolve("config.properties"));
+        GradingPipeline pipeline = new GradingPipeline(app, execution(),
+                (submissions, assessment) -> List.of(),
+                (stage, item, completed, total) -> Thread.currentThread().interrupt());
+
+        try {
+            assertThrows(InterruptedException.class,
+                    () -> pipeline.grade(List.of(submission("unresolved", null, false, null))));
+        } finally {
+            Thread.interrupted();
+        }
+    }
 
     @Test
     void keepsPassLoopPassMarksAndIsolatesCompilationFailureToItsQuestion() throws Exception {

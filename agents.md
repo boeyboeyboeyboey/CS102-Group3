@@ -36,7 +36,7 @@ Allowed statuses: TODO, IN_PROGRESS, REVIEW, DONE.
 
 ## Gatekeeper and ownership
 
-Boey owns feature 2 (offline HTML dashboard) and approved the original implementation plan on 2026-10-10. Gabriel claimed feature 5 (Markdown student feedback) on 2026-10-10 and approved its plan; implementation is in REVIEW on branch markdown-student-feedback awaiting Gabriel's clean-build confirmation. Kai Cong owns feature 6 (ANSI terminal dashboard); Boey recorded on 2026-10-26 that its PR #15 (branch kaicong/6-terminal-dashboard, draft) is awaiting approval. No numbered bonus feature remains available. Ask unassigned members to claim an available feature before feature work. Only Sera may claim or implement feature 3; only William may claim or implement feature 4. No bonus implementation begins until the MVP is functional and tested.
+Boey owns feature 2 (offline HTML dashboard) and approved the original implementation plan on 2026-10-10. Gabriel claimed feature 5 (Markdown student feedback) on 2026-10-10 and approved its plan; implementation is in REVIEW on branch markdown-student-feedback awaiting Gabriel's clean-build confirmation. Kai Cong confirmed his feature 6 claim on 2026-10-25 and approved adaptation of the October 14 draft; he owns feature 6 (ANSI terminal dashboard); Boey recorded on 2026-10-26 that its PR #15 (branch kaicong/6-terminal-dashboard, draft) is awaiting approval. No numbered bonus feature remains available. Ask unassigned members to claim an available feature before feature work. Only Sera may claim or implement feature 3; only William may claim or implement feature 4. No bonus implementation begins until the MVP is functional and tested.
 
 Keep shared configuration, domain models, interfaces, Maven setup, and pipeline integration coordinated by the main agent. Give each bonus implementation its own package after the interfaces are approved. Record file ownership before concurrent edits. Agents must reread this board before claiming work; this file alone does not provide a concurrent locking mechanism.
 
@@ -155,7 +155,7 @@ The authorization and Git snapshots below describe earlier sessions. The current
 - Ownership: main integrated configuration, pipeline, CLI and docs; delegated adapters/provider/tests and process services/tests are complete; no agents actively editing
 - Original ZIPs, instructor tests, starter files and source score sheet remain unchanged
 - Do not add AI-attribution comments to Java; Boey retained that rule and humans own review/modification and brief-required declarations before submission
-- Feature 2 is DONE after Boey's clean-build/run and dashboard acceptance; Gabriel owns feature 5 (REVIEW); Kiya owns feature 1 (REVIEW), Sera owns feature 3 (REVIEW) and William owns feature 4 (REVIEW); available feature 6
+- Feature 2 is DONE after Boey's clean-build/run and dashboard acceptance; Gabriel owns feature 5 (REVIEW); Kiya owns feature 1 (REVIEW), Sera owns feature 3 (REVIEW) and William owns feature 4 (REVIEW). Kai Cong claimed feature 6 on 2026-10-25; its current status is REVIEW
 - Feature 2 architecture document is complete; no other per-bonus architecture document is due
 - Maven is temporarily available at /tmp/apache-maven-3.9.9/bin/mvn with -Dmaven.repo.local=/tmp/cs102-maven-repository
 - Exact commands: mvn clean verify; java -jar target/auto-grading-system-1.0-SNAPSHOT.jar config.properties

@@ -21,11 +21,16 @@ import autograder.config.WorkerLimits;
 import autograder.grading.GradingRun;
 import autograder.model.GradingReportContext;
 import autograder.model.StudentGrade;
+import autograder.ui.DashboardSettings;
+import autograder.ui.TerminalCancellation;
+import autograder.ui.TerminalDashboard;
 
+import java.io.Console;
 import java.io.IOException;
-import java.security.SecureRandom;
 import java.nio.file.Path;
+import java.security.SecureRandom;
 import java.util.OptionalInt;
+import java.util.concurrent.CancellationException;
 import java.util.function.Consumer;
 
 public final class App {
@@ -74,20 +79,36 @@ public final class App {
     }
 
     private static int runGrading(Path configFile, OptionalInt workersOverride) {
+        TerminalCancellation cancellation = null;
         try {
             RunSettings settings = RunSettings.load(configFile, RuntimePathOverrides.none());
             if (workersOverride.isPresent()) {
                 settings = settings.withWorkers(workersOverride.getAsInt());
             }
             settings = capWorkers(settings);
-            RunOutcome outcome = new GradingService().run(settings, new ConsoleRunListener());
+            DashboardSettings dashboard = DashboardSettings.load(configFile);
+            Console console = System.console();
+            TerminalDashboard terminalDashboard = new TerminalDashboard(System.out,
+                    dashboard.mode(), console != null, System.getenv());
+            cancellation = TerminalCancellation.start(console, Thread.currentThread(), System.out);
+            DashboardRunListener listener = new DashboardRunListener(
+                    new ConsoleRunListener(), terminalDashboard);
+            RunOutcome outcome = new GradingService().run(settings, listener);
             return report(outcome);
         } catch (Exception exception) {
-            if (exception instanceof InterruptedException) {
+            if (exception instanceof InterruptedException
+                    || exception instanceof CancellationException
+                    || Thread.currentThread().isInterrupted()) {
                 Thread.currentThread().interrupt();
+                System.err.println("grading cancelled");
+                return 130;
             }
             System.err.println("could not complete grading: " + exception.getMessage());
             return 1;
+        } finally {
+            if (cancellation != null) {
+                cancellation.close();
+            }
         }
     }
 
@@ -100,7 +121,11 @@ public final class App {
         return settings.withWorkers(capped.workers());
     }
 
-    private static int report(RunOutcome outcome) {
+    static int report(RunOutcome outcome) {
+        if (outcome.status() == RunOutcome.Status.INTERRUPTED) {
+            System.err.println("grading cancelled");
+            return 130;
+        }
         if (outcome.status() == RunOutcome.Status.NO_SUBMISSIONS) {
             System.err.println("No submission archives matched the configured input directory and pattern");
         } else if (outcome.failure() != null) {

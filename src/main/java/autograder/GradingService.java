@@ -22,6 +22,7 @@ import java.util.List;
  */
 public final class GradingService {
     private static final String GRADING_STAGE = "grading";
+    private static final String REPORTING_STAGE = "reporting";
 
     public RunOutcome run(RunSettings settings, RunListener suppliedListener) {
         RunListener listener = new GuardedListener(suppliedListener);
@@ -72,12 +73,27 @@ public final class GradingService {
         } catch (Exception exception) {
             return failed(RunOutcome.Stage.GRADING, exception, results, null);
         }
+        if (Thread.currentThread().isInterrupted()) {
+            return interrupted(RunOutcome.Stage.GRADING,
+                    new InterruptedException("grading stopped"), results, run);
+        }
         listener.graded(run, settings);
+        listener.reportingProgress("Generating optional reports", 1, 2);
+        if (Thread.currentThread().isInterrupted()) {
+            return interrupted(RunOutcome.Stage.REPORTS,
+                    new InterruptedException("grading stopped"), results, run);
+        }
         int reportExit;
         try {
             reportExit = reports(settings, run, listener);
         } catch (Exception exception) {
             return failed(RunOutcome.Stage.REPORTS, exception, results, run);
+        }
+        listener.reportingProgress(reportExit == 0 ? "Reports ready"
+                : "Reports completed with errors", 2, 2);
+        if (Thread.currentThread().isInterrupted()) {
+            return interrupted(RunOutcome.Stage.REPORTS,
+                    new InterruptedException("grading stopped"), results, run);
         }
         if (reportExit == 0) {
             return new RunOutcome(RunOutcome.Status.COMPLETED, null, null, results, run, 0);
@@ -107,6 +123,8 @@ public final class GradingService {
         return (stage, item, completed, total) -> {
             if (GRADING_STAGE.equals(stage)) {
                 listener.gradingProgress(item, completed, total);
+            } else if (REPORTING_STAGE.equals(stage)) {
+                listener.reportingProgress(item, completed, total);
             }
         };
     }
@@ -167,6 +185,11 @@ public final class GradingService {
         @Override
         public void gradingProgress(String item, int completed, int total) {
             guard(() -> delegate.gradingProgress(item, completed, total));
+        }
+
+        @Override
+        public void reportingProgress(String item, int completed, int total) {
+            guard(() -> delegate.reportingProgress(item, completed, total));
         }
 
         @Override

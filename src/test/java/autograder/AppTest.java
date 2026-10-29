@@ -39,6 +39,20 @@ class AppTest {
     }
 
     @Test
+    void interruptedRunUsesShellCancellationExitCodeAndKeepsInterruptFlag() {
+        RunOutcome outcome = new RunOutcome(RunOutcome.Status.INTERRUPTED,
+                RunOutcome.Stage.PREPARATION, new InterruptedException("cancelled"),
+                List.of(), null, 1);
+        Thread.currentThread().interrupt();
+        try {
+            assertEquals(130, App.report(outcome));
+            assertTrue(Thread.currentThread().isInterrupted());
+        } finally {
+            Thread.interrupted();
+        }
+    }
+
+    @Test
     void workersFlagRejectsBadValuesAndWrongArgumentCounts() {
         String config = temporaryDirectory.resolve("missing.properties").toString();
         for (String value : new String[] {"0", "33", "-1", "abc", ""}) {

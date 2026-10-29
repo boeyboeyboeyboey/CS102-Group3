@@ -28,6 +28,7 @@ public final class GradingPipeline {
     private final List<TestCaseDefinition> cases;
     private final PlagiarismDetector plagiarismDetector;
     private final ProgressListener progressListener;
+    private boolean progressEnabled = true;
 
     public GradingPipeline(AppConfig app, ExecutionConfig execution) throws IOException {
         this(app, execution, (submissions, assessment) -> List.of());
@@ -75,6 +76,7 @@ public final class GradingPipeline {
     }
 
     public GradingRun grade(List<SubmissionResult> submissions) throws IOException, InterruptedException {
+        checkCancelled();
         Files.createDirectories(execution.directory());
         Path run = Files.createTempDirectory(execution.directory(), "run-");
         Map<String, Integer> identities = identityCounts(submissions);
@@ -86,11 +88,15 @@ public final class GradingPipeline {
             SubmissionResult submission = submissions.get(index);
             String item = submission.getArchivePath().getFileName().toString();
             notifyCount(item, finished, 0, total);
+            checkCancelled();
             Map<SubmissionResult, String> local = new LinkedHashMap<>();
             StudentGrade grade = gradeSubmission(submission, identities, run, index + 1, total, local);
+            checkCancelled();
             notifyCount(item, finished, 1, total);
+            checkCancelled();
             return new GradedSubmission(grade, local);
         });
+        checkCancelled();
         for (GradedSubmission item : graded) {
             grades.add(item.grade());
             withheld.putAll(item.withheld());
@@ -98,8 +104,18 @@ public final class GradingPipeline {
         BatchResult batch = new BatchResult(app.getAssessment(), grades, List.of(),
                 compareSimilarity(submissions));
         GradingRun result = new GradingRun(batch, run, withheld);
+        checkCancelled();
+        notifyProgress("reporting", "Writing score and diagnostic CSV files", 0, 2);
+        checkCancelled();
         new GradingDiagnosticsWriter(app, execution).write(result);
+        notifyProgress("reporting", "Score and diagnostic CSV files ready", 1, 2);
         return result;
+    }
+
+    private static void checkCancelled() throws InterruptedException {
+        if (Thread.currentThread().isInterrupted()) {
+            throw new InterruptedException("grading cancelled");
+        }
     }
 
     private record GradedSubmission(StudentGrade grade, Map<SubmissionResult, String> withheld) {
@@ -107,18 +123,19 @@ public final class GradingPipeline {
 
     // the count is read under the listener lock so parallel events never go backwards
     private synchronized void notifyCount(String item, AtomicInteger finished, int step, int total) {
-        notifyProgress(item, finished.addAndGet(step), total);
+        notifyProgress("grading", item, finished.addAndGet(step), total);
     }
 
-    // a failing listener must not stop grading
-    private synchronized void notifyProgress(String item, int completed, int total) {
-        if (progressListener == null) {
+    // a failing listener must not stop grading and is disabled for the rest of the run
+    private synchronized void notifyProgress(String stage, String item, int completed, int total) {
+        if (progressListener == null || !progressEnabled) {
             return;
         }
         try {
-            progressListener.onProgress("grading", item, completed, total);
+            progressListener.onProgress(stage, item, completed, total);
         } catch (RuntimeException exception) {
             System.err.println("progress update failed: " + exception.getMessage());
+            progressEnabled = false;
         }
     }
 
@@ -159,6 +176,7 @@ public final class GradingPipeline {
         } else {
             Path studentDirectory = Files.createDirectory(run.resolve("submission-" + index));
             for (QuestionDefinition question : app.getAssessment().getQuestions()) {
+                checkCancelled();
                 gradeQuestion(submission, question, studentDirectory, results, withheld);
             }
         }
@@ -181,6 +199,7 @@ public final class GradingPipeline {
                 recordCompilationFailure(results, questionCases, compilation);
             } else {
                 for (TestCaseDefinition test : questionCases) {
+                    checkCancelled();
                     results.add(new CaseExecutor().execute(test, question, part,
                             execution.javaExecutable(), execution.caseTimeoutMillis(),
                             execution.maxOutputBytes()));
