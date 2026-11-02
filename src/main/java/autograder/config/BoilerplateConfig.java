@@ -24,12 +24,17 @@ public record BoilerplateConfig(boolean enabled, Path starterDirectory,
         try (InputStream input = Files.newInputStream(file)) {
             properties.load(input);
         }
+        Path baseDirectory = file.toAbsolutePath().normalize().getParent();
+        return load(properties, baseDirectory);
+    }
+
+    static BoilerplateConfig load(Properties properties, Path baseDirectory)
+            throws IOException {
         String enabled = properties.getProperty("grading.boilerplate.enabled", "false").trim();
         if (!enabled.equalsIgnoreCase("true") && !enabled.equalsIgnoreCase("false")) {
             throw new IllegalArgumentException("grading.boilerplate.enabled must be true or false");
         }
-        Path base = file.toAbsolutePath().normalize().getParent();
-        return new BoilerplateConfig(Boolean.parseBoolean(enabled), base.resolve(
+        return new BoilerplateConfig(Boolean.parseBoolean(enabled), baseDirectory.resolve(
                 properties.getProperty("grading.boilerplate.starter.directory",
                         "Project/RenameToYourUsername").trim()),
                 Double.parseDouble(properties.getProperty("grading.boilerplate.similarity.threshold", "0.98")),

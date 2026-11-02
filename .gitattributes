@@ -1,0 +1,5 @@
+# submission scripts must keep their platform line endings
+*.sh text eol=lf
+mvnw text eol=lf
+*.bat text eol=crlf
+*.cmd text eol=crlf

@@ -41,6 +41,21 @@ The generator still embeds the same CSS and JavaScript. Report classes render co
 
 ## Bonus connections
 
+Sera approved the feature-3 method comparison revision on 2026-10-26. Within
+`analysis.boilerplate`, `ComparisonSourceReader` shares the existing bounded
+UTF-8/path checks, `JavaMethods` uses the JDK's parse-only Java 17 compiler tree
+API, `MethodComparison` matches class/signature and explains token edits,
+`MethodDiffHtml` aligns escaped source lines, and `StarterComparisonReport`
+streams a separate offline report to `starter-comparison/index.html` in the run
+directory. The `StarterAnalysis` hook attempts this report independently of its
+existing CSV and retains nonzero failure reporting while later reports continue.
+Whole-file findings and CSV schema remain unchanged. No other bonus renderer,
+shared domain model/interface, grading decision or runtime dependency changes.
+The method report distinguishes unavailable files and files with no explicit
+methods, bounds alignment work, and never claims correctness or misconduct.
+See [the feature-3 testing guide](STARTER_CODE_TESTING.md) for matching semantics,
+coverage boundaries and human acceptance steps. Feature 3 remains REVIEW.
+
 Feature 3 implements `BoilerplateDetector` with `StarterCodeDetector` in `autograder.analysis.boilerplate`. It compares only configured answer sources and student-written companions, reading bounded UTF-8 inputs and reporting per-file failures without stopping other comparisons. `JavaSourceTokens` ignores comments/formatting outside literals and computes token edit distance. `BoilerplateConfig` validates external enablement, starter path, similarity threshold and resource limits. After grading/CSV export, the App hook attaches immutable findings to a new `BatchResult`, writes `starter-analysis.csv` and supplies those findings to the existing HTML renderer. Grades, withholding, shared interfaces and the grading pipeline are unchanged. High whole-file similarity is a review heuristic; Unicode escapes and unsupported/malformed input require manual comparison. Feature 3 is REVIEW pending Sera's acceptance; see [testing instructions](STARTER_CODE_TESTING.md).
 
 | Contract | Input | Output |
@@ -99,3 +114,18 @@ Externalize settings the instructor or team may change: paths, assessment identi
 ## Dependency choices
 
 Java 17 standard library provides file/ZIP/process primitives. JUnit Jupiter is a test-only dependency; there are no third-party application runtime libraries in the current foundation. Maven compiler, test, and JAR plugins build the application. JUnit is EPL-2.0 and the selected Apache Maven plugins use Apache-2.0; the final team release must verify the complete dependency/license inventory if libraries change.
+
+### Feature-3 overview navigation (2026-10-28)
+
+`ComparisonOverview` renders one escaped summary row per submission/file from
+exactly the same method results used for the detailed report. Ordinal fragment
+IDs distinguish identical filenames across submissions. `StarterComparisonReport`
+spools detailed HTML to a temporary file, then writes the compact overview before
+copying the detail stream into the final report; source files are parsed once and
+full-batch source/diff HTML is not retained in memory. The temporary file is
+removed in a finally block. Summary rows remain visible during detail filtering.
+The View why fragment links work as native navigation without JavaScript; with
+JavaScript they also clear detail filters, expand destination methods and focus
+the destination heading, including repeated clicks and initial fragment URLs.
+Counts describe methods, not similarity percentages. Unavailable/no-method
+comparisons remain distinct and do not imply a whole-file match.

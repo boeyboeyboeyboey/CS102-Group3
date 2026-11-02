@@ -64,12 +64,7 @@ class ExecutionServicesTest {
             }
         });
         runner.start();
-        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
-        while (!Files.exists(pidFile) && System.nanoTime() < deadline) {
-            Thread.sleep(10);
-        }
-        assertTrue(Files.exists(pidFile), "child process did not start");
-        long childPid = Long.parseLong(Files.readString(pidFile));
+        long childPid = awaitPid(pidFile, System.nanoTime() + TimeUnit.SECONDS.toNanos(5));
 
         runner.interrupt();
         runner.join(5000);
@@ -85,6 +80,23 @@ class ExecutionServicesTest {
         }
         assertFalse(aliveAfterRunnerCleanup,
                 "interrupted process must be terminated");
+    }
+
+    private static long awaitPid(Path pidFile, long deadline) throws Exception {
+        while (System.nanoTime() < deadline) {
+            if (Files.exists(pidFile)) {
+                String text = Files.readString(pidFile).trim();
+                if (!text.isEmpty()) {
+                    try {
+                        return Long.parseLong(text);
+                    } catch (NumberFormatException partiallyWritten) {
+                        // the child creates the file before writing the pid; keep polling
+                    }
+                }
+            }
+            Thread.sleep(10);
+        }
+        throw new AssertionError("child process did not start");
     }
 
     @Test

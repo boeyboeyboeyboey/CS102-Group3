@@ -28,6 +28,12 @@ public record FeedbackConfig(boolean enabled, String directory, int maxDiagnosti
         try (InputStream input = Files.newInputStream(file)) {
             properties.load(input);
         }
+        Path baseDirectory = file.toAbsolutePath().normalize().getParent();
+        return load(properties, baseDirectory);
+    }
+
+    static FeedbackConfig load(Properties properties, Path baseDirectory)
+            throws IOException {
         String enabled = properties.getProperty("grading.feedback.enabled", "false").trim();
         if (!enabled.equalsIgnoreCase("true") && !enabled.equalsIgnoreCase("false")) {
             throw new IllegalArgumentException("grading.feedback.enabled must be true or false");

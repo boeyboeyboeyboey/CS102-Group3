@@ -36,7 +36,7 @@ Bonus credit depends on usefulness, correctness, and design quality; there is no
 | 3: starter-code comparison | Sera | Unchanged starter submission detected; genuine changes distinguished; explain comparison limitations |
 | 4: parameterized cases | William | New inputs catch a hard-coded solution; invalid case data gives useful errors; retain each question's maximum and the 20-point assessment total |
 | 5: Markdown feedback | Gabriel | Explain compilation failure, timeout, mismatch, and missing files using recorded evidence; no invented diagnosis |
-| 6: terminal dashboard | Unclaimed | Progress and cancellation; readable non-ANSI fallback; one display failure cannot stop grading |
+| 6: terminal dashboard | Kai Cong | Progress and cancellation; readable non-ANSI fallback; one display failure cannot stop grading |
 
 The contracts exist before implementations. Bonus code must consume common results rather than re-run grading independently. No bonus implementation begins before the core MVP is tested.
 

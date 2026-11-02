@@ -130,6 +130,19 @@ public final class RandomizedGrader {
         return supportSources;
     }
 
+    static List<String> childCommand(String javaCommand, Path classesDirectory, Question question,
+                                     Path inputFile, Path outputFile) {
+        // child output is decoded as utf-8 by the parent whatever the platform default is
+        List<String> command = new ArrayList<>(List.of(javaCommand, "-Dfile.encoding=UTF-8",
+                "-Dstdout.encoding=UTF-8", "-Dstderr.encoding=UTF-8", "-classpath",
+                classesDirectory.toString(), "RandomizedStudentRunner", question.getClassName(),
+                question.getMethodName(), inputFile.toString(), outputFile.toString()));
+        for (Question.Parameter parameter : question.getParameters()) {
+            command.add(typeName(parameter.type()));
+        }
+        return command;
+    }
+
     private RandomizedResult executeTrials(Question question, RandomizedConfig config, long seed,
                                            List<Trial> trials, Path workspace, Path classesDirectory)
             throws IOException, InterruptedException {
@@ -137,12 +150,8 @@ public final class RandomizedGrader {
         Path outputFile = workspace.resolve("outputs.bin");
         List<Object[]> inputArguments = trials.stream().map(trial -> trial.arguments().toArray()).toList();
         RandomizedTrialProtocol.writeInputs(inputFile, inputArguments);
-        List<String> command = new ArrayList<>(List.of(config.javaCommand(), "-classpath",
-                classesDirectory.toString(), "RandomizedStudentRunner", question.getClassName(),
-                question.getMethodName(), inputFile.toString(), outputFile.toString()));
-        for (Question.Parameter parameter : question.getParameters()) {
-            command.add(typeName(parameter.type()));
-        }
+        List<String> command = childCommand(config.javaCommand(), classesDirectory, question,
+                inputFile, outputFile);
         ProcessResult execution = ProcessRunner.run(command, workspace,
                 config.timeoutMillis(), config.maxOutputBytes());
         if (execution.timedOut()) {
@@ -246,7 +255,7 @@ public final class RandomizedGrader {
                 .collect(java.util.stream.Collectors.joining(", "));
     }
 
-    private String typeName(Class<?> type) {
+    private static String typeName(Class<?> type) {
         return type.isArray() ? type.getCanonicalName() : type.getName();
     }
 
