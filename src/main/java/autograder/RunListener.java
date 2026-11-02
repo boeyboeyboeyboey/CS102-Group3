@@ -20,6 +20,9 @@ public interface RunListener extends ProgressListener {
     default void gradingProgress(String item, int completed, int total) {
     }
 
+    default void reportingProgress(String item, int completed, int total) {
+    }
+
     void graded(GradingRun run, RunSettings settings);
 
     default void reportFailed(String message) {

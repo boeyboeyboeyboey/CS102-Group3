@@ -132,6 +132,7 @@ class GradingServiceTest {
     void listenerFailureDoesNotDiscardAGradedRun() throws Exception {
         Path submissions = Files.createDirectories(temporaryDirectory.resolve("subs"));
         RunSettings settings = settings(submissions);
+        List<String> reportingProgress = new ArrayList<>();
         Path sample = Path.of("").toAbsolutePath().resolve("Project/student-submission");
         try (Stream<Path> zips = Files.list(sample)) {
             Path zip = zips.sorted().findFirst().orElseThrow();
@@ -142,6 +143,11 @@ class GradingServiceTest {
             public void graded(GradingRun run, RunSettings runSettings) {
                 throw new IllegalStateException("display broke");
             }
+
+            @Override
+            public void reportingProgress(String item, int completed, int total) {
+                reportingProgress.add(item + ":" + completed + "/" + total);
+            }
         };
 
         RunOutcome outcome = new GradingService().run(settings, listener);
@@ -149,6 +155,12 @@ class GradingServiceTest {
         assertTrue(outcome.graded());
         assertTrue(outcome.run() != null);
         assertTrue(outcome.status() != RunOutcome.Status.FAILED);
+        assertEquals(List.of("Writing score and diagnostic CSV files:0/2",
+                "Score and diagnostic CSV files ready:1/2",
+                "Generating optional reports:1/2",
+                outcome.status() == RunOutcome.Status.COMPLETED
+                        ? "Reports ready:2/2" : "Reports completed with errors:2/2"),
+                reportingProgress);
     }
 
     private RunSettings settings(Path submissions) throws IOException {

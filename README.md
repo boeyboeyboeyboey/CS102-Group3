@@ -35,7 +35,7 @@ After identity is confirmed, reread the feature board. For Sera or William, conf
 
 A Java application being built to prepare and grade student submissions against instructor tests, then fill the supplied CSV score sheet.
 
-**Current stage: core MVP and feature 2 DONE; features 1, 4 and 5 are in REVIEW.** The command prepares submissions, compiles each part, runs 20 fixed instructor cases and 25 seeded dynamic property cases separately with deadlines, exports real scores and generates optional HTML and Markdown reports. The combined cases share each question's original maximum, preserving the 20-point assessment total while allowing dynamic results to affect marks. Boey confirmed the original dashboard build/run/display on 2026-10-10. The question heatmap was merged in PR #2; its historical agent checks are recorded, while a separate human heatmap build/display transcript remains uncaptured. Gabriel's feature 5 is merged and remains REVIEW pending its human completion gate. See [the dashboard architecture](offline_html_dashboard_architecture.md) for its implementation and presentation talking points.
+**Current stage: core MVP and feature 2 DONE; features 1, 3, 4, 5 and 6 are in REVIEW.** The command prepares submissions, compiles each part, runs 20 fixed instructor cases and 25 seeded dynamic property cases separately with deadlines, exports real scores and generates optional HTML and Markdown reports. The combined cases share each question's original maximum, preserving the 20-point assessment total while allowing dynamic results to affect marks. Boey confirmed the original dashboard build/run/display on 2026-10-10. The question heatmap was merged in PR #2; its historical agent checks are recorded, while a separate human heatmap build/display transcript remains uncaptured. Gabriel's feature 5 is merged and remains REVIEW pending its human completion gate. See [the dashboard architecture](offline_html_dashboard_architecture.md) for its implementation and presentation talking points.
 
 Kiya's feature-1 plagiarism detector merged in PR #1 on 2026-10-15, was integrated with the code-modularisation work in PR #5, and received follow-up fixes in PRs #9 and #12. It is REVIEW pending Kiya's human clean-build confirmation.
 
@@ -321,9 +321,11 @@ Sera's starter-code comparison (feature 3) is implemented locally and in REVIEW,
 | 3: starter-code comparison | BoilerplateDetector | Sera, locked |
 | 4: parameterized test cases | TestCaseProvider | William, locked |
 | 5: Markdown feedback | FeedbackGenerator | Gabriel |
-| 6: terminal dashboard | ProgressListener | Unclaimed |
+| 6: terminal dashboard | ProgressListener | Kai Cong |
 
-The interfaces exist so implementations share common inputs and outputs. HTML reporting receives `GradingReportContext`, which carries completed batch results and explicit withholding reasons. Kiya's feature-1 detector is merged (integrated through PR #5) and in REVIEW. Boey owns the HTML dashboard (feature 2, DONE). Gabriel's Markdown feedback is merged and in REVIEW. Sera and William retain locked features 3 and 4; feature 6 is unclaimed with Kai Cong's intent recorded.
+The interfaces exist so implementations share common inputs and outputs. HTML reporting receives `GradingReportContext`, which carries completed batch results and explicit withholding reasons. Kiya's feature-1 detector is merged (integrated through PR #5) and in REVIEW. Boey owns the HTML dashboard (feature 2, DONE). Gabriel's Markdown feedback is merged and in REVIEW. Sera and William retain locked features 3 and 4; Kai Cong owns feature 6, implemented locally and in REVIEW pending his clean-build confirmation.
+
+Feature 6 uses `ProgressListener` for archive and grading progress. `dashboard.mode=auto` selects ANSI color only for an interactive terminal; `plain` always omits ANSI codes, and `ansi` forces color. On an interactive console, type `q` then Enter to cancel; cancellation exits with code 130. See [the terminal dashboard guide](docs/TERMINAL_DASHBOARD.md) for behavior and limits.
 
 ## Latest verification
 
