@@ -58,6 +58,22 @@ Only a JDK 17 or newer is needed; `javac -version` should report 17 or later, an
 
 The scripts can be started from any directory or by double-clicking (Windows), and always work from the project folder, so relative paths in arguments are resolved from the project folder; use absolute paths for files elsewhere. Keep the console open while the instructor window runs; closing it closes the window. With arguments, `run` passes them to the command-line application, for example `sh run.sh --workers 4 config.properties`. The compile scripts skip the automated tests; run `sh ./mvnw clean verify` (or `mvnw.cmd clean verify`) for the full test suite. The project uses the standard Maven layout (`src/main/java`) allowed by the brief instead of the `classes`/`lib` folders.
 
+### Demo cohort: 100 students
+
+The six supplied submissions are too few to show parallel grading, so `demo` grades a larger cohort: the six real archives plus 94 synthetic students. Each synthetic student takes its Q1, Q2 and Q3 folders from randomly chosen real submissions, with the header name and email rewritten, so every program is real student code and each synthetic question score equals its source student's. A fixed seed makes every generation identical. Nothing under `Project/` or `config.properties` changes; the cohort is written to `build/demo-cohort/` and graded with `demo.properties`, which differs from `config.properties` only in its input, score sheet and output paths (results under `build/demo-run/grading/`).
+
+| | macOS / Linux | Windows |
+| --- | --- | --- |
+| Grade the cohort (generated on first use) | `sh demo.sh` | `demo.bat` |
+| Grade with 8 parallel workers | `sh demo.sh 8` | `demo.bat 8` |
+| Rebuild with a different size | `sh demo.sh generate 24` | `demo.bat generate 24` |
+
+`generate` takes the number of synthetic students (1-400, default 94) and an optional seed. Measured on a 10-core Mac (4 performance cores): 100 students took 11 min 21 s with 1 worker and 4 min 40 s with 8, with identical case verdicts, nobody withheld and the six real scores unchanged. A 30-student cohort (`generate 24`) took 74 s with 8 workers. About 117 cases time out by design, because synthetic students that reuse a hanging Q2 submission inherit its infinite loop. Recombined code also produces many similarity findings, which shows the plagiarism report working but makes `dashboard.html` about 7 MB.
+
+On Windows, use 1 worker for now. A diagnostic on a Windows laptop showed that with 2 or more workers, Java start-up time counts against the 2-second case limit and some passing cases are reported as timed out.
+
+To use the instructor window instead, run `sh run.sh` and set Config file to `demo.properties`. The window remembers previously used submission, score sheet and output folders, so also set them to `build/demo-cohort/submissions`, `build/demo-cohort/IS442-ScoreSheet.csv` and `build/demo-run/grading`.
+
 ## Setup, build and run
 
 ### Optional randomized question mode
