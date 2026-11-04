@@ -1,0 +1,148 @@
+
+date: 2026-11-04T09:42:50
+os: Microsoft Windows NT 10.0.26300.0
+logical processors: 20
+cpu: AMD Ryzen AI 9 365 w/ Radeon 880M              
+folder: C:\Users\gmthj\nodrive\CS102\CS102-Group3
+java: openjdk version "25.0.4" 2026-07-21 LTS | OpenJDK Runtime Environment Temurin-25.0.4+7 (build 25.0.4+7-LTS) | OpenJDK 64-Bit Server VM Temurin-25.0.4+7 (build 25.0.4+7-LTS, mixed mode, sharing)
+commit: 6e5c3bf Add Windows worker-count diagnostic script
+
+=== workers 1 ===
+exit code: 0  wall time: 294.7 s
+run folder: C:\Users\gmthj\nodrive\CS102\CS102-Group3\build\grading\run-7275637862670682936
+scores: 20.00, 11.50, 10.50, 9.88, 0.00, 0.50  expected: 20.00, 11.50, 10.50, 9.88, 0.00, 0.50  match: True
+cases: 270  TIMED_OUT: 9
+(baseline for verdict comparison: workers 1)
+
+=== workers 2 ===
+exit code: 0  wall time: 282.2 s
+run folder: C:\Users\gmthj\nodrive\CS102\CS102-Group3\build\grading\run-5438466256669339811
+scores: 19.18, 10.00, 9.00, 9.38, 0.00, 0.50  expected: 20.00, 11.50, 10.50, 9.88, 0.00, 0.50  match: False
+cases: 270  TIMED_OUT: 24
+verdicts changed vs baseline: 15
+  #chee.teo.2022 Q2a-dynamic-1 : PASSED -> TIMED_OUT
+  #chee.teo.2022 Q2a-dynamic-3 : PASSED -> TIMED_OUT
+  #chee.teo.2022 Q2a-dynamic-5 : PASSED -> TIMED_OUT
+  #chee.teo.2022 Q3-3 : FAILED -> TIMED_OUT
+  #david.2024 Q2a-5 : PASSED -> TIMED_OUT
+  #david.2024 Q2a-dynamic-2 : PASSED -> TIMED_OUT
+  #david.2024 Q2a-dynamic-4 : PASSED -> TIMED_OUT
+  #david.2024 Q2b-dynamic-2 : FAILED -> TIMED_OUT
+  #david.2024 Q3-dynamic-4 : FAILED -> TIMED_OUT
+  #fen.lai.2022 Q1b-dynamic-4 : FAILED -> TIMED_OUT
+  #fen.lai.2022 Q2a-dynamic-5 : PASSED -> TIMED_OUT
+  #jing.lim.2021 Q3-dynamic-1 : FAILED -> TIMED_OUT
+  #ping.lee.2023 Q1a-3 : PASSED -> TIMED_OUT
+  #ping.lee.2023 Q3-2 : PASSED -> TIMED_OUT
+  #xing.yan.2023 Q1b-1 : FAILED -> TIMED_OUT
+
+=== workers 6 ===
+exit code: 0  wall time: 238.2 s
+run folder: C:\Users\gmthj\nodrive\CS102\CS102-Group3\build\grading\run-14739745964869074432
+scores: 18.00, 6.50, 8.13, 5.88, 0.00, 0.00  expected: 20.00, 11.50, 10.50, 9.88, 0.00, 0.50  match: False
+cases: 270  TIMED_OUT: 59
+verdicts changed vs baseline: 50
+  #chee.teo.2022 Q1a-1 : PASSED -> TIMED_OUT
+  #chee.teo.2022 Q1a-2 : PASSED -> TIMED_OUT
+  #chee.teo.2022 Q1a-dynamic-1 : PASSED -> TIMED_OUT
+  #chee.teo.2022 Q1b-dynamic-4 : PASSED -> TIMED_OUT
+  #chee.teo.2022 Q2a-1 : PASSED -> TIMED_OUT
+  #chee.teo.2022 Q2a-2 : PASSED -> TIMED_OUT
+  #chee.teo.2022 Q2a-3 : PASSED -> TIMED_OUT
+  #chee.teo.2022 Q2a-4 : PASSED -> TIMED_OUT
+  #chee.teo.2022 Q2a-5 : PASSED -> TIMED_OUT
+  #chee.teo.2022 Q2a-dynamic-1 : PASSED -> TIMED_OUT
+  #chee.teo.2022 Q2b-1 : PASSED -> TIMED_OUT
+  #chee.teo.2022 Q3-3 : FAILED -> TIMED_OUT
+  #david.2024 Q1a-1 : PASSED -> TIMED_OUT
+  #david.2024 Q1a-dynamic-2 : PASSED -> TIMED_OUT
+  #david.2024 Q1a-dynamic-5 : PASSED -> TIMED_OUT
+  #david.2024 Q1b-dynamic-1 : PASSED -> TIMED_OUT
+  #david.2024 Q1b-dynamic-3 : PASSED -> TIMED_OUT
+  #david.2024 Q2a-dynamic-4 : PASSED -> TIMED_OUT
+  #david.2024 Q2b-4 : FAILED -> TIMED_OUT
+  #david.2024 Q2b-dynamic-3 : FAILED -> TIMED_OUT
+  #david.2024 Q2b-dynamic-4 : FAILED -> TIMED_OUT
+  #david.2024 Q3-3 : FAILED -> TIMED_OUT
+  #david.2024 Q3-dynamic-1 : FAILED -> TIMED_OUT
+  #fen.lai.2022 Q2a-2 : PASSED -> TIMED_OUT
+  #fen.lai.2022 Q2a-3 : PASSED -> TIMED_OUT
+  #fen.lai.2022 Q2a-5 : PASSED -> TIMED_OUT
+  #fen.lai.2022 Q2a-dynamic-1 : PASSED -> TIMED_OUT
+  #fen.lai.2022 Q2a-dynamic-2 : PASSED -> TIMED_OUT
+  #fen.lai.2022 Q2a-dynamic-4 : PASSED -> TIMED_OUT
+  #fen.lai.2022 Q2b-dynamic-1 : PASSED -> TIMED_OUT
+  #fen.lai.2022 Q2b-dynamic-5 : PASSED -> TIMED_OUT
+  #jing.lim.2021 Q2b-dynamic-4 : FAILED -> TIMED_OUT
+  #jing.lim.2021 Q2b-dynamic-5 : FAILED -> TIMED_OUT
+  #jing.lim.2021 Q3-1 : FAILED -> TIMED_OUT
+  #jing.lim.2021 Q3-2 : FAILED -> TIMED_OUT
+  #jing.lim.2021 Q3-dynamic-4 : FAILED -> TIMED_OUT
+  #ping.lee.2023 Q1a-dynamic-1 : PASSED -> TIMED_OUT
+  #ping.lee.2023 Q1a-dynamic-4 : PASSED -> TIMED_OUT
+  #ping.lee.2023 Q1b-2 : PASSED -> TIMED_OUT
+  #ping.lee.2023 Q1b-dynamic-4 : PASSED -> TIMED_OUT
+  #ping.lee.2023 Q2b-2 : PASSED -> TIMED_OUT
+  #xing.yan.2023 Q1a-dynamic-2 : FAILED -> TIMED_OUT
+  #xing.yan.2023 Q1b-2 : FAILED -> TIMED_OUT
+  #xing.yan.2023 Q1b-dynamic-4 : FAILED -> TIMED_OUT
+  #xing.yan.2023 Q2a-1 : PASSED -> TIMED_OUT
+  #xing.yan.2023 Q2b-3 : FAILED -> TIMED_OUT
+  #xing.yan.2023 Q2b-4 : FAILED -> TIMED_OUT
+  #xing.yan.2023 Q2b-dynamic-5 : FAILED -> TIMED_OUT
+  #xing.yan.2023 Q3-1 : FAILED -> TIMED_OUT
+  #xing.yan.2023 Q3-4 : FAILED -> TIMED_OUT
+
+=== workers 10 ===
+exit code: 0  wall time: 230.2 s
+run folder: C:\Users\gmthj\nodrive\CS102\CS102-Group3\build\grading\run-622783582776995038
+scores: 16.31, 9.50, 6.88, 8.38, 0.00, 0.50  expected: 20.00, 11.50, 10.50, 9.88, 0.00, 0.50  match: False
+cases: 270  TIMED_OUT: 54
+verdicts changed vs baseline: 45
+  #chee.teo.2022 Q1a-1 : PASSED -> TIMED_OUT
+  #chee.teo.2022 Q1a-2 : PASSED -> TIMED_OUT
+  #chee.teo.2022 Q1a-dynamic-5 : PASSED -> TIMED_OUT
+  #chee.teo.2022 Q1b-dynamic-1 : PASSED -> TIMED_OUT
+  #chee.teo.2022 Q2a-4 : PASSED -> TIMED_OUT
+  #chee.teo.2022 Q2b-dynamic-2 : FAILED -> TIMED_OUT
+  #chee.teo.2022 Q3-dynamic-1 : FAILED -> TIMED_OUT
+  #chee.teo.2022 Q3-dynamic-5 : FAILED -> TIMED_OUT
+  #david.2024 Q1a-dynamic-2 : PASSED -> TIMED_OUT
+  #david.2024 Q1a-dynamic-3 : PASSED -> TIMED_OUT
+  #david.2024 Q1a-dynamic-5 : PASSED -> TIMED_OUT
+  #david.2024 Q1b-3 : PASSED -> TIMED_OUT
+  #david.2024 Q1b-dynamic-1 : PASSED -> TIMED_OUT
+  #david.2024 Q1b-dynamic-3 : PASSED -> TIMED_OUT
+  #david.2024 Q1b-dynamic-4 : PASSED -> TIMED_OUT
+  #david.2024 Q2a-dynamic-1 : PASSED -> TIMED_OUT
+  #david.2024 Q2a-dynamic-3 : PASSED -> TIMED_OUT
+  #david.2024 Q2b-2 : FAILED -> TIMED_OUT
+  #david.2024 Q2b-3 : FAILED -> TIMED_OUT
+  #david.2024 Q3-dynamic-5 : FAILED -> TIMED_OUT
+  #fen.lai.2022 Q1b-2 : FAILED -> TIMED_OUT
+  #fen.lai.2022 Q1b-dynamic-3 : FAILED -> TIMED_OUT
+  #fen.lai.2022 Q2a-2 : PASSED -> TIMED_OUT
+  #fen.lai.2022 Q2a-dynamic-5 : PASSED -> TIMED_OUT
+  #fen.lai.2022 Q2b-1 : PASSED -> TIMED_OUT
+  #jing.lim.2021 Q2b-dynamic-1 : FAILED -> TIMED_OUT
+  #jing.lim.2021 Q3-4 : FAILED -> TIMED_OUT
+  #jing.lim.2021 Q3-dynamic-3 : FAILED -> TIMED_OUT
+  #jing.lim.2021 Q3-dynamic-4 : FAILED -> TIMED_OUT
+  #ping.lee.2023 Q1a-dynamic-1 : PASSED -> TIMED_OUT
+  #ping.lee.2023 Q1a-dynamic-2 : PASSED -> TIMED_OUT
+  #ping.lee.2023 Q1b-1 : PASSED -> TIMED_OUT
+  #ping.lee.2023 Q1b-3 : PASSED -> TIMED_OUT
+  #ping.lee.2023 Q1b-dynamic-2 : PASSED -> TIMED_OUT
+  #ping.lee.2023 Q1b-dynamic-5 : PASSED -> TIMED_OUT
+  #ping.lee.2023 Q2a-dynamic-3 : PASSED -> TIMED_OUT
+  #ping.lee.2023 Q2b-2 : PASSED -> TIMED_OUT
+  #ping.lee.2023 Q3-dynamic-2 : PASSED -> TIMED_OUT
+  #xing.yan.2023 Q1a-1 : FAILED -> TIMED_OUT
+  #xing.yan.2023 Q1a-dynamic-3 : FAILED -> TIMED_OUT
+  #xing.yan.2023 Q1a-dynamic-4 : FAILED -> TIMED_OUT
+  #xing.yan.2023 Q1b-3 : FAILED -> TIMED_OUT
+  #xing.yan.2023 Q1b-dynamic-5 : FAILED -> TIMED_OUT
+  #xing.yan.2023 Q2b-dynamic-3 : FAILED -> TIMED_OUT
+  #xing.yan.2023 Q3-dynamic-3 : FAILED -> TIMED_OUT
+
+done. send diag-workers-result.txt to Boey
