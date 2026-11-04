@@ -10,3 +10,5 @@ agents.md
 build-out/
 scratch/
 .DS_Store
+.idea
+.vscode
