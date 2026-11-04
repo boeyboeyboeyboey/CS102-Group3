@@ -1,0 +1,79 @@
+Preparing submissions for CS102 Java Project 2023-2024
+[ingestion] [------------] 0/6 (0%) working: 2023-2024-chee.teo.2022.zip
+[ingestion] [##----------] 1/6 (16%) done: 2023-2024-chee.teo.2022.zip
+[ingestion] [##----------] 1/6 (16%) working: 2023-2024-david.2024.zip
+[ingestion] [####--------] 2/6 (33%) done: 2023-2024-david.2024.zip
+[ingestion] [####--------] 2/6 (33%) working: 2023-2024-fen.lai.2022.zip
+[ingestion] [######------] 3/6 (50%) done: 2023-2024-fen.lai.2022.zip
+[ingestion] [######------] 3/6 (50%) working: 2023-2024-jing.lim.2021.zip
+[ingestion] [########----] 4/6 (66%) done: 2023-2024-jing.lim.2021.zip
+[ingestion] [########----] 4/6 (66%) working: 2023-2024-ping.lee.2023.zip
+[ingestion] [##########--] 5/6 (83%) done: 2023-2024-ping.lee.2023.zip
+[ingestion] [##########--] 5/6 (83%) working: 2023-2024-xing.yan.2023.zip
+[ingestion] [############] 6/6 (100%) done: 2023-2024-xing.yan.2023.zip
+Prepared 6 submission archives
+2023-2024-chee.teo.2022.zip | #chee.teo.2022 | READY | issues=0 | corrections=3
+  Working copy: C:\Users\gmthj\nodrive\CS102\CS102-Group3\build\working\run-ce6229b2-933c-4cad-b06f-c6ed3bfb456b\submission-2cae6e38-6336-46ca-9ea4-587b73a49fde\chee.teo.2022
+2023-2024-david.2024.zip | #david.2024 | REVIEW_REQUIRED | issues=4 | corrections=5
+  Working copy: C:\Users\gmthj\nodrive\CS102\CS102-Group3\build\working\run-ce6229b2-933c-4cad-b06f-c6ed3bfb456b\submission-53bbcb5c-1ff1-4ae5-b25d-f1317c28e73c\david.2024
+2023-2024-fen.lai.2022.zip | #fen.lai.2022 | READY | issues=0 | corrections=1
+  Working copy: C:\Users\gmthj\nodrive\CS102\CS102-Group3\build\working\run-ce6229b2-933c-4cad-b06f-c6ed3bfb456b\submission-f726970b-04f1-4dfb-99d0-0db894bb036e\fen.lai.2022
+2023-2024-jing.lim.2021.zip | #jing.lim.2021 | READY | issues=0 | corrections=13
+  Working copy: C:\Users\gmthj\nodrive\CS102\CS102-Group3\build\working\run-ce6229b2-933c-4cad-b06f-c6ed3bfb456b\submission-b349a9fd-3629-4c12-81f3-29cf6bae3db2\jing.lim.2021
+2023-2024-ping.lee.2023.zip | #ping.lee.2023 | READY | issues=0 | corrections=0
+  Working copy: C:\Users\gmthj\nodrive\CS102\CS102-Group3\build\working\run-ce6229b2-933c-4cad-b06f-c6ed3bfb456b\submission-705fb629-bc83-4171-b319-7613ab292f86\ping.lee.2023
+2023-2024-xing.yan.2023.zip | #xing.yan.2023 | REVIEW_REQUIRED | issues=6 | corrections=0
+  Working copy: C:\Users\gmthj\nodrive\CS102\CS102-Group3\build\working\run-ce6229b2-933c-4cad-b06f-c6ed3bfb456b\submission-f9341f12-db25-46c3-ae4c-3a5d90f6c4a5\xing.yan.2023
+Ready: 4; needs review: 2; failed: 0
+READY means ready for the next stage, not a passing grade
+Diagnostics: C:\Users\gmthj\nodrive\CS102\CS102-Group3\build\submission-anomalies.log
+Corrections: C:\Users\gmthj\nodrive\CS102\CS102-Group3\build\submission-corrections.log
+[grading] [------------] 0/6 (0%) working: 2023-2024-chee.teo.2022.zip
+Grading 1/6: 2023-2024-chee.teo.2022.zip
+[grading] [##----------] 1/6 (16%) done: 2023-2024-chee.teo.2022.zip
+[grading] [##----------] 1/6 (16%) working: 2023-2024-david.2024.zip
+Grading 2/6: 2023-2024-david.2024.zip
+[grading] [####--------] 2/6 (33%) done: 2023-2024-david.2024.zip
+[grading] [####--------] 2/6 (33%) working: 2023-2024-fen.lai.2022.zip
+Grading 3/6: 2023-2024-fen.lai.2022.zip
+[grading] [######------] 3/6 (50%) done: 2023-2024-fen.lai.2022.zip
+[grading] [######------] 3/6 (50%) working: 2023-2024-jing.lim.2021.zip
+Grading 4/6: 2023-2024-jing.lim.2021.zip
+[grading] [########----] 4/6 (66%) done: 2023-2024-jing.lim.2021.zip
+[grading] [########----] 4/6 (66%) working: 2023-2024-ping.lee.2023.zip
+Grading 5/6: 2023-2024-ping.lee.2023.zip
+[grading] [##########--] 5/6 (83%) done: 2023-2024-ping.lee.2023.zip
+[grading] [##########--] 5/6 (83%) working: 2023-2024-xing.yan.2023.zip
+Grading 6/6: 2023-2024-xing.yan.2023.zip
+[grading] [############] 6/6 (100%) done: 2023-2024-xing.yan.2023.zip
+[reporting] [------------] 0/2 (0%) working: Writing score and diagnostic CSV files
+[reporting] [######------] 1/2 (50%) done: Score and diagnostic CSV files ready
+#chee.teo.2022 [archive+header email id in Q1a.java+header email id in Q1b.java+header email id in Q2a.java+header email id in Q2b.java+header email id in ShapeComparator.java] | Score: 11.5
+#david.2024 [archive+wrapper student id+header email id in Q1a.java+header email id in Q1b.java+header email id in Q2a.java+header email id in Q2b.java] | Score: 10.5
+#fen.lai.2022 [archive+header email id in Q1a.java+header email id in Q1b.java+header email id in Q2a.java+header email id in Q2b.java+header email id in Q3.java+header email id in ShapeComparator.java] | Score: 9.875
+#jing.lim.2021 [archive] | Score: 0.0
+#ping.lee.2023 [archive+wrapper username+header email id in Q1a.java+header email id in Q1b.java+header email id in Q2a.java+header email id in Q2b.java+header email id in Q3.java+header email id in ShapeComparator.java] | Score: 20.0
+#xing.yan.2023 [archive+wrapper username+header email id in Q1a.java+header email id in Q1b.java+header email id in Q2a.java+header email id in Q2b.java+header email id in Q3.java+header email id in ShapeComparator.java] | Score: 0.5
+Score report: C:\Users\gmthj\nodrive\CS102\CS102-Group3\build\grading\run-18114986173254544406\scorereport.csv
+Per-case diagnostics: C:\Users\gmthj\nodrive\CS102\CS102-Group3\build\grading\run-18114986173254544406\cases.csv
+Export decisions and review warnings: C:\Users\gmthj\nodrive\CS102\CS102-Group3\build\grading\run-18114986173254544406\submissions.csv
+Withheld or absent students retain their original score-sheet rows
+Similarity review: 0 finding(s) (n-gram >= 0.80, JPlag >= 0.60), starter code excluded: C:\Users\gmthj\nodrive\CS102\CS102-Group3\build\grading\run-18114986173254544406\similarity.csv
+[reporting] [######------] 1/2 (50%) working: Generating optional reports
+Starter review: UNCHANGED_STARTER | 2023-2024-chee.teo.2022.zip: Code tokens match the starter after ignoring comments and formatting; 0 token edits, 100.00% similarity (723 starter / 723 answer tokens). Review warning only; marks unchanged
+Starter review: UNCHANGED_STARTER | 2023-2024-david.2024.zip: Code tokens match the starter after ignoring comments and formatting; 0 token edits, 100.00% similarity (723 starter / 723 answer tokens). Review warning only; marks unchanged
+Starter review: UNCHANGED_STARTER | 2023-2024-david.2024.zip: Code tokens match the starter after ignoring comments and formatting; 0 token edits, 100.00% similarity (12 starter / 12 answer tokens). Review warning only; marks unchanged
+Starter review: UNCHANGED_STARTER | 2023-2024-jing.lim.2021.zip: Code tokens match the starter after ignoring comments and formatting; 0 token edits, 100.00% similarity (559 starter / 559 answer tokens). Review warning only; marks unchanged
+Starter review: UNCHANGED_STARTER | 2023-2024-jing.lim.2021.zip: Code tokens match the starter after ignoring comments and formatting; 0 token edits, 100.00% similarity (723 starter / 723 answer tokens). Review warning only; marks unchanged
+Starter review: UNCHANGED_STARTER | 2023-2024-jing.lim.2021.zip: Code tokens match the starter after ignoring comments and formatting; 0 token edits, 100.00% similarity (12 starter / 12 answer tokens). Review warning only; marks unchanged
+Starter review: UNCHANGED_STARTER | 2023-2024-xing.yan.2023.zip: Code tokens match the starter after ignoring comments and formatting; 0 token edits, 100.00% similarity (535 starter / 535 answer tokens). Review warning only; marks unchanged
+Starter review: UNCHANGED_STARTER | 2023-2024-xing.yan.2023.zip: Code tokens match the starter after ignoring comments and formatting; 0 token edits, 100.00% similarity (644 starter / 644 answer tokens). Review warning only; marks unchanged
+Starter review: UNCHANGED_STARTER | 2023-2024-xing.yan.2023.zip: Code tokens match the starter after ignoring comments and formatting; 0 token edits, 100.00% similarity (559 starter / 559 answer tokens). Review warning only; marks unchanged
+Starter review: UNCHANGED_STARTER | 2023-2024-xing.yan.2023.zip: Code tokens match the starter after ignoring comments and formatting; 0 token edits, 100.00% similarity (723 starter / 723 answer tokens). Review warning only; marks unchanged
+Starter review: UNCHANGED_STARTER | 2023-2024-xing.yan.2023.zip: Code tokens match the starter after ignoring comments and formatting; 0 token edits, 100.00% similarity (12 starter / 12 answer tokens). Review warning only; marks unchanged
+Starter comparison: 11 findings; C:\Users\gmthj\nodrive\CS102\CS102-Group3\build\grading\run-18114986173254544406\starter-analysis.csv
+Method comparison report: C:\Users\gmthj\nodrive\CS102\CS102-Group3\build\grading\run-18114986173254544406\starter-comparison\index.html
+Sanity checks: none
+HTML dashboard: C:\Users\gmthj\nodrive\CS102\CS102-Group3\build\grading\run-18114986173254544406\dashboard.html
+Student feedback: 6 Markdown files in C:\Users\gmthj\nodrive\CS102\CS102-Group3\build\grading\run-18114986173254544406\feedback
+[reporting] [############] 2/2 (100%) done: Reports ready

@@ -48,6 +48,7 @@ public final class StudentCompiler {
             Files.copy(adapter, adapterPath, StandardCopyOption.REPLACE_EXISTING);
         }
         sources.add(adapterPath);
+        sources.add(copyResource(CaseExecutor.LAUNCHER_CLASS + ".java", sourceDirectory));
 
         // Dynamic test runner (Feature 4) is compiled into the student classes directory so it can
         // be executed on the same classpath. It uses reflection only, so it has no compile-time
@@ -90,6 +91,17 @@ public final class StudentCompiler {
             Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
         }
         return target;
+    }
+
+    private static Path copyResource(String name, Path sourceDirectory) throws IOException {
+        Path destination = sourceDirectory.resolve(name);
+        try (InputStream resource = StudentCompiler.class.getResourceAsStream(ADAPTER_RESOURCE + name)) {
+            if (resource == null) {
+                throw new IOException("required adapter resource is missing: " + ADAPTER_RESOURCE + name);
+            }
+            Files.copy(resource, destination, StandardCopyOption.REPLACE_EXISTING);
+        }
+        return destination;
     }
 
     private static void recreateDirectory(Path directory) throws IOException {

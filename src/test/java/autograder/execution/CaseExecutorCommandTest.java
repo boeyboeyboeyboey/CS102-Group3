@@ -21,4 +21,17 @@ class CaseExecutorCommandTest {
                 "-Dstderr.encoding=UTF-8", "-classpath", "classes", "Runner", "a", "b",
                 "result.txt"), command);
     }
+
+    @Test
+    void launcherCommandPutsLauncherAndMarkerBeforeTheUnchangedRunnerArguments() {
+        TestCaseDefinition test = new TestCaseDefinition("c1", "Q1", "Runner",
+                List.of("a", "b"), 1);
+
+        List<String> command = CaseExecutor.buildLauncherCommand("java", Path.of("classes"), test,
+                Path.of("c1.started"), Path.of("result.txt"));
+
+        assertEquals(List.of("java", "-Dfile.encoding=UTF-8", "-Dstdout.encoding=UTF-8",
+                "-Dstderr.encoding=UTF-8", "-classpath", "classes", "GraderCaseLauncher",
+                "c1.started", "Runner", "a", "b", "result.txt"), command);
+    }
 }

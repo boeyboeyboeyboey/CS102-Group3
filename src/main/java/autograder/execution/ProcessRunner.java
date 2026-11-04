@@ -11,12 +11,35 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public final class ProcessRunner {
+    private static final long MARKER_POLL_MILLIS = 10;
+
     public ProcessRunner() {
     }
 
     public static ProcessResult run(List<String> command, Path cwd, long timeoutMillis,
                                     int maxOutputBytes) throws IOException, InterruptedException {
-        if (command == null || command.isEmpty() || timeoutMillis <= 0 || maxOutputBytes < 0) {
+        if (timeoutMillis <= 0) {
+            throw new IllegalArgumentException("command, positive timeout, and output limit are required");
+        }
+        return run(command, cwd, maxOutputBytes,
+                process -> !process.waitFor(timeoutMillis, TimeUnit.MILLISECONDS));
+    }
+
+    // the time limit starts when the child creates startedMarker; until then the child gets
+    // the start-up allowance, and a child that never creates it is stopped as timed out
+    public static ProcessResult run(List<String> command, Path cwd, Path startedMarker,
+                                    long startupAllowanceMillis, long timeoutMillis,
+                                    int maxOutputBytes) throws IOException, InterruptedException {
+        if (startedMarker == null || startupAllowanceMillis <= 0 || timeoutMillis <= 0) {
+            throw new IllegalArgumentException("started marker and positive time limits are required");
+        }
+        return run(command, cwd, maxOutputBytes, process -> awaitAfterStart(process, startedMarker,
+                startupAllowanceMillis, timeoutMillis));
+    }
+
+    private static ProcessResult run(List<String> command, Path cwd, int maxOutputBytes,
+                                     CompletionWait completion) throws IOException, InterruptedException {
+        if (command == null || command.isEmpty() || maxOutputBytes < 0) {
             throw new IllegalArgumentException("command, positive timeout, and output limit are required");
         }
         Path workingDirectory = cwd.toAbsolutePath().normalize();
@@ -40,7 +63,7 @@ public final class ProcessRunner {
 
         boolean timedOut;
         try {
-            timedOut = !process.waitFor(timeoutMillis, TimeUnit.MILLISECONDS);
+            timedOut = completion.timedOut(process);
             collectDescendants(process, knownDescendants);
             if (timedOut) {
                 terminate(process, knownDescendants);
@@ -86,6 +109,21 @@ public final class ProcessRunner {
         }
         return new ProcessResult(exitCode, timedOut, durationMillis,
                 stdout.text(), stderr.text());
+    }
+
+    private static boolean awaitAfterStart(Process process, Path startedMarker,
+                                           long startupAllowanceMillis, long timeoutMillis)
+            throws InterruptedException {
+        long startupDeadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(startupAllowanceMillis);
+        while (!Files.exists(startedMarker)) {
+            if (process.waitFor(MARKER_POLL_MILLIS, TimeUnit.MILLISECONDS)) {
+                return false;
+            }
+            if (System.nanoTime() - startupDeadline >= 0 && !Files.exists(startedMarker)) {
+                return true;
+            }
+        }
+        return !process.waitFor(timeoutMillis, TimeUnit.MILLISECONDS);
     }
 
     private static void terminate(Process process, List<ProcessHandle> knownDescendants)
@@ -221,5 +259,9 @@ public final class ProcessRunner {
             } catch (IOException ignored) {
             }
         }
+    }
+
+    private interface CompletionWait {
+        boolean timedOut(Process process) throws InterruptedException;
     }
 }

@@ -4,7 +4,7 @@ setlocal
 cd /d "%~dp0"
 set "STATUS=0"
 echo Building... the first run downloads Maven and the dependencies (needs internet)
-call mvnw.cmd -DskipTests package
+call "%~dp0mvnw.cmd" -DskipTests package
 if errorlevel 1 set "STATUS=1"
 if "%STATUS%"=="0" echo Built target\auto-grading-system-1.0-SNAPSHOT.jar
 if "%STATUS%"=="1" echo Build failed. Check that javac -version and JAVA_HOME point to a JDK 17 or newer. 1>&2

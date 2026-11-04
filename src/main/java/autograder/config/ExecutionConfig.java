@@ -11,8 +11,10 @@ import java.util.Properties;
 
 public record ExecutionConfig(Path directory, String reportFile, String javaExecutable,
                               String javacExecutable, long compileTimeoutMillis,
-                              long caseTimeoutMillis, int maxOutputBytes, int workers) {
+                              long caseTimeoutMillis, int maxOutputBytes, int workers,
+                              long startupAllowanceMillis) {
     public static final int MAX_WORKERS = 32;
+    public static final long DEFAULT_STARTUP_ALLOWANCE_MILLIS = 10000;
     private static final String AUTO_WORKERS = "auto";
     // compared ignoring case because macos and windows filesystems treat Cases.csv as cases.csv
     private static final List<String> RESERVED_REPORT_FILES = List.of(
@@ -24,6 +26,13 @@ public record ExecutionConfig(Path directory, String reportFile, String javaExec
                            long caseTimeoutMillis, int maxOutputBytes) {
         this(directory, reportFile, javaExecutable, javacExecutable, compileTimeoutMillis,
                 caseTimeoutMillis, maxOutputBytes, 1);
+    }
+
+    public ExecutionConfig(Path directory, String reportFile, String javaExecutable,
+                           String javacExecutable, long compileTimeoutMillis,
+                           long caseTimeoutMillis, int maxOutputBytes, int workers) {
+        this(directory, reportFile, javaExecutable, javacExecutable, compileTimeoutMillis,
+                caseTimeoutMillis, maxOutputBytes, workers, DEFAULT_STARTUP_ALLOWANCE_MILLIS);
     }
 
     public static ExecutionConfig load(Path file, AppConfig app) throws IOException {
@@ -70,7 +79,8 @@ public record ExecutionConfig(Path directory, String reportFile, String javaExec
         return new ExecutionConfig(directory, report, executable(properties, "execution.java", baseDirectory),
                 executable(properties, "execution.javac", baseDirectory),
                 positive(properties, "execution.compile.timeout.ms"),
-                positive(properties, "execution.case.timeout.ms"), (int) outputBytes, workers(properties, limits));
+                positive(properties, "execution.case.timeout.ms"), (int) outputBytes, workers(properties, limits),
+                startupAllowance(properties));
     }
 
     public ExecutionConfig withWorkers(int workers) {
@@ -81,7 +91,15 @@ public record ExecutionConfig(Path directory, String reportFile, String javaExec
             throw new IllegalArgumentException("execution.workers must be at most " + MAX_WORKERS);
         }
         return new ExecutionConfig(directory, reportFile, javaExecutable, javacExecutable,
-                compileTimeoutMillis, caseTimeoutMillis, maxOutputBytes, workers);
+                compileTimeoutMillis, caseTimeoutMillis, maxOutputBytes, workers, startupAllowanceMillis);
+    }
+
+    private static long startupAllowance(Properties properties) {
+        String value = properties.getProperty("execution.startup.allowance.ms");
+        if (value == null || value.isBlank()) {
+            return DEFAULT_STARTUP_ALLOWANCE_MILLIS;
+        }
+        return positive(properties, "execution.startup.allowance.ms");
     }
 
     private static int workers(Properties properties, WorkerLimits limits) {
