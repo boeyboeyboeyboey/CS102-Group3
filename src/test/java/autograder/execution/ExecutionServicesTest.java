@@ -114,7 +114,6 @@ class ExecutionServicesTest {
         assertTrue(result.exitCode() != 0);
         assertTrue(result.stderr().contains("error"));
         assertTrue(Files.isRegularFile(part.resolve("src/QXAdapter.java")));
-        assertTrue(Files.isRegularFile(part.resolve("src/GraderCaseLauncher.java")));
         assertFalse(Files.exists(part.resolve("classes/QX.class")));
     }
 

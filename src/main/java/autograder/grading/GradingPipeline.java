@@ -201,8 +201,8 @@ public final class GradingPipeline {
                 for (TestCaseDefinition test : questionCases) {
                     checkCancelled();
                     results.add(new CaseExecutor().execute(test, question, part,
-                            execution.javaExecutable(), execution.startupAllowanceMillis(),
-                            execution.caseTimeoutMillis(), execution.maxOutputBytes()));
+                            execution.javaExecutable(), execution.caseTimeoutMillis(),
+                            execution.maxOutputBytes()));
                 }
             }
         } catch (IOException exception) {
