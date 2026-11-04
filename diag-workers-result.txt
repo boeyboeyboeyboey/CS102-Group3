@@ -1,0 +1,38 @@
+
+date: 2026-11-04T10:30:14
+os: Microsoft Windows NT 10.0.26300.0
+logical processors: 20
+cpu: AMD Ryzen AI 9 365 w/ Radeon 880M              
+folder: C:\Users\gmthj\nodrive\CS102\CS102-Group3
+java: openjdk version "25.0.4" 2026-07-21 LTS | OpenJDK Runtime Environment Temurin-25.0.4+7 (build 25.0.4+7-LTS) | OpenJDK 64-Bit Server VM Temurin-25.0.4+7 (build 25.0.4+7-LTS, mixed mode, sharing)
+commit: bfc6743 Chore: Gitignore update
+
+=== workers 1 ===
+exit code: 0  wall time: 74.9 s
+run folder: C:\Users\gmthj\nodrive\CS102\CS102-Group3\build\grading\run-11196835653724712189
+scores: 20.00, 11.50, 10.50, 9.88, 0.00, 0.50  expected: 20.00, 11.50, 10.50, 9.88, 0.00, 0.50  match: True
+cases: 270  TIMED_OUT: 9
+(baseline for verdict comparison: workers 1)
+
+=== workers 2 ===
+exit code: 0  wall time: 62.7 s
+run folder: C:\Users\gmthj\nodrive\CS102\CS102-Group3\build\grading\run-6497283441701071474
+scores: 20.00, 11.50, 10.50, 9.88, 0.00, 0.50  expected: 20.00, 11.50, 10.50, 9.88, 0.00, 0.50  match: True
+cases: 270  TIMED_OUT: 9
+verdicts changed vs baseline: 0
+
+=== workers 6 ===
+exit code: 0  wall time: 55.7 s
+run folder: C:\Users\gmthj\nodrive\CS102\CS102-Group3\build\grading\run-12807283785573889853
+scores: 20.00, 11.50, 10.50, 9.88, 0.00, 0.50  expected: 20.00, 11.50, 10.50, 9.88, 0.00, 0.50  match: True
+cases: 270  TIMED_OUT: 9
+verdicts changed vs baseline: 0
+
+=== workers 10 ===
+exit code: 0  wall time: 58.7 s
+run folder: C:\Users\gmthj\nodrive\CS102\CS102-Group3\build\grading\run-9005966688755756413
+scores: 20.00, 11.50, 10.50, 9.88, 0.00, 0.50  expected: 20.00, 11.50, 10.50, 9.88, 0.00, 0.50  match: True
+cases: 270  TIMED_OUT: 9
+verdicts changed vs baseline: 0
+
+done. send diag-workers-result.txt to Boey
