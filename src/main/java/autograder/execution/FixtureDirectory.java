@@ -4,8 +4,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.nio.file.attribute.FileTime;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,7 +14,7 @@ import java.util.stream.Stream;
 final class FixtureDirectory {
     private final Path directory;
     private final List<Path> fixtures;
-    private Map<Path, FileState> expected;
+    private Map<Path, byte[]> expected;
 
     FixtureDirectory(Path directory, List<Path> fixtures) {
         this.directory = directory;
@@ -30,39 +29,42 @@ final class FixtureDirectory {
         expected = null;
         new DirectoryCleaner().deleteRecursively(directory);
         Files.createDirectories(directory);
-        Map<Path, FileState> copies = new HashMap<>();
+        Map<Path, byte[]> copies = new HashMap<>();
         for (Path fixture : fixtures) {
             if (!Files.isRegularFile(fixture)) {
                 throw new IOException("configured fixture is missing: " + fixture);
             }
             Path copy = directory.resolve(fixture.getFileName());
             Files.copy(fixture, copy, StandardCopyOption.REPLACE_EXISTING);
-            copies.put(copy.getFileName(), FileState.of(copy));
+            copies.put(copy.getFileName(), Files.readAllBytes(copy));
         }
         expected = copies;
     }
 
-    // true when no case has added, removed or changed anything since the last reset
+    // true when no case has added, removed or changed anything since the last reset; contents
+    // are compared byte for byte because timestamps are too coarse on some file systems
     boolean isUnchanged() throws IOException {
         if (expected == null || !Files.isDirectory(directory)) {
             return false;
         }
-        Map<Path, FileState> actual = new HashMap<>();
+        int entryCount = 0;
         try (Stream<Path> entries = Files.list(directory)) {
             for (Path entry : (Iterable<Path>) entries::iterator) {
-                if (!Files.isRegularFile(entry)) {
+                entryCount++;
+                if (!matchesFixture(entry)) {
                     return false;
                 }
-                actual.put(entry.getFileName(), FileState.of(entry));
             }
         }
-        return actual.equals(expected);
+        return entryCount == expected.size();
     }
 
-    private record FileState(long size, FileTime modified) {
-        static FileState of(Path file) throws IOException {
-            BasicFileAttributes attributes = Files.readAttributes(file, BasicFileAttributes.class);
-            return new FileState(attributes.size(), attributes.lastModifiedTime());
+    private boolean matchesFixture(Path entry) throws IOException {
+        byte[] original = expected.get(entry.getFileName());
+        if (original == null || !Files.isRegularFile(entry)) {
+            return false;
         }
+        // check the size first so a case that wrote a huge file is not read into memory
+        return Files.size(entry) == original.length && Arrays.equals(Files.readAllBytes(entry), original);
     }
 }

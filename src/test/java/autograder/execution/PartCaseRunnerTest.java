@@ -13,6 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -155,6 +156,72 @@ class PartCaseRunnerTest {
     }
 
     @Test
+    void sameLengthFixtureRewriteWithRestoredTimestampIsStillDetected() throws Exception {
+        Path part = part("fixture-bytes");
+        Path fixture = temporaryDirectory.resolve("data.txt");
+        Files.writeString(fixture, "original");
+        runner(part, "Sneaky", "try { java.nio.file.Path data = java.nio.file.Path.of(\"data.txt\");"
+                + " java.nio.file.attribute.FileTime time = java.nio.file.Files.getLastModifiedTime(data);"
+                + " java.nio.file.Files.writeString(data, \"ORIGINAL\");"
+                + " java.nio.file.Files.setLastModifiedTime(data, time); }"
+                + " catch (Exception e) { throw new RuntimeException(e); } write(args, \"PASSED\");");
+        runner(part, "Reader", "try { write(args, java.nio.file.Files.readString(java.nio.file.Path.of(\"data.txt\"))"
+                + ".equals(\"original\") ? \"PASSED\" : \"FAILED\"); } catch (Exception e) { throw new RuntimeException(e); }");
+
+        List<TestCaseResult> results = run(part, List.of(fixture), CASE_TIMEOUT,
+                test("a", "Sneaky"), test("b", "Reader"));
+
+        assertEquals(List.of(TestStatus.PASSED, TestStatus.PASSED), statuses(results));
+    }
+
+    @Test
+    void hostThatDiesBetweenCasesIsReplacedAndTheNextCaseStillRuns() throws Exception {
+        Path part = part("dies");
+        // the thread escapes the case's thread group, so the host looks clean and is reused,
+        // then it halts the host jvm while no case is running
+        runner(part, "Halter", "Thread killer = new Thread(Thread.currentThread().getThreadGroup().getParent(),"
+                + " () -> { try { Thread.sleep(300); } catch (InterruptedException e) { }"
+                + " Runtime.getRuntime().halt(0); }); killer.setDaemon(true); killer.start();"
+                + " write(args, \"PASSED\");");
+        runner(part, "Pass", PASS);
+        List<TestCaseResult> results = new ArrayList<>();
+        Consumer<TestCaseResult> waitForHostToDie = result -> {
+            results.add(result);
+            sleepQuietly(1500);
+        };
+
+        new PartCaseRunner(java(), CASE_TIMEOUT, STARTUP_TIMEOUT, 4096)
+                .run(question(List.of()), List.of(test("a", "Halter"), test("b", "Pass"),
+                        test("c", "Pass")), part, waitForHostToDie);
+
+        assertEquals(List.of(TestStatus.PASSED, TestStatus.PASSED, TestStatus.PASSED), statuses(results));
+    }
+
+    @Test
+    void hostThatNeverBecomesReadyCostsOnlyThoseCases() throws Exception {
+        Path part = part("never-ready");
+        runner(part, "Pass", PASS);
+        List<TestCaseResult> results = new ArrayList<>();
+
+        new PartCaseRunner(java(), CASE_TIMEOUT, 1, 4096)
+                .run(question(List.of()), List.of(test("a", "Pass"), test("b", "Pass")), part, results::add);
+
+        assertEquals(List.of(TestStatus.RUNTIME_ERROR, TestStatus.RUNTIME_ERROR), statuses(results));
+        assertTrue(results.get(0).getStandardError().contains("case host failed twice"));
+        assertTrue(results.get(0).getStandardError().contains("did not start within 1 ms"));
+    }
+
+    @Test
+    void missingJavaExecutableIsStillAnInfrastructureError() throws Exception {
+        Path part = part("no-java");
+        runner(part, "Pass", PASS);
+        Path missingJava = temporaryDirectory.resolve("no-such-java");
+
+        assertThrows(IOException.class, () -> new PartCaseRunner(missingJava.toString(), CASE_TIMEOUT,
+                STARTUP_TIMEOUT, 4096).run(question(List.of()), List.of(test("a", "Pass")), part, result -> { }));
+    }
+
+    @Test
     void interruptionStopsTheRunBeforeTheNextCase() throws Exception {
         Path part = part("cancel");
         runner(part, "Pass", PASS);
@@ -173,6 +240,14 @@ class PartCaseRunnerTest {
         new PartCaseRunner(java(), timeoutMillis, STARTUP_TIMEOUT, 4096)
                 .run(question(fixtures), List.of(tests), part, results::add);
         return results;
+    }
+
+    private static void sleepQuietly(long millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     private Path part(String name) throws IOException {

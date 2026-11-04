@@ -86,7 +86,7 @@ final class CaseHostProcess implements AutoCloseable {
         String[] fields = reply.split(" ");
         if (fields.length != 3 || !fields[0].equals(CaseHost.DONE)) {
             close();
-            throw new IOException("unexpected case host reply: " + reply);
+            throw new HostFailureException("unexpected case host reply: " + reply);
         }
         try {
             int exitCode = Integer.parseInt(fields[1]);
@@ -95,7 +95,7 @@ final class CaseHostProcess implements AutoCloseable {
                     hostErrors.text());
         } catch (NumberFormatException exception) {
             close();
-            throw new IOException("unexpected case host reply: " + reply, exception);
+            throw new HostFailureException("unexpected case host reply: " + reply, exception);
         }
     }
 
@@ -124,15 +124,30 @@ final class CaseHostProcess implements AutoCloseable {
         long deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(startupTimeoutMillis);
         String reply = nextReply(deadline);
         if (reply == null) {
-            throw new IOException("case host did not start within " + startupTimeoutMillis + " ms");
+            throw new HostFailureException("case host did not start within "
+                    + startupTimeoutMillis + " ms");
         }
         if (!reply.equals(CaseHost.READY)) {
             process.waitFor(STREAM_DRAIN_MILLIS, TimeUnit.MILLISECONDS);
-            throw new IOException("case host failed to start: " + drainedErrors());
+            throw new HostFailureException("case host failed to start: " + drainedErrors());
         }
     }
 
     private void send(String runnerClass, Path caseDirectory, List<String> arguments)
+            throws IOException {
+        // a host that died after the previous case, for example killed by the os, never saw this case
+        if (!process.isAlive() || END_OF_STREAM.equals(replies.peek())) {
+            throw new HostFailureException("case host exited before the case was sent");
+        }
+        try {
+            writeCommand(runnerClass, caseDirectory, arguments);
+        } catch (IOException exception) {
+            throw new HostFailureException("could not send the case to the case host: "
+                    + exception.getMessage(), exception);
+        }
+    }
+
+    private void writeCommand(String runnerClass, Path caseDirectory, List<String> arguments)
             throws IOException {
         StringBuilder line = new StringBuilder(CaseHost.RUN);
         line.append(CaseHost.FIELD_SEPARATOR).append(encode(runnerClass));
@@ -205,6 +220,18 @@ final class CaseHostProcess implements AutoCloseable {
             return Path.of(CaseHost.class.getProtectionDomain().getCodeSource().getLocation().toURI());
         } catch (URISyntaxException | RuntimeException exception) {
             throw new IOException("cannot locate the grader classes for the case host", exception);
+        }
+    }
+
+    // the host jvm failed rather than the case; the runner retries the case on a fresh host,
+    // while other i/o errors (such as a missing java executable) stay infrastructure errors
+    static final class HostFailureException extends IOException {
+        HostFailureException(String message) {
+            super(message);
+        }
+
+        HostFailureException(String message, Throwable cause) {
+            super(message, cause);
         }
     }
 
