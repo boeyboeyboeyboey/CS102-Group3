@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.regex.Pattern;
 
 public final class AppConfig {
@@ -100,6 +101,11 @@ public final class AppConfig {
 
     public static AppConfig load(Path configPath) throws IOException {
         return AppConfigLoader.load(configPath);
+    }
+
+    static AppConfig load(Properties properties, Path baseDirectory)
+            throws IOException {
+        return AppConfigLoader.load(properties, baseDirectory);
     }
 
     static Path canonicalize(Path path) throws IOException {

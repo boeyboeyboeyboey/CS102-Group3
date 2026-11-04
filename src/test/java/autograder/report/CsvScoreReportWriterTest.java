@@ -27,13 +27,14 @@ class CsvScoreReportWriterTest {
         ScoreSheet sheet = new ScoreSheetRepository(source, columns()).load();
         Path output = temporaryDirectory.resolve("output").resolve("scorereport.csv");
 
-        new CsvScoreReportWriter().write(sheet, Map.of("#01400001", 13.5), output);
+        new CsvScoreReportWriter().write(sheet,
+                Map.of("#01400001", 15.277777777777777), output);
 
         String result = Files.readString(output, StandardCharsets.UTF_8);
         assertTrue(result.startsWith("\uFEFF"));
         ScoreSheet outputSheet = new ScoreSheetRepository(output, columns()).load();
         assertEquals(sheet.getHeaders(), outputSheet.getHeaders());
-        assertEquals("13.5", outputSheet.getRows().get(0).get(5));
+        assertEquals("15.28", outputSheet.getRows().get(0).get(5));
         assertEquals("9.0", outputSheet.getRows().get(1).get(5));
         assertEquals("#01400002", outputSheet.getRows().get(1).get(0));
         assertEquals("20", outputSheet.getRows().get(1).get(6));

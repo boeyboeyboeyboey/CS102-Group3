@@ -8,7 +8,7 @@ Both issues below predate the modularisation and remain unfixed. Documentation i
 
 | ID | Issue | Priority | Status | Affected area | Contact / coordination |
 | --- | --- | --- | --- | --- | --- |
-| [B1](#b1-csv-filename-case-can-overwrite-diagnostics) | Case variants of reserved CSV names can replace diagnostics | P2 | Open; fix approval pending | Shared MVP grading/configuration; no specific bonus | Boey coordinates the shared-core fix; implementing human owner is unassigned |
+| [B1](#b1-csv-filename-case-can-overwrite-diagnostics) | Case variants of reserved CSV names can replace diagnostics | P2 | Fixed 2026-10-24 (Kiya); awaiting review | Shared MVP grading/configuration; no specific bonus | Boey coordinates the shared-core fix; implementing human owner is unassigned |
 | [B2](#b2-dashboard-test-uses-a-windows-invalid-filename) | Dashboard escaping fixture creates a Windows-invalid filename | P2 | Open; fix approval pending | Feature 2: offline HTML dashboard tests | Boey, the recorded feature-2 owner |
 
 P2 means a normal-priority correctness/portability fix to schedule and verify. It does not mean every ordinary grading run fails.
@@ -30,6 +30,8 @@ P2 means a normal-priority correctness/portability fix to schedule and verify. I
 **Suggested fix and acceptance checks:** Reject reserved names case-insensitively in `ExecutionConfig.load`. Add focused configuration tests for case variants of both reserved names and an accepted custom filename. Use an otherwise valid disposable fixture with protected inputs/output paths to demonstrate the guard; preserve supplied settings and inputs. Changing direct constructor invariants is a separate API decision, not an automatic part of this fix.
 
 **Who to contact:** Boey should coordinate this as shared-core work with the main integration agent and a human teammate reviewer. The board does not assign the core grading/configuration layer to another named member. It is not automatically William's feature 4 (dynamic test ingestion) or Gabriel's feature 5 (Markdown feedback). If another member implements it, agree their ownership and check overlapping shared-file work first. Suggested focused branch: `csv-report-filename-validation`.
+
+**Resolution (2026-10-24, Kiya):** `ExecutionConfig` now checks `grading.report.file` against one list of reserved diagnostic filenames (`cases.csv`, `submissions.csv`, `similarity.csv`, `starter-analysis.csv`), ignoring case. `ExecutionConfigTest.rejectsEveryReservedReportFilenameCaseInsensitively` covers case variants of all four, and the existing acceptance test still allows distinct names such as `scores.csv` and `starter-analysis-results.csv`. Verified with `mvn clean verify`; no Windows run was performed.
 
 ## B2: Dashboard test uses a Windows-invalid filename
 

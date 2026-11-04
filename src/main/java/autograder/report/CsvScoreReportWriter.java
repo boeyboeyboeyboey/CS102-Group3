@@ -4,6 +4,8 @@ import autograder.csv.CsvCodec;
 import autograder.model.ScoreSheet;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
@@ -65,7 +67,8 @@ public final class CsvScoreReportWriter {
                 throw new IOException("score for student " + studentId
                         + " exceeds the configured denominator");
             }
-            row.set(numeratorIndex, Double.toString(score));
+            row.set(numeratorIndex, BigDecimal.valueOf(score)
+                    .setScale(2, RoundingMode.HALF_UP).toPlainString());
         }
 
         String content = CsvCodec.write(outputRows);

@@ -138,13 +138,15 @@ Key mechanics:
 | --- | --- | --- |
 | **Q1a** | `getIsogramWords(ArrayList<String>) → ArrayList<String>` | Result contains **exactly** the input words that are isograms (letters only, case-insensitive). Every result word must come from the input; each input word appears in the result iff it is an isogram (count preserved). |
 | **Q1b** | `getSumOfEvenIntegers(ArrayList<Object>) → int` | Result equals the sum of the `Integer` elements that are even. `Boolean`, `Double`, and `String` elements are ignored. |
-| **Q2a** | `getAverageAge(String file, String surname) → double` | Returned average equals the mean age of persons whose **surname** (last whitespace token of the name, case-insensitive) matches. It only queries surnames the fixed adapter does **not** cover (`TAY, LEE, WONG, ONG` are skipped), so a memorized solution is forced to give a wrong answer. |
+| **Q2a** | `getAverageAge(String file, String surname) → double` | Returned average equals the mean age of persons whose uppercase **surname** (first or last whitespace token of the name, case-insensitive) matches. It only queries surnames the fixed adapter does **not** cover, so a memorized solution is forced to give a wrong answer. |
 | **Q2b** | `getTopStudent(String file, String course) → String` | Returned `"Name-GPA"` must name a real student enrolled in the course with that exact GPA, and no other enrolled student may have a higher GPA. It only queries courses the fixed adapter does **not** cover (`SMU101, CS101, CS102, CS103` are skipped). |
-| **Q3** | `sortShapes(List<Shape>) → List<Shape>` | Result is a **permutation** of the inputs (same ids, same multiplicities) **and** sorted in **descending** order of area. Area is parsed from each shape's `toString()` in the form `id=>AREA:PERIMETER`. |
+| **Q3** | `sortShapes(List<Shape>) → List<Shape>` | Result contains exactly the input shapes with area **at most 1000**, sorted by descending area and then descending perimeter. The runner checks the `Shape` getters directly. |
 
 For Q3, `DynamicRunner` builds `Circle`/`Rectangle` objects via reflection
 (`Class.forName("Circle").getConstructor(String, double).newInstance(id, radius)`) using the compiled
 support classes already in the student classes directory, then feeds them to the student's `sortShapes`.
+Each generated input includes a circle above the 1000 area limit and two equal-area rectangles in
+reverse perimeter order, so both the filter and tie-break rule are checked every trial.
 
 ---
 
@@ -182,23 +184,15 @@ java -jar target/auto-grading-system-1.0-SNAPSHOT.jar config.properties   # grad
 ```
 
 Each submission receives **45 cases = 20 fixed + 25 dynamic** (5 per question). Their combined
-maximum remains **20 points**. Individual test cases have fractional marks because each question's
-original maximum is shared across all of its cases.
+maximum remains **20 points**. Individual cases have fractional marks because each question's
+original maximum is shared across all its cases. The score-sheet numerator is rounded half-up to two
+decimal places; detailed case and submission diagnostics retain the full computed precision.
 
-### B. Prove it catches hard-coding (fastest, JDK only, no build)
-`scratch/verify.sh` compiles a *correct* and a *hard-coded* reference solution per question and runs
-`DynamicRunner` directly:
-
-```bash
-bash scratch/verify.sh
-```
-
-Expected output: every `correct … -> PASSED` and every `hard … -> FAILED` for seeds 7 / 42 / 99.
-
-### C. Run the pipeline unit test without Maven
-This sandbox has no Maven installed, so the suite was verified by compiling with JDK 17+ and running
-`autograder.grading.ManualTestLauncher`, which invokes the two `GradingPipelineTest` methods directly.
-On a normal machine this is simply `mvn test`.
+### B. Development harnesses (historical)
+During development, `scratch/verify.sh` compiled a *correct* and a *hard-coded* reference solution per
+question and ran `DynamicRunner` directly, and `autograder.grading.ManualTestLauncher` ran the
+`GradingPipelineTest` methods without Maven. Both were removed from the submission in the repository cleanup; retrievable from Git history at commit `517ad84`. `verify.sh` also contained a
+machine-specific path. Use `mvn clean verify` instead.
 
 ---
 
@@ -206,8 +200,8 @@ On a normal machine this is simply `mvn test`.
 
 - `GradingPipelineTest` checks all 45 cases end-to-end and verifies that the question maxima remain
   3, 3, 5, 5 and 4 points (20 overall), including Q3 with the reference support classes.
-- `scratch/verify.sh` confirms, for every question and seeds 7/42/99:
-  correct → `PASSED`, hard-coded → `FAILED`.
+- During development, `scratch/verify.sh` (now removed from the submission in the repository cleanup; retrievable from Git history at commit `517ad84`) confirmed, for every question and seeds
+  7/42/99: correct → `PASSED`, hard-coded → `FAILED`.
 - No supplied `Project/` inputs were modified; the oracle-free design is compatible with
   "only `Project/` is provided".
 

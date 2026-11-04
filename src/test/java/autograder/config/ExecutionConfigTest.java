@@ -41,11 +41,13 @@ class ExecutionConfigTest {
     }
 
     @Test
-    void rejectsStarterReportFilenameCaseInsensitively() throws Exception {
+    void rejectsEveryReservedReportFilenameCaseInsensitively() throws Exception {
         AppConfig app = AppConfig.load(Path.of("config.properties"));
         Properties properties = settings();
         for (String name : new String[] {"starter-analysis.csv", "Starter-Analysis.csv",
-                "STARTER-ANALYSIS.csv", "sTaRtEr-AnAlYsIs.csv"}) {
+                "STARTER-ANALYSIS.csv", "sTaRtEr-AnAlYsIs.csv", "Cases.csv", "CASES.csv",
+                "Submissions.csv", "SUBMISSIONS.csv", "Similarity.csv",
+                "SIMILARITY.csv", "sanity-checks.csv", "Sanity-Checks.CSV"}) {
             properties.setProperty("grading.report.file", name);
             assertThrows(IllegalArgumentException.class, () -> load(properties, app), name);
         }
@@ -59,6 +61,69 @@ class ExecutionConfigTest {
             properties.setProperty("grading.report.file", name);
             assertEquals(name, load(properties, app).reportFile());
         }
+    }
+
+    @Test
+    void defaultsWorkersToOneAndParsesConfiguredValue() throws Exception {
+        AppConfig app = AppConfig.load(Path.of("config.properties"));
+        Properties properties = settings();
+        assertEquals(1, load(properties, app).workers());
+        properties.setProperty("execution.workers", " ");
+        assertEquals(1, load(properties, app).workers());
+        properties.setProperty("execution.workers", "4");
+        assertEquals(4, load(properties, app).workers());
+        properties.setProperty("execution.workers", "32");
+        assertEquals(32, load(properties, app).workers());
+    }
+
+    @Test
+    void rejectsWorkerCountsOutsideOneToThirtyTwo() throws Exception {
+        AppConfig app = AppConfig.load(Path.of("config.properties"));
+        Properties properties = settings();
+        for (String value : new String[] {"0", "-1", "33", "abc"}) {
+            properties.setProperty("execution.workers", value);
+            assertThrows(IllegalArgumentException.class, () -> load(properties, app), value);
+        }
+    }
+
+    @Test
+    void resolvesAutoWorkersCaseInsensitivelyThroughLimits() throws Exception {
+        AppConfig app = AppConfig.load(Path.of("config.properties"));
+        Properties properties = settings();
+        for (String value : new String[] {"auto", " AUTO ", "Auto"}) {
+            properties.setProperty("execution.workers", value);
+            assertEquals(2, load(properties, app, new WorkerLimits(() -> 2)).workers(), value);
+            assertEquals(4, load(properties, app, new WorkerLimits(() -> 16)).workers(), value);
+        }
+    }
+
+    @Test
+    void withWorkersCopiesConfigAndValidatesRange() throws Exception {
+        AppConfig app = AppConfig.load(Path.of("config.properties"));
+        ExecutionConfig config = load(settings(), app);
+        ExecutionConfig changed = config.withWorkers(8);
+        assertEquals(8, changed.workers());
+        assertEquals(config.directory(), changed.directory());
+        assertEquals(config.caseTimeoutMillis(), changed.caseTimeoutMillis());
+        assertEquals(32, config.withWorkers(32).workers());
+        assertThrows(IllegalArgumentException.class, () -> config.withWorkers(0));
+        assertThrows(IllegalArgumentException.class, () -> config.withWorkers(-1));
+        IllegalArgumentException tooMany = assertThrows(IllegalArgumentException.class,
+                () -> config.withWorkers(33));
+        assertEquals("execution.workers must be at most 32", tooMany.getMessage());
+    }
+
+    private ExecutionConfig load(Properties properties, AppConfig app,
+                                 WorkerLimits limits) throws Exception {
+        Path path = temporaryDirectory.resolve("execution.properties");
+        try (var output = Files.newOutputStream(path)) {
+            properties.store(output, null);
+        }
+        Properties loaded = new Properties();
+        try (var input = Files.newInputStream(path)) {
+            loaded.load(input);
+        }
+        return ExecutionConfig.load(loaded, temporaryDirectory, app, limits);
     }
 
     private ExecutionConfig load(Properties properties, AppConfig app) throws Exception {

@@ -24,12 +24,12 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public final class DynamicRunner {
 
@@ -41,8 +41,6 @@ public final class DynamicRunner {
     // Courses the instructor's fixed adapter already exercises.
     private static final Set<String> FIXED_Q2B_COURSES =
             new HashSet<>(Arrays.asList("SMU101", "CS101", "CS102", "CS103"));
-
-    private static final Pattern AREA_PATTERN = Pattern.compile("=>\\s*([0-9]+(?:\\.[0-9]+)?)\\s*:");
 
     public static void main(String[] args) {
         if (args.length < 3) {
@@ -163,13 +161,7 @@ public final class DynamicRunner {
     // query only surnames the fixed adapter does NOT cover, so a hard-coded solution fails.
     private static String trialQ2a(Random random) throws IOException {
         List<String> lines = readLines("personstester.txt");
-        List<String> candidates = new ArrayList<>();
-        for (String line : lines) {
-            String surname = lastSurname(line);
-            if (surname != null && !FIXED_Q2A_SURNAMES.contains(surname.toUpperCase())) {
-                candidates.add(surname);
-            }
-        }
+        List<String> candidates = surnameCandidates(lines);
         if (candidates.isEmpty()) {
             return "no non-fixed surnames available to probe";
         }
@@ -250,25 +242,9 @@ public final class DynamicRunner {
     }
 
     // ---- Q3: sortShapes(List<Shape>) -> List<Shape> ----
-    // Invariant: the result is a permutation of the input (same shape ids, same multiplicities) and
-    // is sorted in descending order of area (parsed from each shape's toString "id=>AREA:PERIMETER").
+    // Invariant: retain eligible inputs and sort by descending area, then perimeter.
     private static String trialQ3(Random random) throws Exception {
-        int n = 3 + random.nextInt(4); // 3..6 shapes
-        ArrayList<Object> shapes = new ArrayList<>();
-        List<String> inputIds = new ArrayList<>();
-        for (int i = 0; i < n; i++) {
-            String id = "S" + i;
-            inputIds.add(id);
-            if (random.nextBoolean()) {
-                double radius = 1 + random.nextDouble() * 20;
-                shapes.add(newShape("Circle", id, radius));
-            } else {
-                double width = 1 + random.nextDouble() * 20;
-                double height = 1 + random.nextDouble() * 20;
-                shapes.add(newShape("Rectangle", id, width, height));
-            }
-        }
-
+        List<Object> shapes = randomShapes(random);
         Object resultObj;
         try {
             resultObj = invokeStatic("Q3", "sortShapes", new Class[] {List.class}, shapes);
@@ -280,31 +256,88 @@ public final class DynamicRunner {
         }
         @SuppressWarnings("unchecked")
         List<Object> result = (List<Object>) resultObj;
+        return verifySortedEligibleShapes(shapes, result);
+    }
+
+    private static List<Object> randomShapes(Random random) throws Exception {
+        int n = 3 + random.nextInt(4); // 3..6 shapes
+        ArrayList<Object> shapes = new ArrayList<>();
+        for (int i = 0; i < n; i++) {
+            String id = "S" + i;
+            if (i == 0) {
+                double radius = 18 + random.nextDouble() * 3;
+                shapes.add(newShape("Circle", id, radius));
+            } else if (i == 1) {
+                shapes.add(newShape("Rectangle", id, 6, 4));
+            } else if (i == 2) {
+                shapes.add(newShape("Rectangle", id, 8, 3));
+            } else if (random.nextBoolean()) {
+                double radius = 1 + random.nextDouble() * 20;
+                shapes.add(newShape("Circle", id, radius));
+            } else {
+                double width = 1 + random.nextDouble() * 20;
+                double height = 1 + random.nextDouble() * 20;
+                shapes.add(newShape("Rectangle", id, width, height));
+            }
+        }
+        return shapes;
+    }
+
+    private static String verifySortedEligibleShapes(List<Object> shapes, List<Object> result)
+            throws Exception {
+        List<String> expectedIds = new ArrayList<>();
+        for (Object shape : shapes) {
+            if (shapeMetric(shape, "getArea") <= 1000.0) {
+                expectedIds.add(shapeId(shape));
+            }
+        }
 
         List<String> resultIds = new ArrayList<>();
         List<Double> areas = new ArrayList<>();
+        List<Double> perimeters = new ArrayList<>();
         for (Object shape : result) {
-            String text = shape.toString();
-            int sep = text.indexOf("=>");
-            if (sep < 0) {
-                return "cannot parse shape id from: " + text;
+            double area = shapeMetric(shape, "getArea");
+            if (area > 1000.0) {
+                return "result contains a shape whose area exceeds 1000";
             }
-            resultIds.add(text.substring(0, sep).trim());
-            Matcher m = AREA_PATTERN.matcher(text);
-            if (!m.find()) {
-                return "cannot parse shape area from: " + text;
-            }
-            areas.add(Double.parseDouble(m.group(1)));
+            resultIds.add(shapeId(shape));
+            areas.add(area);
+            perimeters.add(shapeMetric(shape, "getPerimeter"));
         }
-        if (!isPermutation(inputIds, resultIds)) {
-            return "result is not a permutation of the inputs";
+        if (!isPermutation(expectedIds, resultIds)) {
+            return "result does not contain exactly the shapes with area at most 1000";
         }
         for (int i = 1; i < areas.size(); i++) {
-            if (areas.get(i) > areas.get(i - 1) + 1e-9) {
-                return "result is not sorted by descending area";
+            double area = areas.get(i);
+            double previousArea = areas.get(i - 1);
+            if (area > previousArea + 1e-9
+                    || Math.abs(area - previousArea) <= 1e-9
+                    && perimeters.get(i) > perimeters.get(i - 1) + 1e-9) {
+                return "result is not sorted by descending area and perimeter";
             }
         }
         return null;
+    }
+
+    private static double shapeMetric(Object shape, String methodName) throws Exception {
+        Object value = shape.getClass().getMethod(methodName).invoke(shape);
+        if (!(value instanceof Number)) {
+            throw new IllegalStateException(methodName + " did not return a number");
+        }
+        double metric = ((Number) value).doubleValue();
+        if (!Double.isFinite(metric)) {
+            throw new IllegalStateException(methodName + " returned a non-finite value");
+        }
+        return metric;
+    }
+
+    private static String shapeId(Object shape) {
+        String text = shape.toString();
+        int separator = text.indexOf("=>");
+        if (separator < 0) {
+            throw new IllegalStateException("cannot parse shape id from: " + text);
+        }
+        return text.substring(0, separator).trim();
     }
 
     // ---- reflection helpers ----
@@ -336,17 +369,32 @@ public final class DynamicRunner {
         return Files.readAllLines(Path.of(file));
     }
 
-    private static String lastSurname(String line) {
+    private static List<String> surnameCandidates(List<String> lines) {
+        Set<String> candidates = new LinkedHashSet<>();
+        for (String line : lines) {
+            String[] tokens = nameTokens(line);
+            if (tokens.length == 0) {
+                continue;
+            }
+            addSurnameCandidate(candidates, tokens[0]);
+            addSurnameCandidate(candidates, tokens[tokens.length - 1]);
+        }
+        return new ArrayList<>(candidates);
+    }
+
+    private static void addSurnameCandidate(Set<String> candidates, String token) {
+        String normalized = token.toUpperCase(Locale.ROOT);
+        if (token.equals(normalized) && !FIXED_Q2A_SURNAMES.contains(normalized)) {
+            candidates.add(token);
+        }
+    }
+
+    private static String[] nameTokens(String line) {
         int dash = line.lastIndexOf('-');
-        if (dash < 0) {
-            return null;
+        if (dash < 0 || line.substring(0, dash).trim().isEmpty()) {
+            return new String[0];
         }
-        String namePart = line.substring(0, dash).trim();
-        String[] tokens = namePart.split("\\s+");
-        if (tokens.length == 0) {
-            return null;
-        }
-        return tokens[tokens.length - 1];
+        return line.substring(0, dash).trim().split("\\s+");
     }
 
     private static double averageAgeForSurname(List<String> lines, String query) {
@@ -357,7 +405,10 @@ public final class DynamicRunner {
             if (dash < 0) {
                 continue;
             }
-            String namePart = line.substring(0, dash).trim();
+            String[] tokens = nameTokens(line);
+            if (tokens.length == 0) {
+                continue;
+            }
             String ageText = line.substring(dash + 1).trim();
             int age;
             try {
@@ -365,11 +416,8 @@ public final class DynamicRunner {
             } catch (NumberFormatException e) {
                 continue;
             }
-            String[] tokens = namePart.split("\\s+");
-            if (tokens.length == 0) {
-                continue;
-            }
-            if (tokens[tokens.length - 1].equalsIgnoreCase(query)) {
+            if (tokens[0].equalsIgnoreCase(query)
+                    || tokens[tokens.length - 1].equalsIgnoreCase(query)) {
                 sum += age;
                 count++;
             }

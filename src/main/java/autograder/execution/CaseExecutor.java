@@ -35,13 +35,7 @@ public final class CaseExecutor {
             throw new IOException("compiled classes directory is missing: " + classesDirectory);
         }
         Path resultFile = caseDirectory.resolve("case-result.txt").toAbsolutePath();
-        List<String> command = new ArrayList<>();
-        command.add(javaExecutable);
-        command.add("-classpath");
-        command.add(classesDirectory.toString());
-        command.add(test.getRunnerClass());
-        command.addAll(test.getArguments());
-        command.add(resultFile.toString());
+        List<String> command = buildCommand(javaExecutable, classesDirectory, test, resultFile);
 
         ProcessResult process = ProcessRunner.run(command, caseDirectory, timeoutMillis, maxOutputBytes);
         TestStatus status;
@@ -79,14 +73,24 @@ public final class CaseExecutor {
                 process.stdout(), diagnostic);
     }
 
+    static List<String> buildCommand(String javaExecutable, Path classesDirectory,
+                                     TestCaseDefinition test, Path resultFile) {
+        List<String> command = new ArrayList<>();
+        command.add(javaExecutable);
+        // child output is decoded as utf-8 by the parent whatever the platform default is
+        command.add("-Dfile.encoding=UTF-8");
+        command.add("-Dstdout.encoding=UTF-8");
+        command.add("-Dstderr.encoding=UTF-8");
+        command.add("-classpath");
+        command.add(classesDirectory.toString());
+        command.add(test.getRunnerClass());
+        command.addAll(test.getArguments());
+        command.add(resultFile.toString());
+        return command;
+    }
+
     private static void recreateDirectory(Path directory) throws IOException {
-        if (Files.exists(directory)) {
-            try (var paths = Files.walk(directory)) {
-                for (Path path : paths.sorted((left, right) -> right.compareTo(left)).toList()) {
-                    Files.delete(path);
-                }
-            }
-        }
+        new DirectoryCleaner().deleteRecursively(directory);
         Files.createDirectories(directory);
     }
 }

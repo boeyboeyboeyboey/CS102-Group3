@@ -7,3 +7,8 @@ build/
 /HANDOFF.md
 /BOEY_FEATURE2_HANDOFF.local.md
 agents.md
+build-out/
+scratch/
+.DS_Store
+.idea
+.vscode
