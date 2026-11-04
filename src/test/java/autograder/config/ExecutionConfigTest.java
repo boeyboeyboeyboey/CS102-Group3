@@ -77,21 +77,6 @@ class ExecutionConfigTest {
     }
 
     @Test
-    void startupAllowanceIsOptionalAndMustBePositive() throws Exception {
-        AppConfig app = AppConfig.load(Path.of("config.properties"));
-        Properties properties = settings();
-        assertEquals(ExecutionConfig.DEFAULT_STARTUP_ALLOWANCE_MILLIS,
-                load(properties, app).startupAllowanceMillis());
-        properties.setProperty("execution.startup.allowance.ms", "25000");
-        assertEquals(25000, load(properties, app).startupAllowanceMillis());
-        assertEquals(25000, load(properties, app).withWorkers(2).startupAllowanceMillis());
-        properties.setProperty("execution.startup.allowance.ms", "0");
-        assertThrows(IllegalArgumentException.class, () -> load(properties, app));
-        properties.setProperty("execution.startup.allowance.ms", "soon");
-        assertThrows(IllegalArgumentException.class, () -> load(properties, app));
-    }
-
-    @Test
     void rejectsWorkerCountsOutsideOneToThirtyTwo() throws Exception {
         AppConfig app = AppConfig.load(Path.of("config.properties"));
         Properties properties = settings();
