@@ -180,6 +180,7 @@ final class MainWindow extends JFrame {
 
     private void onFinished(RunOutcome outcome) {
         List<String> problems = worker == null ? List.of() : worker.reportProblems();
+        long elapsedMillis = bar.elapsedMillis();
         worker = null;
         if (quitWhenFinished) {
             exit();
@@ -187,7 +188,7 @@ final class MainWindow extends JFrame {
         }
         bar.setIdle();
         bar.setStatus("");
-        results.show(outcome, activeSettings, problems);
+        results.show(outcome, activeSettings, problems, elapsedMillis);
         setInputsEnabled(true);
         pack();
     }

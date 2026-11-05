@@ -6,20 +6,26 @@ import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
+import javax.swing.Timer;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
-/** Bottom bar: status text, progress bar and the Grade and Stop buttons. */
+/** Bottom bar: status text with a live run clock, progress bar and the Grade and Stop buttons. */
 final class RunBar extends JPanel {
     private static final int GAP = 8;
+    private static final int CLOCK_TICK_MILLIS = 1_000;
 
     private final JLabel status = new JLabel(" ");
     private final JProgressBar progress = new JProgressBar();
     private final JButton grade = new JButton("Grade");
     private final JButton stop = new JButton("Stop");
+    private final Timer clock = new Timer(CLOCK_TICK_MILLIS, event -> refreshStatus());
 
     private final JComboBox<Integer> workers = new JComboBox<>();
+    private String statusText = "";
+    private long runStartedNanos;
 
     RunBar(Runnable onGrade, Runnable onStop, List<Integer> workerOptions) {
         super(new BorderLayout(GAP, GAP));
@@ -60,10 +66,17 @@ final class RunBar extends JPanel {
     }
 
     void setStatus(String text) {
-        status.setText(text == null || text.isEmpty() ? " " : text);
+        statusText = text == null ? "" : text;
+        refreshStatus();
+    }
+
+    /** Milliseconds since the current or most recent run started. */
+    long elapsedMillis() {
+        return TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - runStartedNanos);
     }
 
     void setIdle() {
+        clock.stop();
         progress.setVisible(false);
         stop.setVisible(false);
         grade.setEnabled(true);
@@ -83,6 +96,8 @@ final class RunBar extends JPanel {
         stop.setVisible(true);
         progress.setIndeterminate(true);
         progress.setVisible(true);
+        runStartedNanos = System.nanoTime();
+        clock.start();
         setStatus(OutcomeText.CHECKING);
     }
 
@@ -101,5 +116,10 @@ final class RunBar extends JPanel {
         } else {
             progress.setIndeterminate(true);
         }
+    }
+
+    private void refreshStatus() {
+        String text = clock.isRunning() ? OutcomeText.withClock(statusText, elapsedMillis()) : statusText;
+        status.setText(text.isEmpty() ? " " : text);
     }
 }

@@ -1,6 +1,7 @@
 package autograder.gui;
 
 import autograder.RunOutcome;
+import autograder.util.ElapsedTime;
 
 import java.nio.channels.ClosedByInterruptException;
 import java.util.List;
@@ -38,6 +39,17 @@ public final class OutcomeText {
             default:
                 return failed(outcome);
         }
+    }
+
+    /** Headline followed by how long the run took, e.g. "Grading complete\nRun time: 1 min 23 s". */
+    public static String headline(RunOutcome outcome, long elapsedMillis) {
+        return headline(outcome) + "\nRun time: " + ElapsedTime.describe(elapsedMillis);
+    }
+
+    /** Progress text with the live elapsed clock appended, e.g. "Grading 3 of 6: chee · 0:42". */
+    public static String withClock(String text, long elapsedMillis) {
+        String clock = ElapsedTime.clock(elapsedMillis);
+        return text == null || text.isBlank() ? clock : text + " · " + clock;
     }
 
     /** One line per reported problem, or empty when there are none. */
