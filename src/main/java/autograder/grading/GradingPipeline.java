@@ -4,8 +4,10 @@ import autograder.api.PlagiarismDetector;
 import autograder.api.ProgressListener;
 import autograder.api.TestCaseProvider;
 import autograder.config.AppConfig;
+import autograder.config.CaseIsolation;
 import autograder.config.ExecutionConfig;
 import autograder.execution.CaseExecutor;
+import autograder.execution.PartCaseRunner;
 import autograder.execution.ProcessResult;
 import autograder.execution.ProcessRunner;
 import autograder.execution.StudentCompiler;
@@ -197,6 +199,10 @@ public final class GradingPipeline {
                     execution.compileTimeoutMillis(), execution.maxOutputBytes());
             if (compilation.timedOut() || compilation.exitCode() != 0) {
                 recordCompilationFailure(results, questionCases, compilation);
+            } else if (execution.caseIsolation() == CaseIsolation.PART) {
+                new PartCaseRunner(execution.javaExecutable(), execution.caseTimeoutMillis(),
+                        execution.caseStartupTimeoutMillis(), execution.maxOutputBytes())
+                        .run(question, questionCases, part, results::add);
             } else {
                 for (TestCaseDefinition test : questionCases) {
                     checkCancelled();
