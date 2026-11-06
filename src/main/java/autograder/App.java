@@ -24,6 +24,7 @@ import autograder.model.StudentGrade;
 import autograder.ui.DashboardSettings;
 import autograder.ui.TerminalCancellation;
 import autograder.ui.TerminalDashboard;
+import autograder.util.ElapsedTime;
 
 import java.io.Console;
 import java.io.IOException;
@@ -31,6 +32,7 @@ import java.nio.file.Path;
 import java.security.SecureRandom;
 import java.util.OptionalInt;
 import java.util.concurrent.CancellationException;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 public final class App {
@@ -93,7 +95,14 @@ public final class App {
             cancellation = TerminalCancellation.start(console, Thread.currentThread(), System.out);
             DashboardRunListener listener = new DashboardRunListener(
                     new ConsoleRunListener(), terminalDashboard);
-            RunOutcome outcome = new GradingService().run(settings, listener);
+            long started = System.nanoTime();
+            RunOutcome outcome;
+            try {
+                outcome = new GradingService().run(settings, listener);
+            } finally {
+                System.out.println("Run time: " + ElapsedTime.describe(
+                        TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - started)));
+            }
             return report(outcome);
         } catch (Exception exception) {
             if (exception instanceof InterruptedException

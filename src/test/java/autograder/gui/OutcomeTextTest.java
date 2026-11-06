@@ -101,4 +101,19 @@ class OutcomeTextTest {
         assertEquals("Checking setup…", OutcomeText.CHECKING);
         assertEquals("Writing reports…", OutcomeText.WRITING_REPORTS);
     }
+
+    @Test
+    void headlineWithElapsedAddsRunTimeLine() {
+        assertEquals("Grading complete\nRun time: 1 min 23 s",
+                OutcomeText.headline(outcome(Status.COMPLETED, null, null), 83_000));
+        assertEquals("Grading stopped. No scores were written.\nRun time: 4.2 s",
+                OutcomeText.headline(outcome(Status.INTERRUPTED, null, null), 4_200));
+    }
+
+    @Test
+    void withClockAppendsLiveElapsedTime() {
+        assertEquals("Grading 3 of 6: chee · 0:42", OutcomeText.withClock("Grading 3 of 6: chee", 42_000));
+        assertEquals("0:05", OutcomeText.withClock("", 5_000));
+        assertEquals("0:05", OutcomeText.withClock(null, 5_000));
+    }
 }
