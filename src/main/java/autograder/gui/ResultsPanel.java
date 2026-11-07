@@ -53,7 +53,17 @@ final class ResultsPanel extends JPanel {
     }
 
     void show(RunOutcome outcome, RunSettings settings, List<String> reportProblems) {
-        headline.setText(OutcomeText.headline(outcome));
+        show(OutcomeText.headline(outcome), outcome, settings, reportProblems);
+    }
+
+    /** Shows the outcome with how long the run took under the headline. */
+    void show(RunOutcome outcome, RunSettings settings, List<String> reportProblems, long elapsedMillis) {
+        show(OutcomeText.headline(outcome, elapsedMillis), outcome, settings, reportProblems);
+    }
+
+    private void show(String headlineText, RunOutcome outcome, RunSettings settings,
+                      List<String> reportProblems) {
+        headline.setText(headlineText);
         String problemText = OutcomeText.reportProblems(reportProblems);
         problems.setText(problemText);
         problems.setVisible(!problemText.isEmpty());

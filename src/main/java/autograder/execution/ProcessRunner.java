@@ -88,6 +88,13 @@ public final class ProcessRunner {
                 stdout.text(), stderr.text());
     }
 
+    // used by the case host, which outlives a single case and is stopped on demand
+    static void stopTree(Process process) {
+        if (terminateUninterruptibly(process, new ArrayList<>())) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
     private static void terminate(Process process, List<ProcessHandle> knownDescendants)
             throws InterruptedException {
         collectDescendants(process, knownDescendants);
