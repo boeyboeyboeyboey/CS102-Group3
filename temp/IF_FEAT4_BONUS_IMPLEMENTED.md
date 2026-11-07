@@ -124,7 +124,7 @@ sequenceDiagram
             Runner->>Student: Invoke student's target method
             Student-->>Runner: Actual value, exception, timeout, or process failure
             Runner-->>Pipeline: Structured trial outcome
-            Pipeline->>Provider: Compare expected and actual; create case result
+            Pipeline->>Provider: Compare expected and actual then create case result
         end
         Pipeline->>Pipeline: Aggregate trial marks into student grade
     end
