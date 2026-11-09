@@ -28,6 +28,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 // while the parent enforces the time limit and replaces the host after anything abnormal
 public final class CaseHost {
     static final String READY = "READY";
+    static final String STARTED = "STARTED";
     static final String DONE = "DONE";
     static final String RUN = "RUN";
     static final String FIELD_SEPARATOR = "\t";
@@ -70,6 +71,7 @@ public final class CaseHost {
         String line = commands.readLine();
         while (line != null) {
             CaseCommand command = CaseCommand.parse(line);
+            send(STARTED);
             CaseOutcome outcome = runCase(command);
             send(DONE + " " + outcome.exitStatus() + " " + outcome.threadsLeft());
             line = commands.readLine();
