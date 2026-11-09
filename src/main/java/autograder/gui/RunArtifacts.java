@@ -25,21 +25,21 @@ public final class RunArtifacts {
             return artifacts;
         }
         Path directory = outcome.run().directory();
-        add(artifacts, "Dashboard", directory.resolve(settings.html().file()));
-        add(artifacts, "Scores", directory.resolve(settings.execution().reportFile()));
-        add(artifacts, "Case results", directory.resolve(CASES_FILE));
-        add(artifacts, "Submission decisions", directory.resolve(SUBMISSIONS_FILE));
-        add(artifacts, "Similarity", directory.resolve(GradingPipeline.SIMILARITY_REPORT));
-        add(artifacts, "Starter code", directory.resolve(STARTER_FILE));
-        add(artifacts, "Sanity checks", directory.resolve(SANITY_FILE));
-        add(artifacts, "Feedback", directory.resolve(settings.feedback().directory()));
-        add(artifacts, "Run folder", directory);
+        add(artifacts, "Dashboard", directory.resolve(settings.html().file()), Artifact.View.EXTERNAL);
+        add(artifacts, "Scores", directory.resolve(settings.execution().reportFile()), Artifact.View.TABLE);
+        add(artifacts, "Case results", directory.resolve(CASES_FILE), Artifact.View.TABLE);
+        add(artifacts, "Submission decisions", directory.resolve(SUBMISSIONS_FILE), Artifact.View.TABLE);
+        add(artifacts, "Similarity", directory.resolve(GradingPipeline.SIMILARITY_REPORT), Artifact.View.TABLE);
+        add(artifacts, "Starter code", directory.resolve(STARTER_FILE), Artifact.View.TABLE);
+        add(artifacts, "Sanity checks", directory.resolve(SANITY_FILE), Artifact.View.TABLE);
+        add(artifacts, "Feedback", directory.resolve(settings.feedback().directory()), Artifact.View.FEEDBACK);
+        add(artifacts, "Run folder", directory, Artifact.View.EXTERNAL);
         return artifacts;
     }
 
-    private static void add(List<Artifact> artifacts, String label, Path path) {
+    private static void add(List<Artifact> artifacts, String label, Path path, Artifact.View view) {
         if (Files.exists(path)) {
-            artifacts.add(new Artifact(label, path));
+            artifacts.add(new Artifact(label, path, view));
         }
     }
 }

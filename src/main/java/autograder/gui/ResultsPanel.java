@@ -11,6 +11,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
@@ -31,6 +32,7 @@ final class ResultsPanel extends JPanel {
     private final JTable table = new JTable();
     private final JScrollPane tableScroll = new JScrollPane(table);
     private final JPanel buttons = new JPanel(new FlowLayout(FlowLayout.LEFT, GAP, 0));
+    private OutputViewer viewer;
 
     ResultsPanel() {
         super(new BorderLayout(0, GAP));
@@ -63,6 +65,9 @@ final class ResultsPanel extends JPanel {
 
     private void show(String headlineText, RunOutcome outcome, RunSettings settings,
                       List<String> reportProblems) {
+        if (viewer != null) {
+            viewer.setVisible(false);
+        }
         headline.setText(headlineText);
         String problemText = OutcomeText.reportProblems(reportProblems);
         problems.setText(problemText);
@@ -83,8 +88,19 @@ final class ResultsPanel extends JPanel {
 
     private JButton openButton(Artifact artifact) {
         JButton button = new JButton(artifact.label());
-        button.addActionListener(event -> ArtifactOpener.open(this, artifact.path()));
+        button.addActionListener(event -> open(artifact));
         return button;
+    }
+
+    private void open(Artifact artifact) {
+        if (artifact.view() == Artifact.View.EXTERNAL) {
+            ArtifactOpener.open(this, artifact.path());
+            return;
+        }
+        if (viewer == null) {
+            viewer = new OutputViewer(SwingUtilities.getWindowAncestor(this));
+        }
+        viewer.display(artifact);
     }
 
     private void configureHeadline() {
