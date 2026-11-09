@@ -73,6 +73,16 @@ final class CaseHostProcess implements AutoCloseable {
         send(runnerClass, caseDirectory, arguments);
         long deadline = started + TimeUnit.MILLISECONDS.toNanos(timeoutMillis);
         String reply = nextReply(deadline);
+        if (reply != null && reply.equals(END_OF_STREAM)) {
+            throw new HostFailureException("case host exited before accepting the case");
+        }
+        if (reply != null && !reply.equals(CaseHost.STARTED)) {
+            close();
+            throw new HostFailureException("unexpected case host reply: " + reply);
+        }
+        if (reply != null) {
+            reply = nextReply(deadline);
+        }
         long duration = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - started);
         if (reply == null) {
             close();
