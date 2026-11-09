@@ -1,4 +1,4 @@
-# William's Guide: How the Autograder Works
+# How the Autograder Works
 
 This guide gives you the run order first, then zooms in on the two pieces you
 worked on:
