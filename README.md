@@ -35,7 +35,7 @@ After identity is confirmed, reread the feature board. For Sera or William, conf
 
 A Java application being built to prepare and grade student submissions against instructor tests, then fill the supplied CSV score sheet.
 
-**Current stage: core MVP and feature 2 DONE; features 1, 3, 4, 5 and 6 are in REVIEW.** The command prepares submissions, compiles each part, runs 20 fixed instructor cases and 25 seeded dynamic property cases separately with deadlines, exports real scores and generates optional HTML and Markdown reports. The combined cases share each question's original maximum, preserving the 20-point assessment total while allowing dynamic results to affect marks. Boey confirmed the original dashboard build/run/display on 2026-10-10. The question heatmap was merged in PR #2; its historical agent checks are recorded, while a separate human heatmap build/display transcript remains uncaptured. Gabriel's feature 5 is merged and remains REVIEW pending its human completion gate. See [the dashboard architecture](offline_html_dashboard_architecture.md) for its implementation and presentation talking points.
+**Current stage: core MVP and feature 2 DONE; features 1, 3, 4, 5 and 6 are in REVIEW.** The command prepares submissions, compiles each part, runs 20 fixed instructor cases and 25 seeded dynamic property cases separately with deadlines, exports real scores and generates optional HTML and Markdown reports. The combined cases share each question's original maximum, preserving the 20-point assessment total while allowing dynamic results to affect marks. The project also includes a Swing instructor GUI, parallel grading, advisory score sanity checks, and a run-time display. The run-time change was merged in PR #33; Gabriel's clean-build and GUI display checks remain pending. Boey confirmed the original dashboard build/run/display on 2026-10-10. The question heatmap was merged in PR #2; its historical agent checks are recorded, while a separate human heatmap build/display transcript remains uncaptured. Gabriel's feature 5 is merged and remains REVIEW pending its human completion gate. See [the dashboard architecture](offline_html_dashboard_architecture.md) for its implementation and presentation talking points.
 
 Kiya's feature-1 plagiarism detector merged in PR #1 on 2026-10-15, was integrated with the code-modularisation work in PR #5, and received follow-up fixes in PRs #9 and #12. It is REVIEW pending Kiya's human clean-build confirmation.
 
@@ -92,9 +92,9 @@ Instructors can follow the [randomized lab-test user guide](docs/INSTRUCTOR_USER
 
 ### 1. Install the prerequisites
 
-Each teammate needs Git, a **full JDK 17 or later** (including `javac`) and **Apache Maven 3.9.x** on their own computer. An editor such as VS Code or IntelliJ is optional; the terminal commands below are sufficient. This repository does not include a Maven wrapper.
+Each teammate needs Git and a **full JDK 17 or later** (including `javac`). An editor such as VS Code or IntelliJ is optional; the terminal commands below are sufficient. The repository includes the Maven Wrapper, which downloads Maven 3.9.9 and the required Maven plugins/dependencies on the first build, so a separate Maven installation is not required. Internet access is needed for that first build.
 
-Install the JDK and Maven using your operating system's installer or package manager. Set `JAVA_HOME` to the JDK installation directory, and add the JDK's `bin` and Maven's `bin` directories to `PATH`. On Windows, configure these through Environment Variables and reopen your terminal. On macOS/Linux, use your shell configuration or the package manager's setup instructions.
+Install the JDK using your operating system's installer or package manager. Set `JAVA_HOME` to the JDK installation directory and add the JDK's `bin` directory to `PATH`. On Windows, configure these through Environment Variables and reopen your terminal. On macOS/Linux, use your shell configuration or the package manager's setup instructions.
 
 Open Terminal on macOS/Linux or PowerShell on Windows and check:
 
@@ -102,10 +102,9 @@ Open Terminal on macOS/Linux or PowerShell on Windows and check:
 git --version
 java -version
 javac -version
-mvn -version
 ```
 
-All four commands must work. `mvn -version` should report Java 17 or later and the intended JDK installation. The verified development environment used JDK 25 and Maven 3.9.9, with application compilation targeting Java 17. A separate Java 17 runtime and Windows run have not yet been verified.
+The Java commands should report JDK 17 or later. The project targets Java 17; recorded GitHub Actions checks have run on Temurin JDK 17 for Windows and macOS. The GUI and the Windows `compile.bat`/`run.bat` scripts have not been personally checked on Windows.
 
 ### 2. Clone and open the repository
 
@@ -128,12 +127,14 @@ If Git reports divergent branches or conflicting local changes, coordinate with 
 ### 3. Build and run the automated checks
 
 ```sh
-mvn clean verify
+./mvnw clean verify
 ```
 
-This removes the previous `target` output, compiles the application, runs the tests and builds `target/auto-grading-system-1.0-SNAPSHOT.jar`. The first build downloads Maven plugins and dependencies and needs internet access. The only application libraries are JPlag 4.3.0 (GPL-3.0, the newest release built for Java 17) and its small dependencies; Maven downloads them and bundles them into the JAR, so nothing needs to be installed manually and `java -jar` works on its own.
+On Windows PowerShell, use `.\mvnw.cmd clean verify`.
 
-Wait for **BUILD SUCCESS** before running the application. The current build (2026-10-24, `main` after PR #12) passes **128 tests, zero failures/errors/skips**; earlier milestones had 48 (MVP), 59 (dashboard), 67 (heatmap) and 86 (modularisation). Messages about deliberately broken archives, missing files or timeouts during tests are expected when the final test summary passes. Detailed test reports are in `target/surefire-reports`.
+This removes the previous `target` output, compiles the application, runs the tests and builds `target/auto-grading-system-1.0-SNAPSHOT.jar`. The first build downloads Maven 3.9.9, plugins and dependencies and needs internet access. The only application libraries are JPlag 4.3.0 (GPL-3.0, the newest release built for Java 17) and its small dependencies; Maven downloads them and bundles them into the JAR, so nothing needs to be installed manually and `java -jar` works on its own.
+
+Wait for **BUILD SUCCESS** before running the application. The latest recorded full verification is for the run-timer revision based on `main` at `5e8d23e`: `mvnw clean verify` passed **296 tests, zero failures/errors/skips**. The packaged sample run exited 0 and produced scores of 20.00, 11.50, 10.50, 9.88, 0.00 and 0.50. PR #33 merged the run-timer change on November 6; Gabriel's clean-build confirmation and GUI clock/headline check remain pending, so this is pre-acceptance evidence. Earlier milestones had 48 (MVP), 59 (dashboard), 67 (heatmap), 86 (pre-integration modularisation) and 222 tests. Messages about deliberately broken archives, missing files or timeouts during tests are expected when the final test summary passes. Detailed test reports are in `target/surefire-reports`.
 
 ### 4. Grade the supplied sample submissions
 
@@ -328,24 +329,26 @@ The grading pipeline supplies scores only for eligible students after recording 
 
 ## Six bonus extension points
 
-Sera's starter-code comparison (feature 3) is implemented locally and in REVIEW, pending human build/run and visual acceptance. It writes `starter-analysis.csv`, terminal warnings and HTML analysis findings without changing marks. The approved method-comparison revision also generates `starter-comparison/index.html` inside each grading run: open the printed **Method comparison report** path, search a student/question/method, select changed or unchanged methods, and expand the side-by-side source differences and token-edit explanations. It works offline and requires no extra grading command. See [the feature 3 testing guide](docs/STARTER_CODE_TESTING.md) for commands, configuration, expected outcomes and limitations. This status supersedes older blanket statements that other bonus implementations are TODO.
+Sera's starter-code comparison (feature 3) is implemented on its feature branch and in REVIEW, pending human build/run and visual acceptance. It writes `starter-analysis.csv`, terminal warnings and HTML analysis findings without changing marks. The approved method-comparison revision also generates `starter-comparison/index.html` inside each grading run: open the printed **Method comparison report** path, search a student/question/method, select changed or unchanged methods, and expand the side-by-side source differences and token-edit explanations. It works offline and requires no extra grading command. See [the feature 3 testing guide](docs/STARTER_CODE_TESTING.md) for commands, configuration, expected outcomes and limitations.
 
-| Feature | Java interface | Owner |
-| --- | --- | --- |
-| 1: token-based similarity | PlagiarismDetector | Kiya |
-| 2: offline HTML report | HtmlReportGenerator | Boey |
-| 3: starter-code comparison | BoilerplateDetector | Sera, locked |
-| 4: parameterized test cases | TestCaseProvider | William, locked |
-| 5: Markdown feedback | FeedbackGenerator | Gabriel |
-| 6: terminal dashboard | ProgressListener | Kai Cong |
+The board below is a snapshot; `agents.md` is authoritative if claims change. All six numbered features are assigned, so none is available to claim.
 
-The interfaces exist so implementations share common inputs and outputs. HTML reporting receives `GradingReportContext`, which carries completed batch results and explicit withholding reasons. Kiya's feature-1 detector is merged (integrated through PR #5) and in REVIEW. Boey owns the HTML dashboard (feature 2, DONE). Gabriel's Markdown feedback is merged and in REVIEW. Sera and William retain locked features 3 and 4; Kai Cong owns feature 6, implemented locally and in REVIEW pending his clean-build confirmation.
+| Feature | Purpose | Owner | Status | Available? |
+| --- | --- | --- | --- | --- |
+| 1: token-based plagiarism detection | Flag likely source-code similarity for review | Kiya | REVIEW | No |
+| 2: offline HTML dashboard | Explore scores, cases and grading evidence offline | Boey | DONE | No |
+| 3: starter-code comparison | Separate supplied boilerplate from student changes | Sera (locked) | REVIEW | No |
+| 4: dynamic parameterized tests | Add generated cases while preserving question maxima | William (locked) | REVIEW | No |
+| 5: Markdown student feedback | Give each student evidence-based grading feedback | Gabriel | REVIEW | No |
+| 6: ANSI terminal dashboard | Show grading progress and support cancellation | Kai Cong | REVIEW | No |
+
+The interfaces exist so implementations share common inputs and outputs. HTML reporting receives `GradingReportContext`, which carries completed batch results and explicit withholding reasons. Kiya's feature-1 detector is merged (integrated through PR #5) and in REVIEW. Boey owns the HTML dashboard (feature 2, DONE). Gabriel's Markdown feedback is merged and in REVIEW. Sera and William retain locked features 3 and 4; Kai Cong owns feature 6, which remains in REVIEW pending his clean-build confirmation.
 
 Feature 6 uses `ProgressListener` for archive and grading progress. `dashboard.mode=auto` selects ANSI color only for an interactive terminal; `plain` always omits ANSI codes, and `ansi` forces color. On an interactive console, type `q` then Enter to cancel; cancellation exits with code 130. See [the terminal dashboard guide](docs/TERMINAL_DASHBOARD.md) for behavior and limits.
 
 ## Latest verification
 
-Current verification on 2026-10-27 (`main` after PR #20, 86452f5): `mvn clean verify` passed **222 tests, zero failures/errors/skips** on macOS (JDK 25 targeting Java 17), and GitHub Actions CI on PR #21 (main plus the submission scripts) passed the same 222 tests, the packaged sample run and the score check on **windows-latest and macos-latest with Temurin JDK 17**. The packaged CLI graded the six supplied submissions with exit code 0. Each submission has **45 case records** (20 fixed instructor cases plus 25 seeded dynamic cases), and each question keeps its original maximum. The run wrote the score sheet, `cases.csv`, `submissions.csv`, `similarity.csv` (0 pairs at the default thresholds), `starter-analysis.csv`, `sanity-checks.csv` (no findings), `dashboard.html` and six feedback files. Human acceptance of features 1, 3, 4 and 5 is still pending; feature 6 is not on main.
+The most recent recorded full verification is `mvnw clean verify` on the run-timer revision based on `main` at `5e8d23e`, using JDK 25 with Java 17 compilation, with **296 tests and zero failures/errors/skips**. The packaged CLI sample exited 0 and produced scores of 20.00, 11.50, 10.50, 9.88, 0.00 and 0.50. PR #33 merged the run-timer change on November 6. Gabriel's human clean-build confirmation and GUI clock/headline check are pending. Earlier, GitHub Actions CI on PR #21 passed 222 tests, the packaged sample run and score check on `windows-latest` and `macos-latest` with Temurin JDK 17. That CI run wrote the score sheet, `cases.csv`, `submissions.csv`, `similarity.csv` (0 pairs at the default thresholds), `starter-analysis.csv`, `sanity-checks.csv` (no findings), `dashboard.html` and six feedback files. Features 1, 3, 4 and 5 remain in REVIEW; feature 6 remains in REVIEW and is not on `main`.
 
 | Student | Q1a | Q1b | Q2a | Q2b | Q3 | Total | Score sheet |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
@@ -360,7 +363,7 @@ Question maxima are 3, 3, 5, 5 and 4. Each question's marks are shared equally a
 
 The following modularisation and MVP records are historical evidence.
 
-The behaviour-preserving modularisation revision (merged in PR #5) was **REVIEW** pending post-merge checks, Boey's clean-build/behaviour acceptance and teammate review. Its pre-integration verification passed **86 tests, zero failures/errors/skips** on JDK 25 targeting Java 17; the sample retained the six totals below and 120 cases, producing HTML and six Markdown files. Ten deterministic artifacts and 49 public API surfaces matched in the historical comparison. Those results do not verify PR #5's integration. Actual Java 17 runtime, Windows and a new real-browser pass were not performed; the existing Windows fixture defect remains separately listed. See [CODE_REVIEW.md](docs/CODE_REVIEW.md) and the [PR #5 merge record](docs/PR5_MERGE_RESOLUTION.md).
+The modularisation comparison's **86-test** run, ten deterministic artifact comparisons and 49 public API comparisons are historical pre-integration evidence; they are not the current verification result. PR #5's integration and later changes are covered by the newer verification records above. See [CODE_REVIEW.md](docs/CODE_REVIEW.md) and the [PR #5 merge record](docs/PR5_MERGE_RESOLUTION.md) for scope and evidence limits.
 
 The remaining MVP is **DONE**. Boey supplied a successful clean build on 2026-10-10 with **48 tests, zero failures/errors/skips**, followed by the expected six-submission grading output (12, 10, 10, 0, 20, 1). The human build-confirmation gate is satisfied. `mvn clean verify` passed **48 tests, zero failures/errors**. After final diagnostic wording/formatting fixes, the affected execution suite passed **7/7** and the executable JAR was rebuilt successfully. The packaged CLI graded all six supplied submissions in one fresh run, producing 120 case records (20 per submission). All scores reconciled between case points, submission summaries and exported CSV numerators. All **67** supplied-file hashes in the new snapshot remained unchanged.
 
