@@ -1,12 +1,14 @@
 package autograder;
 
-import autograder.autotester.Question;
-import autograder.autotester.QuestionRegistry;
-import autograder.autotester.RandomizedBatchGrader;
-import autograder.autotester.RandomizedConfig;
-import autograder.autotester.RandomizedGrader;
-import autograder.autotester.RandomizedResult;
-import autograder.autotester.ResourceGenerator;
+import autograder.autotester.execution.RandomizedBatchGrader;
+import autograder.autotester.execution.RandomizedBatchResult;
+import autograder.autotester.execution.RandomizedConfig;
+import autograder.autotester.execution.RandomizedGrader;
+import autograder.autotester.execution.RandomizedResult;
+import autograder.autotester.execution.RandomizedSubmissionResult;
+import autograder.autotester.execution.ResourceGenerator;
+import autograder.autotester.question.Question;
+import autograder.autotester.question.QuestionRegistry;
 import autograder.api.BoilerplateDetector;
 import autograder.api.FeedbackGenerator;
 import autograder.api.HtmlReportGenerator;
@@ -206,9 +208,9 @@ public final class App {
         AppConfig appConfig = AppConfig.load(configFile);
         RandomizedConfig config = RandomizedConfig.load(configFile);
         long seed = args.length == 5 ? Long.parseLong(args[4]) : new SecureRandom().nextLong();
-        RandomizedBatchGrader.BatchResult batch = new RandomizedBatchGrader().grade(question, zipDirectory,
+        RandomizedBatchResult batch = new RandomizedBatchGrader().grade(question, zipDirectory,
                 appConfig, config, seed);
-        for (RandomizedBatchGrader.SubmissionResult submission : batch.submissions()) {
+        for (RandomizedSubmissionResult submission : batch.submissions()) {
             RandomizedResult result = submission.result();
             System.out.println(submission.archive() + " | " + (result.passed() ? "PASS" : "FAIL")
                     + " | " + result.passedCount() + "/" + result.totalCount()
