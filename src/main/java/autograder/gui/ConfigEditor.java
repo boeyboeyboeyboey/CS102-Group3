@@ -77,9 +77,9 @@ final class ConfigEditor extends JDialog {
         problem.setOpaque(false);
         problem.setForeground(ERROR_COLOR);
         problem.getAccessibleContext().setAccessibleName("Save problem");
-        JButton save = new JButton("Save");
+        JButton save = new BrandButton("Save", true);
         save.addActionListener(event -> save());
-        JButton cancel = new JButton("Cancel");
+        JButton cancel = new BrandButton("Cancel", false);
         cancel.addActionListener(event -> cancel());
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, GAP, 0));
         actions.add(cancel);

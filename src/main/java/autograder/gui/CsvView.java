@@ -50,6 +50,7 @@ final class CsvView extends JPanel {
         }
         table.setRowSorter(sorter);
         table.setFillsViewportHeight(true);
+        Brand.style(table);
         table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         // cells hold student output, which swing would otherwise render if it starts with <html>
         DefaultTableCellRenderer plain = new DefaultTableCellRenderer();

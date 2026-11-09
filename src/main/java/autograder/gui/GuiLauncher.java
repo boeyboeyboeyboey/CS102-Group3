@@ -22,6 +22,7 @@ public final class GuiLauncher {
         } catch (Exception exception) {
             // keep the default look and feel
         }
+        Brand.install();
         GuiPreferences preferences = GuiPreferences.system();
         StartupValues values = StartupValues.resolve(args, preferences.load(),
                 Path.of("").toAbsolutePath(), StartupValues.codeLocation());

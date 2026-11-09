@@ -34,7 +34,7 @@ final class MainWindow extends JFrame {
     private final PathRow output;
     private final JPanel advanced = new JPanel(new BorderLayout());
     private final JToggleButton advancedToggle = new JToggleButton(ADVANCED_CLOSED);
-    private final JButton editConfig = new JButton("Edit config…");
+    private final JButton editConfig = new BrandButton("Edit config…", false);
     private final ResultsPanel results = new ResultsPanel();
     private final WorkerChoice workerChoice = new WorkerChoice(WorkerLimits.system());
     private final RunBar bar;
@@ -43,7 +43,7 @@ final class MainWindow extends JFrame {
     private boolean quitWhenFinished;
 
     MainWindow(StartupValues values, GuiPreferences preferences) {
-        super("Autograder");
+        super("ByteGrade: AutoGrader");
         this.preferences = preferences;
         this.monitor = new ReadinessMonitor(this::inputs, this::showReadiness);
         Runnable changed = monitor::schedule;
@@ -97,7 +97,10 @@ final class MainWindow extends JFrame {
         content.add(inputs, BorderLayout.NORTH);
         content.add(results, BorderLayout.CENTER);
         content.add(bar, BorderLayout.SOUTH);
-        setContentPane(content);
+        JPanel root = new JPanel(new BorderLayout());
+        root.add(new BrandHeader(), BorderLayout.NORTH);
+        root.add(content, BorderLayout.CENTER);
+        setContentPane(root);
     }
 
     private void fill(StartupValues values) {
@@ -178,6 +181,7 @@ final class MainWindow extends JFrame {
         preferences.save(inputs());
         activeSettings = readiness.settings().withWorkers(bar.selectedWorkers());
         bar.setRunning();
+        pack();
         worker = new GradingRunWorker(activeSettings, bar::showProgress, this::onFinished);
         worker.execute();
     }
@@ -223,7 +227,7 @@ final class MainWindow extends JFrame {
             return;
         }
         int answer = JOptionPane.showConfirmDialog(this, "Grading is running. Stop and quit?",
-                "Autograder", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+                "ByteGrade", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
         if (answer == JOptionPane.YES_OPTION && worker != null) {
             quitWhenFinished = true;
             stopGrading();

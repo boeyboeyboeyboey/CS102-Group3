@@ -78,16 +78,26 @@ final class ResultsPanel extends JPanel {
                 : new ResultsTableModel(List.of()));
         buttons.removeAll();
         if (settings != null) {
-            for (Artifact artifact : RunArtifacts.from(outcome, settings)) {
-                buttons.add(openButton(artifact));
-            }
+            addButtons(RunArtifacts.from(outcome, settings), outcome);
         }
         setVisible(true);
         revalidate();
     }
 
+    private void addButtons(List<Artifact> artifacts, RunOutcome outcome) {
+        for (Artifact artifact : artifacts) {
+            buttons.add(openButton(artifact));
+        }
+        if (ResultsExport.available(artifacts)) {
+            JButton export = new BrandButton("Export all…", false);
+            export.addActionListener(event -> ResultsExport.chooseAndWrite(this, artifacts,
+                    outcome.run().directory()));
+            buttons.add(export);
+        }
+    }
+
     private JButton openButton(Artifact artifact) {
-        JButton button = new JButton(artifact.label());
+        JButton button = new BrandButton(artifact.label(), false);
         button.addActionListener(event -> open(artifact));
         return button;
     }
@@ -109,6 +119,7 @@ final class ResultsPanel extends JPanel {
         headline.setWrapStyleWord(true);
         headline.setOpaque(false);
         headline.setFont(headline.getFont().deriveFont(Font.BOLD));
+        headline.setForeground(Brand.INK);
         headline.getAccessibleContext().setAccessibleName("Result");
     }
 
@@ -124,6 +135,7 @@ final class ResultsPanel extends JPanel {
     private void configureTable() {
         table.setAutoCreateRowSorter(true);
         table.setFillsViewportHeight(true);
+        Brand.style(table);
         table.getAccessibleContext().setAccessibleName("Student scores");
         tableScroll.setPreferredSize(new Dimension(TABLE_WIDTH, TABLE_HEIGHT));
         NumberFormat format = NumberFormat.getNumberInstance();

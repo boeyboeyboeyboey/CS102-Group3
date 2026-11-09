@@ -38,6 +38,7 @@ final class FeedbackView extends JPanel {
         JList<String> students = new JList<>(files.stream().map(FeedbackView::studentName)
                 .toArray(String[]::new));
         students.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        Brand.style(students);
         students.getAccessibleContext().setAccessibleName("Students");
         students.addListSelectionListener(event -> {
             if (!event.getValueIsAdjusting() && students.getSelectedIndex() >= 0) {
