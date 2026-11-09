@@ -79,11 +79,15 @@ The first result line is exactly PASS or FAIL. The remaining lines contain the p
 Example:
 
 ~~~java
+import autograder.autotester.generator.RandomInt;
+import autograder.autotester.question.Question;
+import java.util.List;
+
 public final class Q1 extends Question {
     public Q1() {
         signature("Q1", "isEven", boolean.class);
         describe("Return true when the integer is even.");
-        param("n", int.class);
+        addParameter("n", int.class);
         addTestCase("small", new RandomInt(-100, 100));
         addTestCase("edge", new RandomInt(-3, 3));
     }
@@ -129,6 +133,12 @@ The values are range-checked. A grading run is limited to 10,000 trials total an
 | RandomizedStudentRunner.java | Standalone child-process entry point; it sees generated inputs, declared fixtures/support classes, the student's classes, and the runner |
 | RandomizedConfig | Reads and validates the mode's external settings |
 | QuestionRegistry | Maps question IDs to instructor-authored definitions |
+
+The source is grouped by responsibility: `autograder.autotester.question` contains
+question definitions and their model types; `autograder.autotester.generator`
+contains the generator interface and implementations; and
+`autograder.autotester.execution` contains grading, resource generation,
+configuration, and result classes.
 
 For the lab demo, `Shape`, `Circle`, `Rectangle`, and `DataException` support sources are packaged under `src/main/resources/autograder/autotester/labtest/`. They reproduce the small public contracts used by the supplied lab artifacts; the supplied `Project` files and compiled classes are not rewritten.
 
