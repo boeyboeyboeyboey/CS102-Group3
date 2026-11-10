@@ -42,5 +42,8 @@ class RunArtifactsTest {
         List<String> labels = RunArtifacts.from(outcome, settings).stream().map(Artifact::label).toList();
 
         assertEquals(List.of("Dashboard", "Scores", "Case results", "Feedback", "Run folder"), labels);
+        List<Artifact.View> views = RunArtifacts.from(outcome, settings).stream().map(Artifact::view).toList();
+        assertEquals(List.of(Artifact.View.EXTERNAL, Artifact.View.TABLE, Artifact.View.TABLE,
+                Artifact.View.FEEDBACK, Artifact.View.EXTERNAL), views);
     }
 }
