@@ -33,15 +33,15 @@ The compile scripts skip the automated tests. To run them (optional), use `sh ./
 
 ## Expected sample result
 
-The default configuration processes the six archives in `Project/student-submission`. The supplied run produces Chee **11.50**, David **10.50**, Fen **9.88**, Jing **0.00**, Ping **20.00**, and Xing **0.50** out of 20 in the score sheet. These totals include dynamic case results. The score sheet rounds half-up to two decimal places, so Fen's exact 9.875 is exported as 9.88; `submissions.csv` (ComputedScore) and `cases.csv` keep the exact values. David and Xing retain name-header review warnings. A completed run with those warnings is expected; check the reports rather than treating every warning as a failure.
+The default configuration processes the six archives in `Project/student-submission`. The supplied run produces Ping **20.00**, Chee **11.50**, David **10.50**, Fen **9.88**, Jing **0.00**, and Xing **0.50** out of 20 in the score sheet. These totals include dynamic case results. The score sheet rounds half-up to two decimal places, so Fen's exact 9.875 is exported as 9.88; `submissions.csv` (ComputedScore) and `cases.csv` keep the exact values. David and Xing retain name-header review warnings. A completed run with those warnings is expected; check the reports rather than treating every warning as a failure.
 
 | Student | Q1a | Q1b | Q2a | Q2b | Q3 | Total | Score sheet |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Ping | 3 | 3 | 5 | 5 | 4 | 20 | 20.00 |
 | Chee | 3 | 3 | 5 | 0.5 | 0 | 11.5 | 11.50 |
 | David | 3 | 3 | 4.5 | 0 | 0 | 10.5 | 10.50 |
 | Fen | 0.375 | 0 | 5 | 4.5 | 0 | 9.875 | 9.88 |
 | Jing | 0 | 0 | 0 | 0 | 0 | 0 | 0.00 |
-| Ping | 3 | 3 | 5 | 5 | 4 | 20 | 20.00 |
 | Xing | 0 | 0 | 0.5 | 0 | 0 | 0.5 | 0.50 |
 
 Question maxima are 3, 3, 5, 5 and 4. Each question's marks are shared equally across its fixed and dynamic cases, so case values such as 0.375 are expected. The score sheet rounds half-up to two decimal places; case and submission reports retain full precision. Results may vary when the assessment, submissions, or configuration changes.
