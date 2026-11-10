@@ -43,7 +43,7 @@ final class MainWindow extends JFrame {
     private boolean quitWhenFinished;
 
     MainWindow(StartupValues values, GuiPreferences preferences) {
-        super("ByteGrade: AutoGrader");
+        super(Brand.NAME + ": AutoGrader");
         this.preferences = preferences;
         this.monitor = new ReadinessMonitor(this::inputs, this::showReadiness);
         Runnable changed = monitor::schedule;
@@ -227,7 +227,7 @@ final class MainWindow extends JFrame {
             return;
         }
         int answer = JOptionPane.showConfirmDialog(this, "Grading is running. Stop and quit?",
-                "ByteGrade", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+                Brand.NAME, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
         if (answer == JOptionPane.YES_OPTION && worker != null) {
             quitWhenFinished = true;
             stopGrading();

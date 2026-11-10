@@ -14,6 +14,7 @@ import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+/** Unpacks a student archive while enforcing entry, size and path limits and removing partial output on failure. */
 public final class SafeZipExtractor {
     private static final String WINDOWS_INVALID_CHARACTERS = "<>:\"|?*";
     private static final Pattern WINDOWS_RESERVED_NAME = Pattern.compile(

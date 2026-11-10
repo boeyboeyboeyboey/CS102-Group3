@@ -9,6 +9,7 @@ import java.util.Optional;
 /** Finds the configuration file to start with, without touching the disk beyond existence checks. */
 public final class ConfigLocator {
     static final String CONFIG_NAME = "config.properties";
+    private static final int CODE_SEARCH_LEVELS = 2;
 
     private ConfigLocator() {
     }
@@ -35,7 +36,7 @@ public final class ConfigLocator {
             return;
         }
         Path parent = codeLocation.toAbsolutePath().getParent();
-        for (int level = 0; level < 2 && parent != null; level++) {
+        for (int level = 0; level < CODE_SEARCH_LEVELS && parent != null; level++) {
             candidates.add(parent.resolve(CONFIG_NAME));
             parent = parent.getParent();
         }

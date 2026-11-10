@@ -27,18 +27,13 @@ public final class OutcomeText {
     }
 
     public static String headline(RunOutcome outcome) {
-        switch (outcome.status()) {
-            case COMPLETED:
-                return "Grading complete";
-            case REPORT_FAILURES:
-                return "Grading complete. Some reports could not be written.";
-            case NO_SUBMISSIONS:
-                return "No submissions matched";
-            case INTERRUPTED:
-                return stopped(outcome);
-            default:
-                return failed(outcome);
-        }
+        return switch (outcome.status()) {
+            case COMPLETED -> "Grading complete";
+            case REPORT_FAILURES -> "Grading complete. Some reports could not be written.";
+            case NO_SUBMISSIONS -> "No submissions matched";
+            case INTERRUPTED -> stopped(outcome);
+            default -> failed(outcome);
+        };
     }
 
     /** Headline followed by how long the run took, e.g. "Grading complete\nRun time: 1 min 23 s". */
@@ -82,16 +77,12 @@ public final class OutcomeText {
         if (stage == null) {
             return "running";
         }
-        switch (stage) {
-            case ENVIRONMENT:
-                return "checking the setup";
-            case PREPARATION:
-                return "preparing submissions";
-            case GRADING:
-                return "grading";
-            default:
-                return "writing reports";
-        }
+        return switch (stage) {
+            case ENVIRONMENT -> "checking the setup";
+            case PREPARATION -> "preparing submissions";
+            case GRADING -> "grading";
+            default -> "writing reports";
+        };
     }
 
     private static String failed(RunOutcome outcome) {

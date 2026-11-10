@@ -2,6 +2,7 @@ package autograder.model;
 
 import java.util.Objects;
 
+/** The outcome of running one test case. */
 public final class TestCaseResult {
     private final TestCaseDefinition testCase;
     private final TestStatus status;

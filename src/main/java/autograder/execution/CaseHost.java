@@ -23,20 +23,25 @@ import java.util.Properties;
 import java.util.TimeZone;
 import java.util.concurrent.atomic.AtomicInteger;
 
-// child jvm that runs the cases of one question part; each case gets a fresh class loader,
-// its own output files, empty stdin and restored system properties, locale and time zone,
-// while the parent enforces the time limit and replaces the host after anything abnormal
+/**
+ * Child jvm that runs the cases of one question part. Each case gets a fresh class loader, its own
+ * output files, empty stdin and restored system properties, locale and time zone, while the parent
+ * enforces the time limit and replaces the host after anything abnormal.
+ */
 public final class CaseHost {
     static final String READY = "READY";
     static final String STARTED = "STARTED";
     static final String DONE = "DONE";
     static final String RUN = "RUN";
     static final String FIELD_SEPARATOR = "\t";
+    static final String REPLY_SEPARATOR = " ";
     static final String STDOUT_FILE = "case-stdout.txt";
     static final String STDERR_FILE = "case-stderr.txt";
     private static final int UNCAUGHT_EXIT_STATUS = 1;
     private static final int USAGE_EXIT_STATUS = 2;
     private static final String CASE_THREAD_NAME = "main";
+    private static final String CASE_GROUP_NAME = "case";
+    private static final String MAIN_METHOD_NAME = "main";
 
     private final String token;
     private final URL[] classpath;
@@ -73,13 +78,13 @@ public final class CaseHost {
             CaseCommand command = CaseCommand.parse(line);
             send(STARTED);
             CaseOutcome outcome = runCase(command);
-            send(DONE + " " + outcome.exitStatus() + " " + outcome.threadsLeft());
+            send(DONE + REPLY_SEPARATOR + outcome.exitStatus() + REPLY_SEPARATOR + outcome.threadsLeft());
             line = commands.readLine();
         }
     }
 
     private void send(String message) {
-        protocol.println(token + " " + message);
+        protocol.println(token + REPLY_SEPARATOR + message);
         protocol.flush();
     }
 
@@ -102,7 +107,7 @@ public final class CaseHost {
     }
 
     private CaseOutcome execute(CaseCommand command) throws IOException {
-        ThreadGroup group = new ThreadGroup("case");
+        ThreadGroup group = new ThreadGroup(CASE_GROUP_NAME);
         AtomicInteger exitStatus = new AtomicInteger();
         try (URLClassLoader loader = new URLClassLoader(classpath, ClassLoader.getPlatformClassLoader())) {
             Thread caseThread = new Thread(group,
@@ -122,7 +127,7 @@ public final class CaseHost {
         Method main;
         try {
             Class<?> runner = Class.forName(runnerClass, false, loader);
-            main = runner.getMethod("main", String[].class);
+            main = runner.getMethod(MAIN_METHOD_NAME, String[].class);
             if (!Modifier.isStatic(main.getModifiers())) {
                 throw new NoSuchMethodException("main is not static");
             }

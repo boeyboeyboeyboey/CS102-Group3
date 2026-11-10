@@ -7,6 +7,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+/** The instructor score sheet CSV: its headers, rows, students and column mapping. */
 public final class ScoreSheet {
     private final Path sourcePath;
     private final boolean byteOrderMark;

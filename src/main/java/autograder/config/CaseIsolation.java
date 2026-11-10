@@ -2,7 +2,7 @@ package autograder.config;
 
 import java.util.Locale;
 
-// how test cases share jvms: part reuses one jvm per question part, case starts one per case
+/** How test cases share jvms: part reuses one jvm per question part, case starts one per case. */
 public enum CaseIsolation {
     PART,
     CASE;

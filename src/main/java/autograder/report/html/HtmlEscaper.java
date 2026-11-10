@@ -1,5 +1,6 @@
 package autograder.report.html;
 
+/** Escapes text for safe inclusion in HTML content and attribute values. */
 final class HtmlEscaper {
     private HtmlEscaper() { }
 

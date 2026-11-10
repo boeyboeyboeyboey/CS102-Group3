@@ -4,6 +4,7 @@ import autograder.csv.CsvCodec;
 import java.util.ArrayList;
 import java.util.List;
 
+/** Formats sanity findings as the rows of sanity-checks.csv. */
 public final class SanityCsvWriter {
     private SanityCsvWriter() {
     }

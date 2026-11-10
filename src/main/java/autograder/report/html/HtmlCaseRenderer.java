@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+/** Groups case results by question and renders the per-question score cells and case tables. */
 final class HtmlCaseRenderer {
     private HtmlCaseRenderer() { }
 
@@ -131,11 +132,13 @@ final class HtmlCaseRenderer {
     private static void appendCaseTable(StringBuilder html, List<TestCaseResult> results) {
         html.append("<div class=\"table-scroll compact-table\"><table><thead><tr><th scope=\"col\">Question</th>")
                 .append("<th scope=\"col\">Case</th><th scope=\"col\">Status</th><th scope=\"col\">Points</th>")
-                .append("<th scope=\"col\">Recorded duration</th><th scope=\"col\">Recorded output</th></tr></thead><tbody>");
+                .append("<th scope=\"col\">Recorded duration</th><th scope=\"col\">Recorded output</th>")
+                .append("</tr></thead><tbody>");
         for (TestCaseResult result : results) {
             html.append("<tr><td>").append(HtmlEscaper.escape(result.getTestCase().getQuestionId()))
                     .append("</td><td>").append(HtmlEscaper.escape(result.getTestCase().getId()))
-                    .append("</td><td><span class=\"case-status\">").append(HtmlEscaper.escape(result.getStatus().name()))
+                    .append("</td><td><span class=\"case-status\">")
+                    .append(HtmlEscaper.escape(result.getStatus().name()))
                     .append("</span></td><td class=\"numeric\">")
                     .append(HtmlScoreFormatter.format(HtmlScoreFormatter.caseScore(result))).append(" / ")
                     .append(HtmlScoreFormatter.format(BigDecimal.valueOf(result.getTestCase().getMaximumScore())))

@@ -13,17 +13,25 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * Writes a student-facing stub and example tester for a question. Question artifacts are
+ * resolved from the project root (the working directory).
+ */
 public final class ResourceGenerator {
     public void generate(Question question, Path outputDirectory, int examplesPerCase, long seed)
             throws IOException {
         question.validate();
-        if (examplesPerCase < 1) throw new IllegalArgumentException("examples per case must be positive");
+        if (examplesPerCase < 1) {
+            throw new IllegalArgumentException("examples per case must be positive");
+        }
         String stub = createStub(question);
         String tester = createTester(question, examplesPerCase, seed);
         Files.createDirectories(outputDirectory);
@@ -38,6 +46,7 @@ public final class ResourceGenerator {
 
     private void copyArtifacts(Question question, Path outputDirectory) throws IOException {
         for (Artifact artifact : question.getArtifacts()) {
+            // artifact sources are relative to the project root, taken from the working directory
             Path source = Path.of("").toAbsolutePath().resolve(artifact.source()).normalize();
             if (!Files.isRegularFile(source)) {
                 throw new IOException("question resource is missing: " + source);
@@ -55,7 +64,9 @@ public final class ResourceGenerator {
         }
         source.append("import java.util.*;\n\npublic class ").append(question.getClassName())
                 .append(" {\n\n    public ");
-        if (question.isStaticMethod()) source.append("static ");
+        if (question.isStaticMethod()) {
+            source.append("static ");
+        }
         source.append(question.getReturnSourceType()).append(' ')
                 .append(question.getMethodName()).append('(');
         appendParameters(source, question);
@@ -74,7 +85,9 @@ public final class ResourceGenerator {
                     .append(question.getClassName()).append("();\n");
         }
         source.append("        int passed = 0;\n        int total = ").append(examples.size()).append(";\n");
-        for (Example example : examples) appendExample(source, question, example);
+        for (Example example : examples) {
+            appendExample(source, question, example);
+        }
         return source.append("        System.out.println(\"passed \" + passed + \" of \" + total + \" examples\");\n")
                 .append("    }\n}\n").toString();
     }
@@ -151,7 +164,9 @@ public final class ResourceGenerator {
                 List<Object> arguments = generate(testCase, random);
                 question.validateArguments(arguments);
                 String key = arguments.stream().map(Literals::source).collect(Collectors.joining("\u0000"));
-                if (!seen.add(key)) continue;
+                if (!seen.add(key)) {
+                    continue;
+                }
                 try {
                     Object expected = question.answerKey(copyArguments(arguments));
                     question.validateExpected(expected);
@@ -171,26 +186,36 @@ public final class ResourceGenerator {
             requireSupportedValue(value);
             arguments.add(value);
         }
-        return java.util.Collections.unmodifiableList(arguments);
+        return Collections.unmodifiableList(arguments);
     }
 
     static List<Object> copyArguments(List<Object> arguments) {
         List<Object> copy = new ArrayList<>();
-        for (Object argument : arguments) copy.add(copyValue(argument));
-        return java.util.Collections.unmodifiableList(copy);
+        for (Object argument : arguments) {
+            copy.add(copyValue(argument));
+        }
+        return Collections.unmodifiableList(copy);
     }
 
     private static Object copyValue(Object value) {
-        if (value instanceof int[] values) return values.clone();
-        if (value instanceof String[] values) return values.clone();
+        if (value instanceof int[] values) {
+            return values.clone();
+        }
+        if (value instanceof String[] values) {
+            return values.clone();
+        }
         if (value instanceof Object[] values) {
             Object[] copy = new Object[values.length];
-            for (int index = 0; index < values.length; index++) copy[index] = copyValue(values[index]);
+            for (int index = 0; index < values.length; index++) {
+                copy[index] = copyValue(values[index]);
+            }
             return copy;
         }
-        if (value instanceof java.util.Collection<?> values) {
+        if (value instanceof Collection<?> values) {
             List<Object> copy = new ArrayList<>();
-            for (Object item : values) copy.add(copyValue(item));
+            for (Object item : values) {
+                copy.add(copyValue(item));
+            }
             return copy;
         }
         return value;
@@ -205,21 +230,39 @@ public final class ResourceGenerator {
 
     private void appendParameters(StringBuilder source, Question question) {
         for (int index = 0; index < question.getParameters().size(); index++) {
-            if (index > 0) source.append(", ");
+            if (index > 0) {
+                source.append(", ");
+            }
             Parameter parameter = question.getParameters().get(index);
             source.append(parameter.sourceType()).append(' ').append(parameter.name());
         }
     }
 
     private String defaultValue(Class<?> type) {
-        if (type == boolean.class) return "false";
-        if (type == int.class) return "0";
-        if (type == long.class) return "0L";
-        if (type == double.class) return "0.0";
-        if (type == int[].class) return "new int[0]";
-        if (type == String[].class) return "new String[0]";
-        if (type == java.util.List.class || type == java.util.ArrayList.class) return "new ArrayList<>()";
-        if (type == String.class) return "\"\"";
+        if (type == boolean.class) {
+            return "false";
+        }
+        if (type == int.class) {
+            return "0";
+        }
+        if (type == long.class) {
+            return "0L";
+        }
+        if (type == double.class) {
+            return "0.0";
+        }
+        if (type == int[].class) {
+            return "new int[0]";
+        }
+        if (type == String[].class) {
+            return "new String[0]";
+        }
+        if (type == List.class || type == ArrayList.class) {
+            return "new ArrayList<>()";
+        }
+        if (type == String.class) {
+            return "\"\"";
+        }
         return "null";
     }
 

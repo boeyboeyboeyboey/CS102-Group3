@@ -1,5 +1,6 @@
 package autograder.model;
 
+/** How a test case ended. */
 public enum TestStatus {
     PASSED,
     FAILED,

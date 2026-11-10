@@ -13,6 +13,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+/** Works out which roster student an archive belongs to and applies the header corrections that follow. */
 public final class IdentityResolver {
     private final IdentityEvidenceCollector evidenceCollector;
     private final RosterIdentityMatcher rosterMatcher;
@@ -83,6 +84,7 @@ public final class IdentityResolver {
         return fileName;
     }
 
+    /** The resolved identity of one archive with the anomalies and corrections found on the way. */
     public static final class Resolution {
         private final StudentIdentity identity;
         private final List<String> anomalies;

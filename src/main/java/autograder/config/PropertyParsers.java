@@ -7,6 +7,7 @@ import java.util.Properties;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
+/** Shared parsing and validation helpers for configuration values. */
 final class PropertyParsers {
     private PropertyParsers() {
     }

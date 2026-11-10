@@ -17,7 +17,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/** Writes the instructor's score sheet with the numerator column filled in from the graded scores. */
 public final class CsvScoreReportWriter {
+    private static final int SCORE_DECIMAL_PLACES = 2;
+
     public void write(ScoreSheet sheet, Map<String, Double> scoresByStudentId, Path output)
             throws IOException {
         if (sheet == null || scoresByStudentId == null || output == null) {
@@ -68,7 +71,7 @@ public final class CsvScoreReportWriter {
                         + " exceeds the configured denominator");
             }
             row.set(numeratorIndex, BigDecimal.valueOf(score)
-                    .setScale(2, RoundingMode.HALF_UP).toPlainString());
+                    .setScale(SCORE_DECIMAL_PLACES, RoundingMode.HALF_UP).toPlainString());
         }
 
         String content = CsvCodec.write(outputRows);

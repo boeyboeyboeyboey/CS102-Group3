@@ -14,6 +14,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+/** Writes the starter-comparison HTML report of how each answer file differs from the starter. */
 public final class StarterComparisonReport {
     private StarterComparisonReport() {
     }

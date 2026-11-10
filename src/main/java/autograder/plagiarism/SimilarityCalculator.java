@@ -3,7 +3,7 @@ package autograder.plagiarism;
 import java.util.HashSet;
 import java.util.Set;
 
-// jaccard similarity: shared n-grams divided by all distinct n-grams
+/** Jaccard similarity: shared n-grams divided by all distinct n-grams. */
 public final class SimilarityCalculator {
     public double jaccard(Set<String> first, Set<String> second) {
         Set<String> union = new HashSet<>(first);

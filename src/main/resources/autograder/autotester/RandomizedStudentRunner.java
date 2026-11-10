@@ -11,11 +11,31 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Runs a student's method on serialized trial inputs inside the student JVM and writes the outcomes back.
+ * This file is compiled on its own in the student workspace, so its constants are copies.
+ */
 public final class RandomizedStudentRunner {
+    // keep in sync with RandomizedTrialProtocol
+    private static final long MAX_INPUT_BYTES = 64L * 1024 * 1024;
+    private static final int MAX_STREAM_DEPTH = 20;
+    private static final int MAX_STREAM_REFERENCES = 100_000;
+    private static final int MAX_ARRAY_LENGTH = 100_000;
+    // keep in sync with ShapeInput
+    private static final String CIRCLE = "circle";
+    private static final String RECTANGLE = "rectangle";
+    // keep in sync with the randomized question id for shapes (Q3)
+    private static final String SHAPE_QUESTION_ID = "Q3";
+    // keep in sync with RandomizedGrader.childCommand: class, method, input file, output file, then types
+    private static final int FIXED_ARGUMENT_COUNT = 4;
+    private static final int MAX_DESCRIPTION_LENGTH = 2_000;
+
     private RandomizedStudentRunner() { }
 
     public static void main(String[] args) throws Exception {
-        if (args.length < 4) throw new IllegalArgumentException("runner arguments are incomplete");
+        if (args.length < FIXED_ARGUMENT_COUNT) {
+            throw new IllegalArgumentException("runner arguments are incomplete");
+        }
         List<Object[]> inputs = decodeInputs(args[0], readInputs(Path.of(args[2])));
         Method method;
         Object receiver;
@@ -31,9 +51,9 @@ public final class RandomizedStudentRunner {
     }
 
     private static Method findMethod(String[] args) throws ReflectiveOperationException {
-        Class<?>[] parameterTypes = new Class<?>[args.length - 4];
-        for (int index = 4; index < args.length; index++) {
-            parameterTypes[index - 4] = resolveType(args[index]);
+        Class<?>[] parameterTypes = new Class<?>[args.length - FIXED_ARGUMENT_COUNT];
+        for (int index = FIXED_ARGUMENT_COUNT; index < args.length; index++) {
+            parameterTypes[index - FIXED_ARGUMENT_COUNT] = resolveType(args[index]);
         }
         return Class.forName(args[0]).getMethod(args[1], parameterTypes);
     }
@@ -63,7 +83,9 @@ public final class RandomizedStudentRunner {
 
     private static List<Object[]> invokeAll(Method method, Object receiver, List<Object[]> inputs) {
         List<Object[]> outcomes = new ArrayList<>();
-        for (Object[] arguments : inputs) outcomes.add(invoke(method, receiver, arguments));
+        for (Object[] arguments : inputs) {
+            outcomes.add(invoke(method, receiver, arguments));
+        }
         return outcomes;
     }
 
@@ -93,11 +115,17 @@ public final class RandomizedStudentRunner {
     }
 
     private static List<Object[]> decodeInputs(String questionId, List<Object[]> inputs) throws Exception {
-        if (!questionId.equals("Q3")) return inputs;
+        if (!questionId.equals(SHAPE_QUESTION_ID)) {
+            return inputs;
+        }
         for (Object[] arguments : inputs) {
-            if (arguments.length == 0 || !(arguments[0] instanceof List<?> encodedShapes)) continue;
+            if (arguments.length == 0 || !(arguments[0] instanceof List<?> encodedShapes)) {
+                continue;
+            }
             List<Object> shapes = new ArrayList<>();
-            for (Object encoded : encodedShapes) shapes.add(decodeShape((Object[]) encoded));
+            for (Object encoded : encodedShapes) {
+                shapes.add(decodeShape((Object[]) encoded));
+            }
             arguments[0] = shapes;
         }
         return inputs;
@@ -109,11 +137,11 @@ public final class RandomizedStudentRunner {
                 || !(encoded[2] instanceof Double first) || !(encoded[3] instanceof Double second)) {
             throw new IllegalArgumentException("invalid shape test input");
         }
-        if (kind.equals("circle")) {
+        if (kind.equals(CIRCLE)) {
             return Class.forName("Circle").getConstructor(String.class, double.class)
                     .newInstance(id, first);
         }
-        if (kind.equals("rectangle")) {
+        if (kind.equals(RECTANGLE)) {
             return Class.forName("Rectangle").getConstructor(String.class, double.class, double.class)
                     .newInstance(id, first, second);
         }
@@ -121,10 +149,12 @@ public final class RandomizedStudentRunner {
     }
 
     private static Object normalizeResult(String questionId, Object result) {
-        if (!(result instanceof List<?> values)) return result;
+        if (!(result instanceof List<?> values)) {
+            return result;
+        }
         List<Object> normalized = new ArrayList<>();
         for (Object value : values) {
-            normalized.add(questionId.equals("Q3") ? String.valueOf(value) : normalizeResult(questionId, value));
+            normalized.add(questionId.equals(SHAPE_QUESTION_ID) ? String.valueOf(value) : normalizeResult(questionId, value));
         }
         return normalized;
     }
@@ -149,12 +179,14 @@ public final class RandomizedStudentRunner {
     }
 
     private static ObjectInputFilter.Status filter(ObjectInputFilter.FilterInfo info) {
-        if (info.depth() > 20 || info.references() > 100_000 || info.streamBytes() > 64L * 1024 * 1024
-                || info.arrayLength() > 100_000) {
+        if (info.depth() > MAX_STREAM_DEPTH || info.references() > MAX_STREAM_REFERENCES
+                || info.streamBytes() > MAX_INPUT_BYTES || info.arrayLength() > MAX_ARRAY_LENGTH) {
             return ObjectInputFilter.Status.REJECTED;
         }
         Class<?> type = info.serialClass();
-        if (type == null) return ObjectInputFilter.Status.UNDECIDED;
+        if (type == null) {
+            return ObjectInputFilter.Status.UNDECIDED;
+        }
         if (type == String.class || type == Integer.class || type == Boolean.class || type == Long.class
                 || type == Double.class || type == Number.class || type == ArrayList.class
                 || type == Object[].class || type == int[].class || type == String[].class) {
@@ -164,7 +196,9 @@ public final class RandomizedStudentRunner {
     }
 
     private static boolean isSupportedValue(Object value) {
-        if (value instanceof List<?> values) return values.stream().allMatch(RandomizedStudentRunner::isSupportedValue);
+        if (value instanceof List<?> values) {
+            return values.stream().allMatch(RandomizedStudentRunner::isSupportedValue);
+        }
         Class<?> type = value.getClass();
         return type == String.class || type == Integer.class || type == Boolean.class
                 || type == Long.class || type == Double.class || type == int[].class
@@ -174,6 +208,6 @@ public final class RandomizedStudentRunner {
     private static String describe(Throwable failure) {
         String message = failure.getMessage();
         String text = failure.getClass().getName() + (message == null ? "" : ": " + message);
-        return text.length() > 2_000 ? text.substring(0, 2_000) : text;
+        return text.length() > MAX_DESCRIPTION_LENGTH ? text.substring(0, MAX_DESCRIPTION_LENGTH) : text;
     }
 }

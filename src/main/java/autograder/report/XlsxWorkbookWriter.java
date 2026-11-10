@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
@@ -74,7 +75,7 @@ public final class XlsxWorkbookWriter {
         for (Sheet sheet : sheets) {
             String name = sheet.name();
             if (name.isBlank() || name.length() > MAX_NAME_CHARS || BAD_NAME.matcher(name).matches()
-                    || !names.add(name.toLowerCase())) {
+                    || !names.add(name.toLowerCase(Locale.ROOT))) {
                 throw new IllegalArgumentException("invalid or duplicate sheet name: " + name);
             }
         }
@@ -89,13 +90,17 @@ public final class XlsxWorkbookWriter {
     private static String contentTypes(int sheetCount) {
         StringBuilder xml = new StringBuilder(XML_HEADER)
                 .append("<Types xmlns=\"http://schemas.openxmlformats.org/package/2006/content-types\">")
-                .append("<Default Extension=\"rels\" ContentType=\"application/vnd.openxmlformats-package.relationships+xml\"/>")
+                .append("<Default Extension=\"rels\" ContentType=\"")
+                .append("application/vnd.openxmlformats-package.relationships+xml\"/>")
                 .append("<Default Extension=\"xml\" ContentType=\"application/xml\"/>")
-                .append("<Override PartName=\"/xl/workbook.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml\"/>")
-                .append("<Override PartName=\"/xl/styles.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml\"/>");
+                .append("<Override PartName=\"/xl/workbook.xml\" ContentType=\"")
+                .append("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml\"/>")
+                .append("<Override PartName=\"/xl/styles.xml\" ContentType=\"")
+                .append("application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml\"/>");
         for (int number = 1; number <= sheetCount; number++) {
             xml.append("<Override PartName=\"/xl/worksheets/sheet").append(number)
-                    .append(".xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml\"/>");
+                    .append(".xml\" ContentType=\"")
+                    .append("application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml\"/>");
         }
         return xml.append("</Types>").toString();
     }

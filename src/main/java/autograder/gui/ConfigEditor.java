@@ -10,7 +10,6 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.WindowConstants;
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
@@ -25,7 +24,6 @@ import java.util.function.Consumer;
 final class ConfigEditor extends JDialog {
     private static final String NOTICE = "Saved changes apply to the next run.";
     private static final Dimension SIZE = new Dimension(820, 620);
-    private static final Color ERROR_COLOR = new Color(0xB00020);
     private static final int GAP = 8;
 
     private final Path file;
@@ -75,7 +73,7 @@ final class ConfigEditor extends JDialog {
         problem.setLineWrap(true);
         problem.setWrapStyleWord(true);
         problem.setOpaque(false);
-        problem.setForeground(ERROR_COLOR);
+        problem.setForeground(Brand.ERROR);
         problem.getAccessibleContext().setAccessibleName("Save problem");
         JButton save = new BrandButton("Save", true);
         save.addActionListener(event -> save());

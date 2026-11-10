@@ -6,8 +6,9 @@ import javax.swing.JList;
 import javax.swing.JTable;
 import javax.swing.UIManager;
 
-/** ByteGrade's colours  */
+/** ByteGrade's product name, colours and shared table and list styling. */
 final class Brand {
+    static final String NAME = "ByteGrade";
     static final Color RED = new Color(0xB1251A);
     static final Color RED_DARK = new Color(0x8E1D14);
     static final Color INK = new Color(0x1B191A);
@@ -18,6 +19,8 @@ final class Brand {
     static final Color HOVER = new Color(0xFBF1EF);
     static final Color DISABLED = new Color(0xE4E0E0);
     static final Color DISABLED_TEXT_BASE = new Color(0xA8A2A2);
+    static final Color OK = new Color(0x1B5E20);
+    static final Color ERROR = new Color(0xB00020);
     private static final int ROW_HEIGHT = 24;
 
     private Brand() {

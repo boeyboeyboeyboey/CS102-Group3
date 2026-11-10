@@ -3,6 +3,7 @@ package autograder.autotester.execution;
 import java.nio.file.Path;
 import java.util.List;
 
+/** Results of grading every ZIP in a folder, with the output folder and summary file. */
 public record RandomizedBatchResult(Path outputDirectory, Path summaryFile,
                                     List<RandomizedSubmissionResult> submissions) {
     public RandomizedBatchResult {

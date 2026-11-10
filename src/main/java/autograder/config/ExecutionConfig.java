@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
+/** Settings for compiling and running student code: executables, timeouts, output limit and workers. */
 public record ExecutionConfig(Path directory, String reportFile, String javaExecutable,
                               String javacExecutable, long compileTimeoutMillis,
                               long caseTimeoutMillis, int maxOutputBytes, int workers,

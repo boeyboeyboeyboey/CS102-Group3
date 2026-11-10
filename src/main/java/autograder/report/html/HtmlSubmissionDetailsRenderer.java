@@ -8,6 +8,7 @@ import autograder.model.TestCaseResult;
 
 import java.util.List;
 
+/** Renders the expandable details row for one submission: record, identity, warnings and corrections. */
 final class HtmlSubmissionDetailsRenderer {
     private HtmlSubmissionDetailsRenderer() { }
 
@@ -62,9 +63,9 @@ final class HtmlSubmissionDetailsRenderer {
 
     private static void appendExportDecision(StringBuilder html, String withheldReason) {
         if (withheldReason != null) {
-            detailItem(html, "Export decision", "WITHHELD — " + withheldReason);
+            detailItem(html, "Export decision", HtmlSubmissionTableRenderer.WITHHELD + " — " + withheldReason);
         } else {
-            detailItem(html, "Export decision", "EXPORTED");
+            detailItem(html, "Export decision", HtmlSubmissionTableRenderer.EXPORTED);
         }
     }
 
@@ -88,8 +89,10 @@ final class HtmlSubmissionDetailsRenderer {
             html.append("<p>No corrections recorded.</p>");
         } else {
             html.append("<div class=\"table-scroll compact-table\"><table><thead><tr><th scope=\"col\">Type</th>")
-                    .append("<th scope=\"col\">Path</th><th scope=\"col\">Field</th><th scope=\"col\">Original value</th>")
-                    .append("<th scope=\"col\">Corrected value</th><th scope=\"col\">Header added</th></tr></thead><tbody>");
+                    .append("<th scope=\"col\">Path</th><th scope=\"col\">Field</th>")
+                    .append("<th scope=\"col\">Original value</th>")
+                    .append("<th scope=\"col\">Corrected value</th><th scope=\"col\">Header added</th>")
+                    .append("</tr></thead><tbody>");
             for (SubmissionCorrection correction : corrections) {
                 html.append("<tr><td>").append(HtmlEscaper.escape(correction.getType())).append("</td><td>")
                         .append(HtmlEscaper.escape(HtmlSubmissionPresentation.pathText(correction.getRelativePath())))

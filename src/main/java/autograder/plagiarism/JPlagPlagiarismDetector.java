@@ -11,7 +11,6 @@ import de.jplag.JPlag;
 import de.jplag.JPlagComparison;
 import de.jplag.JPlagResult;
 import de.jplag.Match;
-import de.jplag.Token;
 import de.jplag.exceptions.ExitException;
 import de.jplag.java.Language;
 import de.jplag.options.JPlagOptions;
@@ -26,7 +25,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-// uses jplag's greedy string tiling over java syntax tokens; starter files are passed as base code
+/** Uses JPlag's greedy string tiling over Java syntax tokens, passing starter files as base code. */
 public final class JPlagPlagiarismDetector implements PlagiarismDetector {
     public static final String ALGORITHM_NAME = "JPlag";
     private static final int MAX_EVIDENCE_BLOCKS = 5;
@@ -139,8 +138,8 @@ public final class JPlagPlagiarismDetector implements PlagiarismDetector {
     private List<String> matchEvidence(JPlagComparison comparison, boolean swapped) {
         List<Match> matches = new ArrayList<>(comparison.matches());
         matches.sort(Comparator.comparingInt(Match::length).reversed());
-        List<Token> firstTokens = comparison.firstSubmission().getTokenList();
-        List<Token> secondTokens = comparison.secondSubmission().getTokenList();
+        List<de.jplag.Token> firstTokens = comparison.firstSubmission().getTokenList();
+        List<de.jplag.Token> secondTokens = comparison.secondSubmission().getTokenList();
         List<String> evidence = new ArrayList<>();
         for (Match match : matches) {
             if (evidence.size() == MAX_EVIDENCE_BLOCKS) {
@@ -159,9 +158,9 @@ public final class JPlagPlagiarismDetector implements PlagiarismDetector {
         return evidence;
     }
 
-    private LineRange lines(List<Token> tokens, int start, int length) {
-        Token first = tokens.get(start);
-        Token last = tokens.get(start + length - 1);
+    private LineRange lines(List<de.jplag.Token> tokens, int start, int length) {
+        de.jplag.Token first = tokens.get(start);
+        de.jplag.Token last = tokens.get(start + length - 1);
         return new LineRange(first.getFile().getName(), first.getLine(), Math.max(first.getLine(), last.getLine()));
     }
 

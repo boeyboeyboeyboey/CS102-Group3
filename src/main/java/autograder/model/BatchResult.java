@@ -3,6 +3,7 @@ package autograder.model;
 import java.util.List;
 import java.util.Objects;
 
+/** Everything one grading run produced: grades, findings and the assessment they belong to. */
 public final class BatchResult {
     private final AssessmentDefinition assessment;
     private final List<StudentGrade> grades;

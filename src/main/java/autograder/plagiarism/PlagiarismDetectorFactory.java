@@ -6,7 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-// builds the detector chosen by plagiarism.enabled and plagiarism.algorithms
+/** Builds the detector chosen by plagiarism.enabled and plagiarism.algorithms. */
 public final class PlagiarismDetectorFactory {
     private PlagiarismDetectorFactory() {
     }

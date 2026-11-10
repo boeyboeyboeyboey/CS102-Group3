@@ -15,6 +15,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Provides the fixed instructor cases for the supplied assessment. The per-question case counts and
+ * tester SHA-256 pins are deliberate: the bundled adapters are written against exactly these
+ * testers, so an edited tester or a different case count must be rejected until its adapter is reviewed.
+ */
 public final class InstructorTestCaseProvider implements TestCaseProvider {
     private static final Map<String, Integer> CASE_COUNTS = Map.of(
             "Q1a", 3, "Q1b", 3, "Q2a", 5, "Q2b", 5, "Q3", 4);

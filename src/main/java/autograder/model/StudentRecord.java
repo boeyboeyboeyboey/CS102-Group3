@@ -1,5 +1,6 @@
 package autograder.model;
 
+/** One student row from the score sheet. */
 public final class StudentRecord {
     private final String id;
     private final String username;

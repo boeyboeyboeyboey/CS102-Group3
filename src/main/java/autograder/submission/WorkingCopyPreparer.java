@@ -50,11 +50,8 @@ final class WorkingCopyPreparer {
             return true;
         }
         Path relativePath = extractionPath.relativize(studentRoot);
-        if (relativePath.getNameCount() == 1
-                && relativePath.getFileName().toString().equals(username)) {
-            return false;
-        }
-        return true;
+        return relativePath.getNameCount() != 1
+                || !relativePath.getFileName().toString().equals(username);
     }
 
     private String safeUsername(StudentRecord student) throws IOException {

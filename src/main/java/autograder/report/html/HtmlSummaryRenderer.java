@@ -10,6 +10,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
+/** Renders the run summary cards: counts plus the average and median exported score. */
 final class HtmlSummaryRenderer {
     private HtmlSummaryRenderer() { }
 
@@ -27,12 +28,15 @@ final class HtmlSummaryRenderer {
             }
         }
 
-        html.append("<section class=\"summary-section\" aria-labelledby=\"summary-title\">\n<h2 id=\"summary-title\">Run summary</h2>\n")
+        html.append("<section class=\"summary-section\" aria-labelledby=\"summary-title\">\n")
+                .append("<h2 id=\"summary-title\">Run summary</h2>\n")
                 .append("<div class=\"summary-grid\">\n");
-        metric(html, "Received submissions", Integer.toString(received), "Submissions present in this grading run");
+        metric(html, "Received submissions", Integer.toString(received),
+                "Submissions present in this grading run");
         metric(html, "Exported", Integer.toString(exported), "Included in the score CSV");
         metric(html, "Withheld", Integer.toString(withheldCount), "Excluded from the score CSV");
-        metric(html, "Submissions with warnings", Integer.toString(warningSubmissions), "At least one preparation warning was recorded");
+        metric(html, "Submissions with warnings", Integer.toString(warningSubmissions),
+                "At least one preparation warning was recorded");
         if (exported == 0) {
             metric(html, "Average exported score", "N/A", "No exported submissions");
             metric(html, "Median exported score", "N/A", "No exported submissions");
@@ -49,7 +53,8 @@ final class HtmlSummaryRenderer {
                             + HtmlScoreFormatter.formatOrUnavailable(maximumScore) + " points");
         }
         html.append("</div>\n<p class=\"scope-note\">These results cover received submissions only. ")
-                .append("Students without a received submission are not listed here; their template values are retained in the CSV.</p>\n")
+                .append("Students without a received submission are not listed here; ")
+                .append("their template values are retained in the CSV.</p>\n")
                 .append("</section>\n");
     }
 

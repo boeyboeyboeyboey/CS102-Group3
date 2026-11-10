@@ -1,3 +1,4 @@
+/** Circle shape for the shape-sorting question. */
 public class Circle implements Shape {
     private final String id;
     private final double radius;

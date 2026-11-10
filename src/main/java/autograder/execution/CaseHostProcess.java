@@ -18,10 +18,12 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-// parent side of one CaseHost jvm: starts it, sends cases and enforces each case deadline
+/** Parent side of one {@link CaseHost} jvm: starts it, sends cases and enforces each case deadline. */
 final class CaseHostProcess implements AutoCloseable {
     private static final String END_OF_STREAM = "\u0000end";
     private static final long STREAM_DRAIN_MILLIS = 500;
+    private static final String REPLY_THREAD_NAME = "case-host-replies";
+    private static final String ERROR_THREAD_NAME = "case-host-errors";
 
     private final Process process;
     private final String token;
@@ -36,8 +38,8 @@ final class CaseHostProcess implements AutoCloseable {
         this.commands = new BufferedWriter(new OutputStreamWriter(process.getOutputStream(),
                 StandardCharsets.UTF_8));
         this.hostErrors = new BoundedText(maxOutputBytes);
-        startDaemon(this::readReplies, "case-host-replies");
-        this.errorReader = startDaemon(this::readErrors, "case-host-errors");
+        startDaemon(this::readReplies, REPLY_THREAD_NAME);
+        this.errorReader = startDaemon(this::readErrors, ERROR_THREAD_NAME);
     }
 
     static CaseHostProcess start(String javaExecutable, Path classesDirectory, Path workingDirectory,
@@ -93,7 +95,7 @@ final class CaseHostProcess implements AutoCloseable {
             int exitCode = exitCodeAfterEnd();
             return new HostCaseOutcome(exitCode, false, false, true, duration, drainedErrors());
         }
-        String[] fields = reply.split(" ");
+        String[] fields = reply.split(CaseHost.REPLY_SEPARATOR);
         if (fields.length != 3 || !fields[0].equals(CaseHost.DONE)) {
             close();
             throw new HostFailureException("unexpected case host reply: " + reply);
@@ -184,7 +186,7 @@ final class CaseHostProcess implements AutoCloseable {
     }
 
     private void readReplies() {
-        String prefix = token + " ";
+        String prefix = token + CaseHost.REPLY_SEPARATOR;
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream(),
                 StandardCharsets.UTF_8))) {
             String line = reader.readLine();

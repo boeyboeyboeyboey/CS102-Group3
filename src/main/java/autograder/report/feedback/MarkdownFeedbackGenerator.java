@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+/** Writes one Markdown feedback file per student with scores, case outcomes and diagnostics. */
 public final class MarkdownFeedbackGenerator implements FeedbackGenerator {
     private static final String MARKDOWN_SPECIAL_CHARACTERS = "\\`*_[]<>#|!~";
 

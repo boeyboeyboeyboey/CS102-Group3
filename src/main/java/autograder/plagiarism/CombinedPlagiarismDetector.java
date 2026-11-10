@@ -11,7 +11,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-// runs each configured algorithm; one failing algorithm is reported without discarding the others
+/** Runs each configured algorithm; one failing algorithm is reported without discarding the others. */
 public final class CombinedPlagiarismDetector implements PlagiarismDetector {
     private final Map<String, PlagiarismDetector> detectors;
 

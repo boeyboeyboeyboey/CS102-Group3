@@ -2,6 +2,7 @@ package autograder.gui;
 
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
@@ -56,7 +57,7 @@ final class ReadinessMonitor {
         } catch (RuntimeException exception) {
             String message = exception.getMessage() == null
                     ? exception.getClass().getSimpleName() : exception.getMessage();
-            return new Readiness(java.util.List.of(
+            return new Readiness(List.of(
                     FieldStatus.error(InputField.CONFIG, message)), null);
         }
     }

@@ -18,7 +18,8 @@ import java.util.List;
 
 /**
  * Runs preparation, grading and report generation for one configuration.
- * Contains no user interface code and never exits the JVM.
+ * Reports problems on System.err and through the listener, has no other user interface code and
+ * never exits the JVM.
  */
 public final class GradingService {
     private static final String GRADING_STAGE = "grading";

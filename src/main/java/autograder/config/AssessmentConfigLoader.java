@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.regex.Pattern;
 
+/** Reads the assessment and its questions from a properties file. */
 final class AssessmentConfigLoader {
     private AssessmentConfigLoader() {
     }

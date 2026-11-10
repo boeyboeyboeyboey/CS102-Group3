@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+/** The assessment being graded: its identity and questions. */
 public final class AssessmentDefinition {
     private final String id;
     private final String name;

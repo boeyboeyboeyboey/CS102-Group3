@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+/** One question of the assessment: where its files are, how it is compiled and its maximum score. */
 public final class QuestionDefinition {
     private final String id;
     private final String folder;

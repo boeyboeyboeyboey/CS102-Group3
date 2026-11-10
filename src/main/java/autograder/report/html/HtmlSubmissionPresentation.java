@@ -4,6 +4,7 @@ import autograder.model.StudentIdentity;
 
 import java.nio.file.Path;
 
+/** Chooses the names and path text shown for a submission, falling back when data is missing. */
 final class HtmlSubmissionPresentation {
     private HtmlSubmissionPresentation() { }
 

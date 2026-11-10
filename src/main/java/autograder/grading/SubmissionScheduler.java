@@ -11,6 +11,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/** Runs per-submission grading tasks on a fixed number of workers and returns the results in order. */
 final class SubmissionScheduler {
     private static final long TERMINATION_WAIT_SECONDS = 10;
 

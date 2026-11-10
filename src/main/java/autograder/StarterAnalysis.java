@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
+/** Runs the optional starter-code comparison on a finished run and writes its report. */
 final class StarterAnalysis {
     private StarterAnalysis() {
     }

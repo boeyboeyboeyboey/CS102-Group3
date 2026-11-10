@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 /** instructor question definition and answer key contract */
 public abstract class Question {
@@ -208,10 +209,18 @@ public abstract class Question {
     }
 
     private Class<?> boxed(Class<?> type) {
-        if (type == int.class) return Integer.class;
-        if (type == boolean.class) return Boolean.class;
-        if (type == long.class) return Long.class;
-        if (type == double.class) return Double.class;
+        if (type == int.class) {
+            return Integer.class;
+        }
+        if (type == boolean.class) {
+            return Boolean.class;
+        }
+        if (type == long.class) {
+            return Long.class;
+        }
+        if (type == double.class) {
+            return Double.class;
+        }
         return type;
     }
 
@@ -233,7 +242,9 @@ public abstract class Question {
             Class<?> component = type.getComponentType();
             if (component == Object.class) {
                 for (Object item : (Object[]) value) {
-                    if (!isSupportedValue(item)) return false;
+                    if (!isSupportedValue(item)) {
+                        return false;
+                    }
                 }
                 return true;
             }
@@ -258,7 +269,7 @@ public abstract class Question {
         }
     }
 
-    private static final java.util.Set<String> JAVA_KEYWORDS = java.util.Set.of(
+    private static final Set<String> JAVA_KEYWORDS = Set.of(
             "abstract", "assert", "boolean", "break", "byte", "case", "catch", "char",
             "class", "const", "continue", "default", "do", "double", "else", "enum",
             "extends", "final", "finally", "float", "for", "goto", "if", "implements",

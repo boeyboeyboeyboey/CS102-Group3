@@ -5,7 +5,7 @@ import java.util.List;
 
 final class IdentityEvidence {
     private final List<String> anomalies;
-    private final List<IdentityEvidence.StrongEvidence> strongEvidence;
+    private final List<StrongEvidence> strongEvidence;
     private final List<ParsedSource> parsedSources;
     private final List<String> names;
     private final List<String> emailIds;

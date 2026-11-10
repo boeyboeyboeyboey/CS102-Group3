@@ -3,6 +3,7 @@ package autograder.model;
 import java.nio.file.Path;
 import java.util.Objects;
 
+/** A non-scoring observation about a submission, such as unchanged starter code. */
 public final class AnalysisFinding {
     private final String code;
     private final Path sourceFile;

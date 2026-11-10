@@ -5,6 +5,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 final class JavaSourceTokens {
+    // multi-character operators, checked in this order after the first character is consumed
+    private static final List<String> OPERATORS = List.of(">>>=", "<<=", ">>=", ">>>", "...", "::", "->",
+            "++", "--", "&&", "||", "==", "!=", "<=", ">=", "+=", "-=", "*=",
+            "/=", "%=", "&=", "|=", "^=", "<<", ">>");
+
     private JavaSourceTokens() {
     }
 
@@ -61,9 +66,7 @@ final class JavaSourceTokens {
                 }
             } else {
                 index++;
-                for (String operator : List.of(">>>=", "<<=", ">>=", ">>>", "...", "::", "->",
-                        "++", "--", "&&", "||", "==", "!=", "<=", ">=", "+=", "-=", "*=",
-                        "/=", "%=", "&=", "|=", "^=", "<<", ">>")) {
+                for (String operator : OPERATORS) {
                     if (source.startsWith(operator, start)) {
                         index = start + operator.length();
                         break;

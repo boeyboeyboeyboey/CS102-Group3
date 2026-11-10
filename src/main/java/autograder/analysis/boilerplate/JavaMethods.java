@@ -19,6 +19,8 @@ import javax.tools.SimpleJavaFileObject;
 import javax.tools.ToolProvider;
 
 final class JavaMethods {
+    private static final List<String> PARSE_OPTIONS = List.of("-proc:none", "--source", "17");
+
     record Method(String signature, String source, int line,
                   List<String> tokens, List<String> bodyTokens) {
     }
@@ -44,7 +46,7 @@ final class JavaMethods {
         try (var manager = compiler.getStandardFileManager(
                 diagnostics, null, null)) {
             JavacTask task = (JavacTask) compiler.getTask(null, manager,
-                    diagnostics, List.of("-proc:none", "--source", "17"),
+                    diagnostics, PARSE_OPTIONS,
                     null, List.of(file));
             CompilationUnitTree unit = task.parse().iterator().next();
             for (var diagnostic : diagnostics.getDiagnostics()) {

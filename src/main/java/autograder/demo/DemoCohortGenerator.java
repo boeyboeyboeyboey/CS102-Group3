@@ -26,6 +26,16 @@ public final class DemoCohortGenerator {
     private static final int DEFAULT_COUNT = 94;
     private static final long DEFAULT_SEED = 102;
     private static final String EOL = "\r\n";
+    private static final String KEY_INPUT_DIRECTORY = "input.directory";
+    private static final String KEY_SCORE_SHEET = "score.sheet.path";
+    private static final String KEY_ARCHIVE_REGEX = "identity.archive.username.regex";
+    private static final String KEY_QUESTIONS = "question.directories.required";
+    private static final String SUBMISSIONS_DIRECTORY = "submissions";
+    private static final String DONORS_LOG = "donors.csv";
+    private static final String ZIP_EXTENSION = ".zip";
+    private static final String ARCHIVE_PREFIX = "2023-2024-";
+    private static final int SEED_MULTIPLIER = 31;
+    private static final int SEED_OFFSET = 7;
 
     private DemoCohortGenerator() {
     }
@@ -58,13 +68,13 @@ public final class DemoCohortGenerator {
     /** Resolves configured inputs against baseDirectory and rebuilds outputDirectory. */
     static void generate(Properties config, Path baseDirectory, Path outputDirectory, int count,
             long seed) throws IOException {
-        Path inputDirectory = baseDirectory.resolve(config.getProperty("input.directory"));
-        Path sheet = baseDirectory.resolve(config.getProperty("score.sheet.path"));
-        Pattern archiveName = Pattern.compile(config.getProperty("identity.archive.username.regex"));
-        List<String> questions = List.of(config.getProperty("question.directories.required")
+        Path inputDirectory = baseDirectory.resolve(config.getProperty(KEY_INPUT_DIRECTORY));
+        Path sheet = baseDirectory.resolve(config.getProperty(KEY_SCORE_SHEET));
+        Pattern archiveName = Pattern.compile(config.getProperty(KEY_ARCHIVE_REGEX));
+        List<String> questions = List.of(config.getProperty(KEY_QUESTIONS)
                 .split("\\s*,\\s*"));
         recreate(outputDirectory);
-        Path submissions = Files.createDirectories(outputDirectory.resolve("submissions"));
+        Path submissions = Files.createDirectories(outputDirectory.resolve(SUBMISSIONS_DIRECTORY));
         List<DonorArchive> donors = copyRealArchives(inputDirectory, submissions, archiveName,
                 questions);
         List<String> sheetLines = Files.readAllLines(sheet, StandardCharsets.UTF_8);
@@ -74,7 +84,7 @@ public final class DemoCohortGenerator {
         List<SyntheticRoster.Identity> roster = SyntheticRoster.generate(count, seed, reserved,
                 ids.next(), ids.width());
         writeSheet(outputDirectory.resolve(SHEET_NAME), sheet, roster);
-        writeSynthetic(submissions, outputDirectory.resolve("donors.csv"), roster, questions,
+        writeSynthetic(submissions, outputDirectory.resolve(DONORS_LOG), roster, questions,
                 donors, seed);
     }
 
@@ -82,7 +92,7 @@ public final class DemoCohortGenerator {
             Pattern archiveName, List<String> questions) throws IOException {
         List<Path> zips;
         try (Stream<Path> listing = Files.list(inputDirectory)) {
-            zips = listing.filter(path -> path.getFileName().toString().endsWith(".zip"))
+            zips = listing.filter(path -> path.getFileName().toString().endsWith(ZIP_EXTENSION))
                     .sorted(Comparator.comparing(path -> path.getFileName().toString()))
                     .collect(Collectors.toList());
         }
@@ -134,7 +144,7 @@ public final class DemoCohortGenerator {
     private static void writeSynthetic(Path submissions, Path donorsCsv,
             List<SyntheticRoster.Identity> roster, List<String> questions,
             List<DonorArchive> donors, long seed) throws IOException {
-        Random random = new Random(seed * 31 + 7);
+        Random random = new Random(seed * SEED_MULTIPLIER + SEED_OFFSET);
         StringBuilder log = new StringBuilder("Username,Q1Donor,Q2Donor,Q3Donor\n");
         for (SyntheticRoster.Identity student : roster) {
             List<DonorArchive> chosen = new ArrayList<>();
@@ -146,7 +156,7 @@ public final class DemoCohortGenerator {
             }
             log.append('\n');
             SyntheticArchiveWriter.write(
-                    submissions.resolve("2023-2024-" + student.username() + ".zip"), student,
+                    submissions.resolve(ARCHIVE_PREFIX + student.username() + ZIP_EXTENSION), student,
                     questions, chosen);
         }
         Files.writeString(donorsCsv, log.toString(), StandardCharsets.UTF_8);

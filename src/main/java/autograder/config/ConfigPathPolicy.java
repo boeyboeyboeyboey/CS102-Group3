@@ -10,6 +10,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
+/** Canonicalizes configured paths and rejects output locations that overlap inputs or protected files. */
 final class ConfigPathPolicy {
     private ConfigPathPolicy() {
     }

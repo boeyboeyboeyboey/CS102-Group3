@@ -9,6 +9,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+/** Turns a finished case process and its result file into a {@link TestCaseResult}. */
 final class CaseResultReader {
     private static final int MAX_RESULT_BYTES = 16;
 
@@ -38,7 +39,6 @@ final class CaseResultReader {
                 status = switch (result) {
                     case "PASSED" -> TestStatus.PASSED;
                     case "FAILED" -> TestStatus.FAILED;
-                    case "ERROR" -> TestStatus.RUNTIME_ERROR;
                     default -> TestStatus.RUNTIME_ERROR;
                 };
                 if (result.equals("ERROR")) {

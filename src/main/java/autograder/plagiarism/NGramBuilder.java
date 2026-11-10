@@ -4,7 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-// records where each n-token window first appears for evidence
+/** Builds token n-grams and records where each window first appears, for evidence. */
 public final class NGramBuilder {
     private final int size;
 

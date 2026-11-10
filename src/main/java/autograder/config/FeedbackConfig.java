@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Properties;
 
+/** Settings for the per-student feedback files. */
 public record FeedbackConfig(boolean enabled, String directory, int maxDiagnosticLines) {
     private static final String DEFAULT_DIRECTORY = "feedback";
     private static final String DEFAULT_MAX_DIAGNOSTIC_LINES = "40";

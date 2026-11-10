@@ -5,6 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+/** Lookup of the randomized questions available to the grader, keyed by class name. */
 public final class QuestionRegistry {
     private static final Map<String, Question> QUESTIONS = createQuestions();
 

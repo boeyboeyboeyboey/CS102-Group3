@@ -13,12 +13,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-// runs the cases of one compiled part in a reused jvm instead of one jvm per case; results use
-// the same statuses and diagnostics as CaseExecutor, and a timeout, crash, non-zero exit or
-// leftover thread replaces the jvm before the next case
+/**
+ * Runs the cases of one compiled part in a reused jvm instead of one jvm per case. Results use the
+ * same statuses and diagnostics as {@link CaseExecutor}, and a timeout, crash, non-zero exit or
+ * leftover thread replaces the jvm before the next case.
+ */
 public final class PartCaseRunner {
     private static final String HOST_DIRECTORY = "_host";
-    private static final String RESULT_FILE = "case-result.txt";
 
     private final String javaExecutable;
     private final long caseTimeoutMillis;
@@ -28,7 +29,7 @@ public final class PartCaseRunner {
     public PartCaseRunner(String javaExecutable, long caseTimeoutMillis,
                           long startupTimeoutMillis, int maxOutputBytes) {
         if (caseTimeoutMillis <= 0 || startupTimeoutMillis <= 0 || maxOutputBytes < 0) {
-            throw new IllegalArgumentException("positive timeouts and an output limit are required");
+            throw new IllegalArgumentException("positive timeouts and a non-negative output limit are required");
         }
         this.javaExecutable = javaExecutable;
         this.caseTimeoutMillis = caseTimeoutMillis;
@@ -40,12 +41,12 @@ public final class PartCaseRunner {
                     Path partWorkspace, Consumer<TestCaseResult> results)
             throws IOException, InterruptedException {
         Path workspace = partWorkspace.toAbsolutePath().normalize();
-        Path classes = workspace.resolve("classes");
+        Path classes = workspace.resolve(CaseExecutor.CLASSES_DIRECTORY);
         if (!Files.isDirectory(classes)) {
             throw new IOException("compiled classes directory is missing: " + classes);
         }
         FixtureDirectory hostDirectory = new FixtureDirectory(
-                workspace.resolve("cases").resolve(HOST_DIRECTORY), question.getFixtures());
+                workspace.resolve(CaseExecutor.CASES_DIRECTORY).resolve(HOST_DIRECTORY), question.getFixtures());
         CaseHostProcess host = null;
         try {
             for (TestCaseDefinition test : tests) {
@@ -109,10 +110,10 @@ public final class PartCaseRunner {
     private CaseHostProcess.HostCaseOutcome runCase(CaseHostProcess host, TestCaseDefinition test,
                                                     Path workspace, Consumer<TestCaseResult> results)
             throws IOException, InterruptedException {
-        Path caseDirectory = workspace.resolve("cases").resolve(test.getId());
+        Path caseDirectory = workspace.resolve(CaseExecutor.CASES_DIRECTORY).resolve(test.getId());
         new DirectoryCleaner().deleteRecursively(caseDirectory);
         Files.createDirectories(caseDirectory);
-        Path resultFile = caseDirectory.resolve(RESULT_FILE);
+        Path resultFile = caseDirectory.resolve(CaseExecutor.RESULT_FILE);
         List<String> arguments = new ArrayList<>(test.getArguments());
         arguments.add(resultFile.toString());
 

@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+/** A prepared submission: its archive, extracted files, identity and any warnings. */
 public final class SubmissionResult {
     private final Path archivePath;
     private final Path extractionPath;

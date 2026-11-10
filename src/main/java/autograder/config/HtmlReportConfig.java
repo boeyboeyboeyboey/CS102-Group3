@@ -6,7 +6,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Properties;
 
+/** Settings for the offline HTML dashboard. */
 public record HtmlReportConfig(boolean enabled, String file) {
+    private static final String DEFAULT_FILE = "dashboard.html";
+
     public HtmlReportConfig {
         if (file == null || !file.matches("[A-Za-z0-9][A-Za-z0-9._-]*\\.html")) {
             throw new IllegalArgumentException("grading.html.file must be a simple .html filename "
@@ -30,6 +33,6 @@ public record HtmlReportConfig(boolean enabled, String file) {
             throw new IllegalArgumentException("grading.html.enabled must be true or false");
         }
         return new HtmlReportConfig(Boolean.parseBoolean(enabled),
-                properties.getProperty("grading.html.file", "dashboard.html").trim());
+                properties.getProperty("grading.html.file", DEFAULT_FILE).trim());
     }
 }

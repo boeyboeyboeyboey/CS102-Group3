@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CancellationException;
 
+/** Turns each archive in the input directory into an extracted, identity-resolved, validated working copy. */
 public final class SubmissionProcessor {
     private final AppConfig config;
     private ProgressListener progressListener;

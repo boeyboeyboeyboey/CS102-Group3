@@ -18,7 +18,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-// flags pairs for instructor review; a high score is evidence to inspect, not proof of copying
+/** Flags pairs for instructor review; a high score is evidence to inspect, not proof of copying. */
 public final class NGramPlagiarismDetector implements PlagiarismDetector {
     public static final String ALGORITHM_NAME = "n-gram";
     private static final int MAX_EVIDENCE_BLOCKS = 5;

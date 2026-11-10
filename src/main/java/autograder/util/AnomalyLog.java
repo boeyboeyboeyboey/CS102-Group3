@@ -6,6 +6,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.time.Instant;
 
+/** Appends unexpected conditions found while grading to a log file. */
 public final class AnomalyLog {
     private final Path logPath;
 

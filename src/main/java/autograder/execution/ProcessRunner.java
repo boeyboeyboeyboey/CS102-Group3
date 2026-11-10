@@ -10,8 +10,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+/** Runs a child process with a timeout and bounded output capture, and stops its whole process tree on timeout. */
 public final class ProcessRunner {
-    public ProcessRunner() {
+    private static final long CAPTURE_JOIN_MILLIS = 2000;
+    private static final long GRACEFUL_STOP_WAIT_MILLIS = 200;
+    private static final long FORCED_STOP_WAIT_SECONDS = 2;
+    private static final long CLEANUP_JOIN_LIMIT_MILLIS = 500;
+    private static final long CLEANUP_JOIN_STEP_MILLIS = 50;
+    private static final int CAPTURE_BUFFER_BYTES = 8192;
+
+    private ProcessRunner() {
     }
 
     public static ProcessResult run(List<String> command, Path cwd, long timeoutMillis,
@@ -55,8 +63,8 @@ public final class ProcessRunner {
             throw interrupted;
         }
         try {
-            stdoutThread.join(2000);
-            stderrThread.join(2000);
+            stdoutThread.join(CAPTURE_JOIN_MILLIS);
+            stderrThread.join(CAPTURE_JOIN_MILLIS);
         } catch (InterruptedException interrupted) {
             terminateUninterruptibly(process, knownDescendants);
             closeCaptureInputs(process, stdout, stderr);
@@ -100,13 +108,13 @@ public final class ProcessRunner {
         collectDescendants(process, knownDescendants);
         destroyDescendants(knownDescendants, false);
         process.destroy();
-        process.waitFor(200, TimeUnit.MILLISECONDS);
+        process.waitFor(GRACEFUL_STOP_WAIT_MILLIS, TimeUnit.MILLISECONDS);
         collectDescendants(process, knownDescendants);
         destroyDescendants(knownDescendants, true);
         if (process.isAlive()) {
             process.destroyForcibly();
         }
-        process.waitFor(2, TimeUnit.SECONDS);
+        process.waitFor(FORCED_STOP_WAIT_SECONDS, TimeUnit.SECONDS);
     }
 
     private static void collectDescendants(Process process, List<ProcessHandle> knownDescendants) {
@@ -124,6 +132,7 @@ public final class ProcessRunner {
                 }
             });
         } catch (RuntimeException ignored) {
+            // descendants are best effort, the process may already be gone
         }
     }
 
@@ -138,6 +147,7 @@ public final class ProcessRunner {
                     }
                 }
             } catch (RuntimeException ignored) {
+                // the child may have exited or be protected, nothing more to do
             }
         }
     }
@@ -163,19 +173,21 @@ public final class ProcessRunner {
         try {
             process.getInputStream().close();
         } catch (IOException ignored) {
+            // already closed, the capture thread is being stopped anyway
         }
         try {
             process.getErrorStream().close();
         } catch (IOException ignored) {
+            // already closed, the capture thread is being stopped anyway
         }
     }
 
     private static boolean joinUninterruptibly(Thread thread) {
         boolean interrupted = false;
-        long deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(500);
+        long deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(CLEANUP_JOIN_LIMIT_MILLIS);
         while (thread.isAlive() && System.nanoTime() < deadline) {
             try {
-                thread.join(50);
+                thread.join(CLEANUP_JOIN_STEP_MILLIS);
             } catch (InterruptedException exception) {
                 interrupted = true;
             }
@@ -197,7 +209,7 @@ public final class ProcessRunner {
 
         @Override
         public void run() {
-            byte[] buffer = new byte[8192];
+            byte[] buffer = new byte[CAPTURE_BUFFER_BYTES];
             try (InputStream stream = input) {
                 int count;
                 while ((count = stream.read(buffer)) != -1) {
@@ -226,6 +238,7 @@ public final class ProcessRunner {
             try {
                 input.close();
             } catch (IOException ignored) {
+                // already closed, closing is only a request to stop reading
             }
         }
     }

@@ -4,7 +4,6 @@ import autograder.RunOutcome;
 import autograder.config.RunSettings;
 
 import javax.swing.BorderFactory;
-import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;

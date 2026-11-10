@@ -17,13 +17,37 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Random;
+import java.util.stream.Collectors;
 
+/**
+ * Grades one student question with seeded random trials run in an isolated student JVM.
+ * File paths in the question's artifacts are resolved from the project root (the working directory).
+ */
 public final class RandomizedGrader {
     private static final long MAX_TOTAL_TRIALS = 10_000;
-    private static final long MAX_ESTIMATED_INPUT_BYTES = 16L * 1024 * 1024;
+    private static final long MAX_ESTIMATED_INPUT_MIB = 16;
+    private static final long MAX_ESTIMATED_INPUT_BYTES = MAX_ESTIMATED_INPUT_MIB * 1024L * 1024;
     private static final long COMPILATION_TIMEOUT_MILLIS = 60_000;
+    private static final long MILLIS_PER_SECOND = 1_000L;
+    private static final String DEFAULT_STUDENT_NAME = "submission";
+    private static final String WORKSPACE_PREFIX = "randomized-";
+    private static final String SOURCE_DIRECTORY_NAME = "src";
+    private static final String CLASSES_DIRECTORY_NAME = "classes";
+    private static final String INPUT_FILE_NAME = "inputs.bin";
+    private static final String OUTPUT_FILE_NAME = "outputs.bin";
+    private static final String RUNNER_CLASS_NAME = "RandomizedStudentRunner";
+    private static final String RUNNER_SOURCE_NAME = RUNNER_CLASS_NAME + ".java";
+    private static final String RUNNER_RESOURCE = "/autograder/autotester/" + RUNNER_SOURCE_NAME;
+    private static final String COMPILER_RELEASE = "17";
+    private static final long INPUT_BASE_BYTES = 64;
+    private static final long NULL_VALUE_BYTES = 8;
+    private static final long OBJECT_OVERHEAD_BYTES = 16;
+    private static final long COLLECTION_OVERHEAD_BYTES = 24;
+    private static final long CHAR_BYTES = 2L;
 
     public RandomizedResult grade(Question question, Path submissionDirectory,
                                   RandomizedConfig config, long seed)
@@ -48,7 +72,7 @@ public final class RandomizedGrader {
         }
         Files.createDirectories(config.resultsDirectory());
         List<Trial> trials = generateTrials(question, config.runsPerCase(), seed);
-        Path workspace = Files.createTempDirectory(config.resultsDirectory(), "randomized-");
+        Path workspace = Files.createTempDirectory(config.resultsDirectory(), WORKSPACE_PREFIX);
         try {
             return gradeInWorkspace(question, source, config, seed, trials, workspace);
         } finally {
@@ -59,7 +83,7 @@ public final class RandomizedGrader {
     public Path writeResult(Question question, Path submissionDirectory,
                             RandomizedConfig config, RandomizedResult result) throws IOException {
         String student = safeName(submissionDirectory.getFileName() == null
-                ? "submission" : submissionDirectory.getFileName().toString());
+                ? DEFAULT_STUDENT_NAME : submissionDirectory.getFileName().toString());
         Path output = config.resultsDirectory().resolve(student + "-" + question.getClassName() + ".txt");
         Files.createDirectories(output.getParent());
         StringBuilder text = new StringBuilder(result.passed() ? "PASS\n" : "FAIL\n")
@@ -76,7 +100,9 @@ public final class RandomizedGrader {
         }
         int failures = result.totalCount() - result.passedCount();
         int omitted = Math.max(0, failures - result.failures().size());
-        if (omitted > 0) text.append("... and ").append(omitted).append(" more failure(s)\n");
+        if (omitted > 0) {
+            text.append("... and ").append(omitted).append(" more failure(s)\n");
+        }
         Files.writeString(output, text, StandardCharsets.UTF_8,
                 StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         return output;
@@ -85,8 +111,8 @@ public final class RandomizedGrader {
     private RandomizedResult gradeInWorkspace(Question question, Path source, RandomizedConfig config,
                                               long seed, List<Trial> trials, Path workspace)
             throws IOException, InterruptedException {
-        Path sourceDirectory = Files.createDirectory(workspace.resolve("src"));
-        Path classesDirectory = Files.createDirectory(workspace.resolve("classes"));
+        Path sourceDirectory = Files.createDirectory(workspace.resolve(SOURCE_DIRECTORY_NAME));
+        Path classesDirectory = Files.createDirectory(workspace.resolve(CLASSES_DIRECTORY_NAME));
         Path studentSource = sourceDirectory.resolve(source.getFileName());
         Files.copy(source, studentSource, StandardCopyOption.REPLACE_EXISTING);
         List<Path> studentSources = new ArrayList<>(List.of(studentSource));
@@ -96,12 +122,14 @@ public final class RandomizedGrader {
             studentSources.add(copy);
         }
         studentSources.addAll(copyArtifacts(question, classesDirectory, workspace, sourceDirectory));
-        Path runnerSource = sourceDirectory.resolve("RandomizedStudentRunner.java");
+        Path runnerSource = sourceDirectory.resolve(RUNNER_SOURCE_NAME);
         copyRunner(runnerSource);
         List<String> compileCommand = new ArrayList<>(List.of(config.javacCommand(), "-proc:none", "-encoding",
-                "UTF-8", "--release", "17", "-classpath", classesDirectory.toString(),
+                "UTF-8", "--release", COMPILER_RELEASE, "-classpath", classesDirectory.toString(),
                 "-d", classesDirectory.toString()));
-        for (Path studentSourceFile : studentSources) compileCommand.add(studentSourceFile.toString());
+        for (Path studentSourceFile : studentSources) {
+            compileCommand.add(studentSourceFile.toString());
+        }
         compileCommand.add(runnerSource.toString());
         ProcessResult compilation = ProcessRunner.run(compileCommand, workspace,
                 Math.max(config.timeoutMillis(), COMPILATION_TIMEOUT_MILLIS), config.maxOutputBytes());
@@ -117,7 +145,10 @@ public final class RandomizedGrader {
                                     Path sourceDirectory) throws IOException {
         List<Path> supportSources = new ArrayList<>();
         for (Artifact artifact : question.getArtifacts()) {
-            if (artifact.kind() == ArtifactKind.STARTER_SOURCE) continue;
+            if (artifact.kind() == ArtifactKind.STARTER_SOURCE) {
+                continue;
+            }
+            // artifact sources are relative to the project root, taken from the working directory
             Path source = Path.of("").toAbsolutePath().resolve(artifact.source()).normalize();
             if (!Files.isRegularFile(source)) {
                 throw new IOException("question resource is missing: " + source);
@@ -131,7 +162,9 @@ public final class RandomizedGrader {
             Path destination = destinationDirectory.resolve(source.getFileName());
             Files.copy(source, destination,
                     StandardCopyOption.REPLACE_EXISTING);
-            if (artifact.kind() == ArtifactKind.SUPPORT_SOURCE) supportSources.add(destination);
+            if (artifact.kind() == ArtifactKind.SUPPORT_SOURCE) {
+                supportSources.add(destination);
+            }
         }
         return supportSources;
     }
@@ -141,7 +174,7 @@ public final class RandomizedGrader {
         // child output is decoded as utf-8 by the parent whatever the platform default is
         List<String> command = new ArrayList<>(List.of(javaCommand, "-Dfile.encoding=UTF-8",
                 "-Dstdout.encoding=UTF-8", "-Dstderr.encoding=UTF-8", "-classpath",
-                classesDirectory.toString(), "RandomizedStudentRunner", question.getClassName(),
+                classesDirectory.toString(), RUNNER_CLASS_NAME, question.getClassName(),
                 question.getMethodName(), inputFile.toString(), outputFile.toString()));
         for (Parameter parameter : question.getParameters()) {
             command.add(typeName(parameter.type()));
@@ -152,8 +185,8 @@ public final class RandomizedGrader {
     private RandomizedResult executeTrials(Question question, RandomizedConfig config, long seed,
                                            List<Trial> trials, Path workspace, Path classesDirectory)
             throws IOException, InterruptedException {
-        Path inputFile = workspace.resolve("inputs.bin");
-        Path outputFile = workspace.resolve("outputs.bin");
+        Path inputFile = workspace.resolve(INPUT_FILE_NAME);
+        Path outputFile = workspace.resolve(OUTPUT_FILE_NAME);
         List<Object[]> inputArguments = trials.stream().map(trial -> trial.arguments().toArray()).toList();
         RandomizedTrialProtocol.writeInputs(inputFile, inputArguments);
         List<String> command = childCommand(config.javaCommand(), classesDirectory, question,
@@ -162,7 +195,7 @@ public final class RandomizedGrader {
                 config.timeoutMillis(), config.maxOutputBytes());
         if (execution.timedOut()) {
             return failedResult(seed, trials.size(), "TIMEOUT: the submission ran longer than "
-                    + config.timeoutMillis() / 1_000 + " seconds (possible infinite loop)");
+                    + config.timeoutMillis() / MILLIS_PER_SECOND + " seconds (possible infinite loop)");
         }
         if (execution.exitCode() != 0 || !Files.isRegularFile(outputFile)) {
             return failedResult(seed, trials.size(), "The submission crashed or called System.exit before finishing.\n"
@@ -186,7 +219,7 @@ public final class RandomizedGrader {
                     && !Boolean.TRUE.equals(outcome[0])
                     && exceptionMatches(expected.className(), String.valueOf(outcome[1]));
             if (expectedException || Boolean.TRUE.equals(outcome[0])
-                    && java.util.Objects.deepEquals(trial.expected(), outcome[1])) {
+                    && Objects.deepEquals(trial.expected(), outcome[1])) {
                 passed++;
             } else if (failures.size() < config.maxFailuresShown()) {
                 String actual = Boolean.TRUE.equals(outcome[0])
@@ -213,7 +246,7 @@ public final class RandomizedGrader {
                 question.validateArguments(arguments);
                 estimatedInputBytes += estimateInputBytes(arguments);
                 if (estimatedInputBytes > MAX_ESTIMATED_INPUT_BYTES) {
-                    throw new IllegalArgumentException("generated inputs exceed the 16 MiB per-run limit");
+                    throw new IllegalArgumentException("generated inputs exceed the " + MAX_ESTIMATED_INPUT_MIB + " MiB per-run limit");
                 }
                 try {
                     Object expected = question.answerKey(ResourceGenerator.copyArguments(arguments));
@@ -229,36 +262,50 @@ public final class RandomizedGrader {
     }
 
     private long estimateInputBytes(List<Object> arguments) {
-        long bytes = 64;
-        for (Object argument : arguments) bytes += estimateValueBytes(argument);
+        long bytes = INPUT_BASE_BYTES;
+        for (Object argument : arguments) {
+            bytes += estimateValueBytes(argument);
+        }
         return bytes;
     }
 
     private long estimateValueBytes(Object value) {
-        if (value == null) return 8;
-        if (value instanceof String text) return 16L + text.length() * 2L;
-        if (value instanceof int[] values) return 16L + values.length * Integer.BYTES;
+        if (value == null) {
+            return NULL_VALUE_BYTES;
+        }
+        if (value instanceof String text) {
+            return OBJECT_OVERHEAD_BYTES + text.length() * CHAR_BYTES;
+        }
+        if (value instanceof int[] values) {
+            return OBJECT_OVERHEAD_BYTES + values.length * Integer.BYTES;
+        }
         if (value instanceof String[] values) {
-            long bytes = 16;
-            for (String item : values) bytes += estimateValueBytes(item);
+            long bytes = OBJECT_OVERHEAD_BYTES;
+            for (String item : values) {
+                bytes += estimateValueBytes(item);
+            }
             return bytes;
         }
         if (value instanceof Object[] values) {
-            long bytes = 16;
-            for (Object item : values) bytes += estimateValueBytes(item);
+            long bytes = OBJECT_OVERHEAD_BYTES;
+            for (Object item : values) {
+                bytes += estimateValueBytes(item);
+            }
             return bytes;
         }
-        if (value instanceof java.util.Collection<?> values) {
-            long bytes = 24;
-            for (Object item : values) bytes += estimateValueBytes(item);
+        if (value instanceof Collection<?> values) {
+            long bytes = COLLECTION_OVERHEAD_BYTES;
+            for (Object item : values) {
+                bytes += estimateValueBytes(item);
+            }
             return bytes;
         }
-        return 16;
+        return OBJECT_OVERHEAD_BYTES;
     }
 
     private String showArguments(List<Object> arguments) {
         return arguments.stream().map(Literals::show)
-                .collect(java.util.stream.Collectors.joining(", "));
+                .collect(Collectors.joining(", "));
     }
 
     private static String typeName(Class<?> type) {
@@ -276,19 +323,22 @@ public final class RandomizedGrader {
 
     private String safeName(String value) {
         String sanitized = value.replaceAll("[^A-Za-z0-9._-]", "_");
-        return sanitized.isBlank() ? "submission" : sanitized;
+        return sanitized.isBlank() ? DEFAULT_STUDENT_NAME : sanitized;
     }
 
     private void copyRunner(Path target) throws IOException {
-        try (InputStream runner = RandomizedGrader.class.getResourceAsStream(
-                "/autograder/autotester/RandomizedStudentRunner.java")) {
-            if (runner == null) throw new IOException("randomized student runner resource is missing");
+        try (InputStream runner = RandomizedGrader.class.getResourceAsStream(RUNNER_RESOURCE)) {
+            if (runner == null) {
+                throw new IOException("randomized student runner resource is missing");
+            }
             Files.copy(runner, target, StandardCopyOption.REPLACE_EXISTING);
         }
     }
 
     private void deleteTree(Path directory) throws IOException {
-        if (!Files.exists(directory)) return;
+        if (!Files.exists(directory)) {
+            return;
+        }
         try (var paths = Files.walk(directory)) {
             for (Path path : paths.sorted((left, right) -> right.compareTo(left)).toList()) {
                 Files.delete(path);

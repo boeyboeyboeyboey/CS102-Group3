@@ -11,7 +11,16 @@ import autograder.execution.PartCaseRunner;
 import autograder.execution.ProcessResult;
 import autograder.execution.ProcessRunner;
 import autograder.execution.StudentCompiler;
-import autograder.model.*;
+import autograder.model.BatchResult;
+import autograder.model.QuestionDefinition;
+import autograder.model.SimilarityFinding;
+import autograder.model.StudentGrade;
+import autograder.model.StudentRecord;
+import autograder.model.SubmissionResult;
+import autograder.model.SubmissionStatus;
+import autograder.model.TestCaseDefinition;
+import autograder.model.TestCaseResult;
+import autograder.model.TestStatus;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -22,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/** Grades every submission in the input directory and exports the score reports. */
 public final class GradingPipeline {
     public static final String SIMILARITY_REPORT = "similarity.csv";
 

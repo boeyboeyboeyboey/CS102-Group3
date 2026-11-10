@@ -20,7 +20,7 @@ final class BrandHeader extends JPanel {
     BrandHeader() {
         super(new FlowLayout(FlowLayout.LEFT, GAP, 0));
         setBorder(BorderFactory.createEmptyBorder(GAP, GAP, GAP, GAP));
-        JLabel name = new JLabel("ByteGrade:");
+        JLabel name = new JLabel(Brand.NAME + ":");
         name.setFont(name.getFont().deriveFont(Font.BOLD, TITLE_SIZE));
         name.setForeground(Brand.INK);
         JLabel product = new JLabel("AutoGrader");

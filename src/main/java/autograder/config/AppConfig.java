@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.regex.Pattern;
 
+/** Directories, file names and name patterns that locate the input, working and output files of a run. */
 public final class AppConfig {
     private final Path inputDirectory;
     private final Path extractionDirectory;

@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+/** Writes the per-case and per-submission diagnostic CSV files for a run. */
 final class GradingDiagnosticsWriter {
     private final AppConfig app;
     private final ExecutionConfig execution;

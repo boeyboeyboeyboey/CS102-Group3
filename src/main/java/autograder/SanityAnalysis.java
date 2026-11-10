@@ -12,6 +12,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.List;
 import java.util.function.Consumer;
 
+/** Runs the optional score sanity checks on a finished run and writes their report. */
 final class SanityAnalysis {
     static final String REPORT = "sanity-checks.csv";
 

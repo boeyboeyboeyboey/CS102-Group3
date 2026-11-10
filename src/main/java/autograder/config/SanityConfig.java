@@ -6,8 +6,16 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Properties;
 
+/** Settings and thresholds for the score sanity checks. */
 public record SanityConfig(boolean enabled, int minGraded, int zeroPercent, int sameFailurePercent,
                            int timeoutPercent, int fixedDynamicGapPoints) {
+    private static final int DEFAULT_MIN_GRADED = 5;
+    private static final int DEFAULT_ZERO_PERCENT = 90;
+    private static final int DEFAULT_SAME_FAILURE_PERCENT = 80;
+    private static final int DEFAULT_TIMEOUT_PERCENT = 50;
+    private static final int DEFAULT_FIXED_DYNAMIC_GAP_POINTS = 40;
+    private static final int MAX_PERCENT = 100;
+
     public SanityConfig {
         if (minGraded <= 0 || !percent(zeroPercent) || !percent(sameFailurePercent)
                 || !percent(timeoutPercent) || !percent(fixedDynamicGapPoints)) {
@@ -17,11 +25,16 @@ public record SanityConfig(boolean enabled, int minGraded, int zeroPercent, int 
     }
 
     public static SanityConfig defaults() {
-        return new SanityConfig(true, 5, 90, 80, 50, 40);
+        return withEnabled(true);
     }
 
     public static SanityConfig disabled() {
-        return new SanityConfig(false, 5, 90, 80, 50, 40);
+        return withEnabled(false);
+    }
+
+    private static SanityConfig withEnabled(boolean enabled) {
+        return new SanityConfig(enabled, DEFAULT_MIN_GRADED, DEFAULT_ZERO_PERCENT,
+                DEFAULT_SAME_FAILURE_PERCENT, DEFAULT_TIMEOUT_PERCENT, DEFAULT_FIXED_DYNAMIC_GAP_POINTS);
     }
 
     public static SanityConfig load(Path file) throws IOException {
@@ -38,11 +51,12 @@ public record SanityConfig(boolean enabled, int minGraded, int zeroPercent, int 
             throw new IllegalArgumentException("grading.sanity.enabled must be true or false");
         }
         return new SanityConfig(Boolean.parseBoolean(enabled),
-                integer(properties, "min.graded", 5, Integer.MAX_VALUE),
-                integer(properties, "zero.percent", 90, 100),
-                integer(properties, "same.failure.percent", 80, 100),
-                integer(properties, "timeout.percent", 50, 100),
-                integer(properties, "fixed.dynamic.gap.points", 40, 100));
+                integer(properties, "min.graded", DEFAULT_MIN_GRADED, Integer.MAX_VALUE),
+                integer(properties, "zero.percent", DEFAULT_ZERO_PERCENT, MAX_PERCENT),
+                integer(properties, "same.failure.percent", DEFAULT_SAME_FAILURE_PERCENT, MAX_PERCENT),
+                integer(properties, "timeout.percent", DEFAULT_TIMEOUT_PERCENT, MAX_PERCENT),
+                integer(properties, "fixed.dynamic.gap.points",
+                        DEFAULT_FIXED_DYNAMIC_GAP_POINTS, MAX_PERCENT));
     }
 
     private static int integer(Properties properties, String name, int fallback, int maximum) {
@@ -65,6 +79,6 @@ public record SanityConfig(boolean enabled, int minGraded, int zeroPercent, int 
     }
 
     private static boolean percent(int value) {
-        return value >= 1 && value <= 100;
+        return value >= 1 && value <= MAX_PERCENT;
     }
 }

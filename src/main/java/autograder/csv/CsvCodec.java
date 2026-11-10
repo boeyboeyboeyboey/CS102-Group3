@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+/** Parses and writes quoted CSV text. */
 public final class CsvCodec {
     private CsvCodec() {
     }

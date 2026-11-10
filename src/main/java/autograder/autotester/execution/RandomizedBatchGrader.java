@@ -17,7 +17,15 @@ import java.util.List;
 import java.util.Locale;
 import java.util.stream.Stream;
 
+/** Grades every ZIP submission in a folder for one question and writes a summary CSV. */
 public final class RandomizedBatchGrader {
+    private static final String BATCH_DIRECTORY_PREFIX = "randomized-batch-";
+    private static final String WORK_DIRECTORY_PREFIX = "randomized-batch-work-";
+    private static final String SUMMARY_FILE_NAME = "summary.csv";
+    private static final String SUMMARY_HEADER = "archive,result,status,passed,total,seed,error\n";
+    private static final String DEFAULT_LABEL = "submission";
+    private static final int MAX_LABEL_LENGTH = 100;
+
     private final RandomizedGrader grader;
 
     public RandomizedBatchGrader() {
@@ -47,8 +55,8 @@ public final class RandomizedBatchGrader {
         }
         Files.createDirectories(results);
         Path outputDirectory = Files.createTempDirectory(results,
-                "randomized-batch-" + question.getClassName() + "-" + seed + "-");
-        Path temporaryDirectory = Files.createTempDirectory("randomized-batch-work-");
+                BATCH_DIRECTORY_PREFIX + question.getClassName() + "-" + seed + "-");
+        Path temporaryDirectory = Files.createTempDirectory(WORK_DIRECTORY_PREFIX);
         List<RandomizedSubmissionResult> submissions = new ArrayList<>();
         try {
             for (int index = 0; index < archives.size(); index++) {
@@ -59,7 +67,7 @@ public final class RandomizedBatchGrader {
             deleteTree(temporaryDirectory);
         }
 
-        Path summary = outputDirectory.resolve("summary.csv");
+        Path summary = outputDirectory.resolve(SUMMARY_FILE_NAME);
         writeSummary(summary, submissions);
         return new RandomizedBatchResult(outputDirectory, summary, submissions);
     }
@@ -154,10 +162,14 @@ public final class RandomizedBatchGrader {
         List<Path> missingNames = new ArrayList<>();
         while (existing != null && !Files.exists(existing, LinkOption.NOFOLLOW_LINKS)) {
             Path name = existing.getFileName();
-            if (name != null) missingNames.add(name);
+            if (name != null) {
+                missingNames.add(name);
+            }
             existing = existing.getParent();
         }
-        if (existing == null) return absolute;
+        if (existing == null) {
+            return absolute;
+        }
         Path canonical = existing.toRealPath();
         for (int index = missingNames.size() - 1; index >= 0; index--) {
             canonical = canonical.resolve(missingNames.get(index));
@@ -167,13 +179,15 @@ public final class RandomizedBatchGrader {
 
     private String safeName(String value) {
         String sanitized = value.replaceAll("[^A-Za-z0-9._-]", "_");
-        if (sanitized.isBlank()) return "submission";
-        return sanitized.length() > 100 ? sanitized.substring(0, 100) : sanitized;
+        if (sanitized.isBlank()) {
+            return DEFAULT_LABEL;
+        }
+        return sanitized.length() > MAX_LABEL_LENGTH ? sanitized.substring(0, MAX_LABEL_LENGTH) : sanitized;
     }
 
     private void writeSummary(Path output,
                               List<RandomizedSubmissionResult> submissions) throws IOException {
-        StringBuilder csv = new StringBuilder("archive,result,status,passed,total,seed,error\n");
+        StringBuilder csv = new StringBuilder(SUMMARY_HEADER);
         for (RandomizedSubmissionResult submission : submissions) {
             RandomizedResult result = submission.result();
             csv.append(csv(submission.archive())).append(',')
@@ -190,7 +204,9 @@ public final class RandomizedBatchGrader {
     }
 
     private void deleteTree(Path root) throws IOException {
-        if (!Files.exists(root)) return;
+        if (!Files.exists(root)) {
+            return;
+        }
         try (Stream<Path> entries = Files.walk(root)) {
             for (Path entry : entries.sorted(Comparator.reverseOrder()).toList()) {
                 Files.deleteIfExists(entry);

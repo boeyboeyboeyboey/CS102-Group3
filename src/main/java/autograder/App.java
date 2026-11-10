@@ -37,7 +37,11 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
+/** Command-line entry point: parses the arguments, runs one grading session and maps the outcome to an exit code. */
 public final class App {
+    private static final int CANCELLED_EXIT_CODE = 130;
+    private static final String CANCELLED_MESSAGE = "grading cancelled";
+
     private App() {
     }
 
@@ -111,8 +115,8 @@ public final class App {
                     || exception instanceof CancellationException
                     || Thread.currentThread().isInterrupted()) {
                 Thread.currentThread().interrupt();
-                System.err.println("grading cancelled");
-                return 130;
+                System.err.println(CANCELLED_MESSAGE);
+                return CANCELLED_EXIT_CODE;
             }
             System.err.println("could not complete grading: " + exception.getMessage());
             return 1;
@@ -134,8 +138,8 @@ public final class App {
 
     static int report(RunOutcome outcome) {
         if (outcome.status() == RunOutcome.Status.INTERRUPTED) {
-            System.err.println("grading cancelled");
-            return 130;
+            System.err.println(CANCELLED_MESSAGE);
+            return CANCELLED_EXIT_CODE;
         }
         if (outcome.status() == RunOutcome.Status.NO_SUBMISSIONS) {
             System.err.println("No submission archives matched the configured input directory and pattern");
@@ -306,7 +310,8 @@ public final class App {
     private static void printUsage() {
         System.out.println("Usage: java -jar <application.jar> [--workers <N|auto>] <configuration.properties>");
         System.out.println("Prepares, compiles and grades submissions using timed instructor cases");
-        System.out.println("Usage: java -jar <application.jar> --randomized-resources <question-id> <configuration.properties>");
+        System.out.println("Usage: java -jar <application.jar> --randomized-resources <question-id> "
+                + "<configuration.properties>");
         System.out.println("Usage: java -jar <application.jar> --randomized-grade <question-id> <submission-folder> "
                 + "<configuration.properties> [seed]");
         System.out.println("Usage: java -jar <application.jar> --randomized-grade-batch <question-id> "

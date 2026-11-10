@@ -10,7 +10,10 @@ import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 
+/** Compiles one question part: the student's sources, the instructor adapter and the dynamic runner. */
 public final class StudentCompiler {
+    /** Class name of the dynamic test runner, shared with the provider that schedules its cases. */
+    public static final String DYNAMIC_RUNNER_CLASS = "DynamicRunner";
     private static final String ADAPTER_RESOURCE = "/autograder/adapters/";
 
     public ProcessResult compile(QuestionDefinition question, Path workingRoot,
@@ -18,8 +21,8 @@ public final class StudentCompiler {
                                  long timeoutMillis, int maxOutputBytes)
             throws IOException, InterruptedException {
         Path workspace = partWorkspace.toAbsolutePath().normalize();
-        Path sourceDirectory = workspace.resolve("src");
-        Path classesDirectory = workspace.resolve("classes");
+        Path sourceDirectory = workspace.resolve(CaseExecutor.SOURCE_DIRECTORY);
+        Path classesDirectory = workspace.resolve(CaseExecutor.CLASSES_DIRECTORY);
         recreateDirectory(sourceDirectory);
         recreateDirectory(classesDirectory);
 
@@ -49,10 +52,10 @@ public final class StudentCompiler {
         }
         sources.add(adapterPath);
 
-        // Dynamic test runner (Feature 4) is compiled into the student classes directory so it can
+        // the dynamic test runner is compiled into the student classes directory so it can
         // be executed on the same classpath. It uses reflection only, so it has no compile-time
-        // dependency on any student class and compiles for every question part.
-        String dynamicRunnerName = "DynamicRunner.java";
+        // dependency on any student class and compiles for every question part
+        String dynamicRunnerName = DYNAMIC_RUNNER_CLASS + ".java";
         Path dynamicRunnerPath = sourceDirectory.resolve(dynamicRunnerName);
         try (InputStream dynamicRunner =
                      StudentCompiler.class.getResourceAsStream(ADAPTER_RESOURCE + dynamicRunnerName)) {

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+/** Name, email and username details recovered for one submission. */
 public final class StudentIdentity {
     private final String name;
     private final String emailId;

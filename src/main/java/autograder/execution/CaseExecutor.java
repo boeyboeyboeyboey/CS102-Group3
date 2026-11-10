@@ -11,13 +11,19 @@ import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 
+/** Runs one test case in its own child jvm, used when case isolation is per case. */
 public final class CaseExecutor {
+    static final String CLASSES_DIRECTORY = "classes";
+    static final String CASES_DIRECTORY = "cases";
+    static final String SOURCE_DIRECTORY = "src";
+    static final String RESULT_FILE = "case-result.txt";
+
     public TestCaseResult execute(TestCaseDefinition test, QuestionDefinition question,
                                   Path partWorkspace, String javaExecutable,
                                   long timeoutMillis, int maxOutputBytes)
             throws IOException, InterruptedException {
         Path workspace = partWorkspace.toAbsolutePath().normalize();
-        Path caseDirectory = workspace.resolve("cases").resolve(test.getId());
+        Path caseDirectory = workspace.resolve(CASES_DIRECTORY).resolve(test.getId());
         recreateDirectory(caseDirectory);
         for (Path fixture : question.getFixtures()) {
             if (!Files.isRegularFile(fixture)) {
@@ -26,11 +32,11 @@ public final class CaseExecutor {
             Files.copy(fixture, caseDirectory.resolve(fixture.getFileName()),
                     StandardCopyOption.REPLACE_EXISTING);
         }
-        Path classesDirectory = workspace.resolve("classes").toAbsolutePath().normalize();
+        Path classesDirectory = workspace.resolve(CLASSES_DIRECTORY).toAbsolutePath().normalize();
         if (!Files.isDirectory(classesDirectory)) {
             throw new IOException("compiled classes directory is missing: " + classesDirectory);
         }
-        Path resultFile = caseDirectory.resolve("case-result.txt").toAbsolutePath();
+        Path resultFile = caseDirectory.resolve(RESULT_FILE).toAbsolutePath();
         List<String> command = buildCommand(javaExecutable, classesDirectory, test, resultFile);
 
         ProcessResult process = ProcessRunner.run(command, caseDirectory, timeoutMillis, maxOutputBytes);

@@ -17,6 +17,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.List;
 import java.util.Objects;
 
+/** Writes the single-file HTML dashboard with its stylesheet and script inlined, so it works offline. */
 public final class OfflineHtmlReportGenerator implements HtmlReportGenerator {
     private static final String STYLE_RESOURCE = "/autograder/html/dashboard.css";
     private static final String SCRIPT_RESOURCE = "/autograder/html/dashboard.js";

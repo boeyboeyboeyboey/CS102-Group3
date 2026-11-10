@@ -17,6 +17,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+/** Reads the roster score sheet CSV into a ScoreSheet using the configured column names. */
 public final class ScoreSheetRepository {
     private static final List<String> REQUIRED_SEMANTIC_COLUMNS = List.of(
             "id", "username", "lastName", "firstName", "email",

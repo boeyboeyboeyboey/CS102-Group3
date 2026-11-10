@@ -2,6 +2,7 @@ package autograder.model;
 
 import java.nio.file.Path;
 
+/** A correction applied to a submission file while preparing it, with the original and corrected value. */
 public final class SubmissionCorrection {
     private final String type;
     private final Path relativePath;

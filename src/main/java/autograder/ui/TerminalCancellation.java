@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.io.Reader;
 
+/** Lets the user type q then Enter in the terminal to interrupt the grading thread. */
 public final class TerminalCancellation implements AutoCloseable {
     private volatile boolean active = true;
 

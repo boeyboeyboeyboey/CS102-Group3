@@ -17,12 +17,17 @@ public class Q1aAdapter extends Q1a {
         } catch (Throwable throwable) {
             throwable.printStackTrace(System.err);
         }
-        if (resultPath != null) {
-            try {
-                Files.writeString(resultPath, status, StandardCharsets.UTF_8);
-            } catch (IOException exception) {
-                exception.printStackTrace(System.err);
-            }
+        writeResult(resultPath, status);
+    }
+
+    private static void writeResult(Path resultPath, String status) {
+        if (resultPath == null) {
+            return;
+        }
+        try {
+            Files.writeString(resultPath, status, StandardCharsets.UTF_8);
+        } catch (IOException exception) {
+            exception.printStackTrace(System.err);
         }
     }
 

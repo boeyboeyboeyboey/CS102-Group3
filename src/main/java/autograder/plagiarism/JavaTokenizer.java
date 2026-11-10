@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-// identifiers become ID and literals NUM, STR or CHR so renamed code still matches
+/** Splits Java source into tokens; identifiers become ID and literals NUM, STR or CHR so renamed code still matches. */
 public final class JavaTokenizer {
     public static final String IDENTIFIER = "ID";
     public static final String NUMBER = "NUM";

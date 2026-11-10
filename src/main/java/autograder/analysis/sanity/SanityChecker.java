@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+/** Looks across all graded submissions for patterns that point to a broken tester, timeout or expected output. */
 public final class SanityChecker {
     private static final String DYNAMIC_MARKER = "-dynamic-";
     private static final int EXCERPT_LIMIT = 80;

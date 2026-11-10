@@ -4,6 +4,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
 
+/** A pair of submissions whose similarity reached the reporting threshold. */
 public final class SimilarityFinding {
     private final Path firstArchive;
     private final Path secondArchive;

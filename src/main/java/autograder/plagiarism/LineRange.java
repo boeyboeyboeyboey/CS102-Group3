@@ -1,5 +1,6 @@
 package autograder.plagiarism;
 
+/** A run of lines in one file, used to show where matching code sits. */
 public record LineRange(String file, int startLine, int endLine) {
     public boolean continuesInto(LineRange next) {
         return file.equals(next.file) && next.startLine >= startLine && next.startLine <= endLine + 1;

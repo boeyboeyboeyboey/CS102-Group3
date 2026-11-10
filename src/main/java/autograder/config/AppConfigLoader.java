@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.regex.Pattern;
 
+/** Reads the general run settings from a properties file and resolves their paths. */
 final class AppConfigLoader {
     private static final List<String> SCORE_COLUMN_KEYS = List.of(
             "id", "username", "lastName", "firstName", "email",

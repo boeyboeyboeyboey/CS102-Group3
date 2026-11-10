@@ -2,6 +2,7 @@ package autograder.autotester.generator;
 
 import java.util.Random;
 
+/** Generates an Integer uniformly between inclusive bounds. */
 public final class RandomInt implements Generator<Integer> {
     private final int minimum;
     private final int maximum;

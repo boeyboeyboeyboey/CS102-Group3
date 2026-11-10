@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
-// working directory shared by the cases of one host; holds only fresh copies of the fixtures
+/** Working directory shared by the cases of one host; holds only fresh copies of the fixtures. */
 final class FixtureDirectory {
     private final Path directory;
     private final List<Path> fixtures;

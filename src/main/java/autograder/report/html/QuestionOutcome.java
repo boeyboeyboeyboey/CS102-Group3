@@ -10,6 +10,7 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Objects;
 
+/** One student's result for one question: earned and maximum score, status counts and credit band. */
 final class QuestionOutcome {
     enum CreditBand {
         ZERO("zero", "0%"),

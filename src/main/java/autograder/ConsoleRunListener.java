@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+/** Prints run progress and results to the console. */
 final class ConsoleRunListener implements RunListener {
     private final ConsoleProgressListener intake = new ConsoleProgressListener();
 

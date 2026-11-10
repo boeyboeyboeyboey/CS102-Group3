@@ -4,8 +4,13 @@ import autograder.api.ProgressListener;
 import java.io.PrintStream;
 import java.util.Map;
 
+/** Prints one progress line per update, with ANSI colour when the terminal supports it. */
 public final class TerminalDashboard implements ProgressListener {
     private static final int BAR_WIDTH = 12;
+    private static final int MAX_TEXT_LENGTH = 40;
+    private static final String TRUNCATION_MARK = "...";
+    private static final String BAR_FILLED = "#";
+    private static final String BAR_EMPTY = "-";
     private static final String CYAN = "\u001b[36m";
     private static final String GREEN = "\u001b[32m";
     private static final String RESET = "\u001b[0m";
@@ -39,7 +44,7 @@ public final class TerminalDashboard implements ProgressListener {
         String action = safeCompleted > lastCompleted && safeStage.equals(lastStage)
                 ? "done" : "working";
         int filled = safeCompleted * BAR_WIDTH / safeTotal;
-        String bar = "#".repeat(filled) + "-".repeat(BAR_WIDTH - filled);
+        String bar = BAR_FILLED.repeat(filled) + BAR_EMPTY.repeat(BAR_WIDTH - filled);
         int percent = safeCompleted * 100 / safeTotal;
         String label = "[" + safeStage + "] [" + bar + "] " + safeCompleted
                 + "/" + safeTotal + " (" + percent + "%) " + action + ": " + safeItem;
@@ -59,12 +64,12 @@ public final class TerminalDashboard implements ProgressListener {
             return "";
         }
         StringBuilder safe = new StringBuilder();
-        for (int index = 0; index < value.length() && safe.length() < 40; index++) {
+        for (int index = 0; index < value.length() && safe.length() < MAX_TEXT_LENGTH; index++) {
             char character = value.charAt(index);
             safe.append(Character.isISOControl(character) ? '?' : character);
         }
-        if (value.length() > 40) {
-            safe.append("...");
+        if (value.length() > MAX_TEXT_LENGTH) {
+            safe.append(TRUNCATION_MARK);
         }
         return safe.toString();
     }

@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
 
+/** Settings for the similarity detectors. */
 public record PlagiarismConfig(boolean enabled, List<String> algorithms, int ngramSize, double threshold,
                                int minimumNgrams, double jplagThreshold, int jplagMinimumTokens,
                                Path starterDirectory) {

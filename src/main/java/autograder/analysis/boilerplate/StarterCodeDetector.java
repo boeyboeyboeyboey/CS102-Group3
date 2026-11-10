@@ -14,7 +14,12 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
+/** Flags answer and companion files whose code tokens match, or nearly match, the starter files. */
 public final class StarterCodeDetector implements BoilerplateDetector {
+    private static final String UNAVAILABLE = "STARTER_COMPARISON_UNAVAILABLE";
+    private static final String UNCHANGED = "UNCHANGED_STARTER";
+    private static final String MINIMAL_CHANGES = "MINIMAL_STARTER_CHANGES";
+
     private final AssessmentDefinition assessment;
     private final BoilerplateConfig config;
 
@@ -28,7 +33,7 @@ public final class StarterCodeDetector implements BoilerplateDetector {
         List<AnalysisFinding> findings = new ArrayList<>();
         Path root = submission.getWorkingRoot();
         if (root == null) {
-            findings.add(new AnalysisFinding("STARTER_COMPARISON_UNAVAILABLE", submission.getArchivePath(),
+            findings.add(new AnalysisFinding(UNAVAILABLE, submission.getArchivePath(),
                     "No working copy; starter comparison did not run"));
             return List.copyOf(findings);
         }
@@ -50,7 +55,7 @@ public final class StarterCodeDetector implements BoilerplateDetector {
                 int edits = starter.equals(answer) ? 0 : JavaSourceTokens.editDistance(starter, answer);
                 double similarity = 1.0 - (double) edits / Math.max(starter.size(), answer.size());
                 if (edits == 0 || similarity >= config.similarityThreshold()) {
-                    String code = edits == 0 ? "UNCHANGED_STARTER" : "MINIMAL_STARTER_CHANGES";
+                    String code = edits == 0 ? UNCHANGED : MINIMAL_CHANGES;
                     String description = edits == 0 ? "Code tokens match the starter after ignoring comments and formatting"
                             : "High whole-file starter similarity; inspect the implementation before drawing conclusions";
                     findings.add(new AnalysisFinding(code, source, String.format(Locale.ROOT,
@@ -59,7 +64,7 @@ public final class StarterCodeDetector implements BoilerplateDetector {
                             description, edits, similarity * 100, starter.size(), answer.size())));
                 }
             } catch (IOException | IllegalArgumentException exception) {
-                findings.add(new AnalysisFinding("STARTER_COMPARISON_UNAVAILABLE", source,
+                findings.add(new AnalysisFinding(UNAVAILABLE, source,
                         submission.getArchivePath().getFileName() + ": " + relative + ": " + exception.getMessage()));
             }
         }

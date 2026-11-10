@@ -3,6 +3,7 @@ package autograder.report.feedback;
 import java.util.ArrayList;
 import java.util.List;
 
+/** Formats recorded stdout and stderr as trimmed, fenced Markdown code blocks. */
 final class MarkdownDiagnosticFormatter {
     private static final int MIN_FENCE_LENGTH = 3;
     private static final String COMPILE_WORKSPACE_PATH = "\\S*[/\\\\]src[/\\\\](?=[^/\\\\\\s]+\\.java)";

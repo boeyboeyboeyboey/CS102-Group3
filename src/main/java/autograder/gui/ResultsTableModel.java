@@ -10,6 +10,8 @@ import java.util.List;
 
 /** Read-only table of each student's score and any reason it was withheld. */
 public final class ResultsTableModel extends AbstractTableModel {
+    private static final int STUDENT_COLUMN = 0;
+    private static final int SCORE_COLUMN = 1;
     private static final String[] COLUMNS = {"Student", "Score", "Note"};
 
     /** One table row; a withheld student has no exported score, so score is null. */
@@ -61,19 +63,16 @@ public final class ResultsTableModel extends AbstractTableModel {
 
     @Override
     public Class<?> getColumnClass(int column) {
-        return column == 1 ? Double.class : String.class;
+        return column == SCORE_COLUMN ? Double.class : String.class;
     }
 
     @Override
     public Object getValueAt(int row, int column) {
         Row entry = rows.get(row);
-        switch (column) {
-            case 0:
-                return entry.student();
-            case 1:
-                return entry.score();
-            default:
-                return entry.note();
-        }
+        return switch (column) {
+            case STUDENT_COLUMN -> entry.student();
+            case SCORE_COLUMN -> entry.score();
+            default -> entry.note();
+        };
     }
 }

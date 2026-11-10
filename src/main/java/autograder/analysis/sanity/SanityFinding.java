@@ -2,6 +2,7 @@ package autograder.analysis.sanity;
 
 import java.util.Objects;
 
+/** One advisory sanity result: which check fired, where, how many submissions it affects and why. */
 public final class SanityFinding {
     private final SanityCheck check;
     private final String questionId;

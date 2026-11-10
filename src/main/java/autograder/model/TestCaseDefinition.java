@@ -2,6 +2,7 @@ package autograder.model;
 
 import java.util.List;
 
+/** One test case to run: the runner class, its arguments and its points. */
 public final class TestCaseDefinition {
     private final String id;
     private final String questionId;

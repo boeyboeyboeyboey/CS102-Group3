@@ -9,7 +9,9 @@ import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.Locale;
 
+/** Writes a feedback file under a safe, unique name derived from the student or archive. */
 final class FeedbackFileWriter {
     private static final String FILE_EXTENSION = ".md";
     private static final String FALLBACK_FILE_NAME = "submission";
@@ -37,7 +39,7 @@ final class FeedbackFileWriter {
     static String baseFileName(SubmissionResult submission, String archiveName) {
         StudentRecord student = submission.getIdentity().getStudentRecord();
         String name = student != null ? student.getUsername() : archiveName;
-        if (student == null && name.toLowerCase().endsWith(ARCHIVE_EXTENSION)) {
+        if (student == null && name.toLowerCase(Locale.ROOT).endsWith(ARCHIVE_EXTENSION)) {
             name = name.substring(0, name.length() - ARCHIVE_EXTENSION.length());
         }
         String safe = name.replaceAll("[^A-Za-z0-9._-]", "_").replaceAll("^[._-]+", "");

@@ -9,7 +9,6 @@ import javax.swing.JTextField;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -22,8 +21,6 @@ final class PathRow extends JPanel {
     private static final int LABEL_WIDTH = 110;
     private static final int FIELD_COLUMNS = 36;
     private static final int GAP = 6;
-    private static final Color OK_COLOR = new Color(0x1B5E20);
-    private static final Color ERROR_COLOR = new Color(0xB00020);
 
     private final JLabel label = new JLabel();
     private final JTextField field = new JTextField(FIELD_COLUMNS);
@@ -43,7 +40,7 @@ final class PathRow extends JPanel {
         label.setPreferredSize(new Dimension(LABEL_WIDTH, label.getPreferredSize().height));
         choose.getAccessibleContext().setAccessibleName("Choose " + text.toLowerCase());
         choose.addActionListener(event -> chooseFile());
-        field.getDocument().addDocumentListener(new ChangeListener(onChange));
+        field.getDocument().addDocumentListener(new RunOnChange(onChange));
         layoutParts();
     }
 
@@ -76,7 +73,7 @@ final class PathRow extends JPanel {
         } else {
             text = "⚠ " + message;
         }
-        status.setForeground(fieldStatus.ok() ? OK_COLOR : ERROR_COLOR);
+        status.setForeground(fieldStatus.ok() ? Brand.OK : Brand.ERROR);
         status.setText(text);
         field.getAccessibleContext().setAccessibleDescription(message);
     }
@@ -126,10 +123,10 @@ final class PathRow extends JPanel {
         }
     }
 
-    private static final class ChangeListener implements DocumentListener {
+    private static final class RunOnChange implements DocumentListener {
         private final Runnable onChange;
 
-        ChangeListener(Runnable onChange) {
+        RunOnChange(Runnable onChange) {
             this.onChange = onChange;
         }
 

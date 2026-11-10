@@ -7,6 +7,7 @@ import autograder.model.TestCaseResult;
 import java.math.BigDecimal;
 import java.util.List;
 
+/** Computes and formats the scores shown in the dashboard. */
 final class HtmlScoreFormatter {
     static final int AVERAGE_DECIMAL_PLACES = 4;
 

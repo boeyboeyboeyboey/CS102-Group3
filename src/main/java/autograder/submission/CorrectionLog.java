@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.time.Instant;
 
+/** Appends one tab-separated line to the correction log for each correction made to a submission. */
 public final class CorrectionLog {
     private final Path logPath;
 

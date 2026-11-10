@@ -7,12 +7,14 @@ import java.math.BigDecimal;
 import java.nio.file.Path;
 import java.util.List;
 
+/** Renders the code-analysis and similarity findings section of the dashboard. */
 final class HtmlAnalysisRenderer {
     private HtmlAnalysisRenderer() { }
 
     static void appendAnalysisSection(StringBuilder html, List<AnalysisFinding> findings,
                                      List<SimilarityFinding> similarities) {
-        html.append("<section class=\"analysis-section\" aria-labelledby=\"analysis-title\"><h2 id=\"analysis-title\">Analysis findings</h2>\n");
+        html.append("<section class=\"analysis-section\" aria-labelledby=\"analysis-title\">")
+                .append("<h2 id=\"analysis-title\">Analysis findings</h2>\n");
         if (findings.isEmpty() && similarities.isEmpty()) {
             html.append("<p>No analysis data supplied for this run.</p>\n</section>\n");
             return;
@@ -45,7 +47,8 @@ final class HtmlAnalysisRenderer {
             for (SimilarityFinding finding : similarities) {
                 BigDecimal percent = BigDecimal.valueOf(finding.getSimilarity())
                         .multiply(BigDecimal.valueOf(100));
-                html.append("<li><strong>Similarity: ").append(HtmlScoreFormatter.format(percent)).append("%</strong><span>")
+                html.append("<li><strong>Similarity: ").append(HtmlScoreFormatter.format(percent))
+                        .append("%</strong><span>")
                         .append(HtmlEscaper.escape(pathText(finding.getFirstArchive()))).append(" ↔ ")
                         .append(HtmlEscaper.escape(pathText(finding.getSecondArchive()))).append("</span>");
                 if (finding.getEvidence().isEmpty()) {

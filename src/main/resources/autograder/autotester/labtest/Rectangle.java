@@ -1,3 +1,4 @@
+/** Rectangle shape for the shape-sorting question. */
 public class Rectangle implements Shape {
     private final String id;
     private final double length;

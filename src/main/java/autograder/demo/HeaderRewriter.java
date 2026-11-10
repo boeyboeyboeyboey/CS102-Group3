@@ -8,26 +8,37 @@ import java.util.regex.Pattern;
 /** Replaces the identity lines of a Java source header, or inserts a header when none exists. */
 final class HeaderRewriter {
     private static final int HEADER_LINES = 12;
-    private static final Pattern NAME = linePattern("Name");
-    private static final Pattern EMAIL = linePattern("Email ID");
-    private static final Pattern USERNAME = linePattern("Username");
+    private static final String LABEL_NAME = "Name";
+    private static final String LABEL_EMAIL = "Email ID";
+    private static final String LABEL_USERNAME = "Username";
+    private static final String NAME_LINE_PREFIX = " * " + LABEL_NAME + ": ";
+    private static final String EMAIL_LINE_PREFIX = " * " + LABEL_EMAIL + ": ";
+    private static final String COMMENT_OPEN = "/*";
+    private static final String COMMENT_CLOSE = " */";
+    private static final String CRLF = "\r\n";
+    private static final int NAME_FOUND = 0;
+    private static final int EMAIL_FOUND = 1;
+    private static final int INSERT_NEW_BLOCK = -2;
+    private static final Pattern NAME = linePattern(LABEL_NAME);
+    private static final Pattern EMAIL = linePattern(LABEL_EMAIL);
+    private static final Pattern USERNAME = linePattern(LABEL_USERNAME);
 
     private HeaderRewriter() {
     }
 
     static String rewrite(String source, String name, String email, String username) {
-        String eol = source.contains("\r\n") ? "\r\n" : "\n";
+        String eol = source.contains(CRLF) ? CRLF : "\n";
         List<String> lines = splitKeepingTerminators(source);
-        boolean[] found = new boolean[2];
+        boolean[] found = new boolean[EMAIL_FOUND + 1];
         int lastMatch = -1;
         for (int i = 0; i < Math.min(HEADER_LINES, lines.size()); i++) {
             String line = lines.get(i);
             String replaced = replaceValue(line, NAME, name);
             if (replaced == null) {
                 replaced = replaceValue(line, EMAIL, email);
-                found[1] |= replaced != null;
+                found[EMAIL_FOUND] |= replaced != null;
             } else {
-                found[0] = true;
+                found[NAME_FOUND] = true;
             }
             if (replaced == null) {
                 replaced = replaceValue(line, USERNAME, username);
@@ -38,11 +49,11 @@ final class HeaderRewriter {
             }
         }
         List<String> missing = new ArrayList<>();
-        if (!found[0]) {
-            missing.add(" * Name: " + name);
+        if (!found[NAME_FOUND]) {
+            missing.add(NAME_LINE_PREFIX + name);
         }
-        if (!found[1]) {
-            missing.add(" * Email ID: " + email);
+        if (!found[EMAIL_FOUND]) {
+            missing.add(EMAIL_LINE_PREFIX + email);
         }
         if (!missing.isEmpty()) {
             insertMissing(lines, missing, lastMatch, eol);
@@ -52,12 +63,12 @@ final class HeaderRewriter {
 
     private static void insertMissing(List<String> lines, List<String> missing, int lastMatch,
             String eol) {
-        int at = lastMatch >= 0 ? lastMatch : opensComment(lines) ? 0 : -2;
-        if (at == -2) {
+        int at = lastMatch >= 0 ? lastMatch : opensComment(lines) ? 0 : INSERT_NEW_BLOCK;
+        if (at == INSERT_NEW_BLOCK) {
             List<String> block = new ArrayList<>();
-            block.add("/*" + eol);
+            block.add(COMMENT_OPEN + eol);
             missing.forEach(entry -> block.add(entry + eol));
-            block.add(" */" + eol);
+            block.add(COMMENT_CLOSE + eol);
             block.add(eol);
             lines.addAll(0, block);
             return;
@@ -72,7 +83,7 @@ final class HeaderRewriter {
     }
 
     private static boolean opensComment(List<String> lines) {
-        return !lines.isEmpty() && lines.get(0).trim().equals("/*");
+        return !lines.isEmpty() && lines.get(0).trim().equals(COMMENT_OPEN);
     }
 
     private static String replaceValue(String line, Pattern pattern, String value) {

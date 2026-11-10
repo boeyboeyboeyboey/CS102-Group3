@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+/** The graded outcome of one submission: its case results and scores. */
 public final class StudentGrade {
     private final SubmissionResult submission;
     private final List<TestCaseResult> testResults;
