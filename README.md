@@ -56,7 +56,7 @@ The six supplied submissions are too few to show parallel grading, so `demo` gra
 | Grade with 8 parallel workers | `sh demo.sh 8` | `demo.bat 8` |
 | Rebuild with a different size | `sh demo.sh generate 24` | `demo.bat generate 24` |
 
-`generate` takes the number of synthetic students (1-400, default 94) and an optional seed. Measured on a 10-core Mac (4 performance cores): 100 students took 11 min 21 s with 1 worker and 4 min 40 s with 8, with identical case verdicts, nobody withheld and the six real scores unchanged. A 30-student cohort (`generate 24`) took 74 s with 8 workers. About 117 cases time out by design, because synthetic students that reuse a hanging Q2 submission inherit its infinite loop. Recombined code also produces many similarity findings, which shows the plagiarism report working but makes `dashboard.html` about 7 MB.
+`generate` takes the number of synthetic students (1-400, default 94) and an optional seed. Measured on a 10-core Mac (4 performance cores): 100 students took 7 min 07 s with 1 worker, 2 min 44 s with 4 and 2 min 30 s with 8, with identical case verdicts, nobody withheld and the six real scores unchanged. A 30-student cohort (`generate 24`) took 74 s with 8 workers. About 117 cases time out by design, because synthetic students that reuse a hanging Q2 submission inherit its infinite loop. Recombined code also produces many similarity findings, which shows the plagiarism report working but makes `dashboard.html` about 7 MB.
 
 On Windows, use 1 worker for now. A diagnostic on a Windows laptop showed that with 2 or more workers, Java start-up time counts against the 2-second case limit and some passing cases are reported as timed out.
 
