@@ -11,6 +11,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
@@ -31,6 +32,7 @@ final class ResultsPanel extends JPanel {
     private final JTable table = new JTable();
     private final JScrollPane tableScroll = new JScrollPane(table);
     private final JPanel buttons = new JPanel(new FlowLayout(FlowLayout.LEFT, GAP, 0));
+    private OutputViewer viewer;
 
     ResultsPanel() {
         super(new BorderLayout(0, GAP));
@@ -63,6 +65,9 @@ final class ResultsPanel extends JPanel {
 
     private void show(String headlineText, RunOutcome outcome, RunSettings settings,
                       List<String> reportProblems) {
+        if (viewer != null) {
+            viewer.setVisible(false);
+        }
         headline.setText(headlineText);
         String problemText = OutcomeText.reportProblems(reportProblems);
         problems.setText(problemText);
@@ -73,18 +78,39 @@ final class ResultsPanel extends JPanel {
                 : new ResultsTableModel(List.of()));
         buttons.removeAll();
         if (settings != null) {
-            for (Artifact artifact : RunArtifacts.from(outcome, settings)) {
-                buttons.add(openButton(artifact));
-            }
+            addButtons(RunArtifacts.from(outcome, settings), outcome);
         }
         setVisible(true);
         revalidate();
     }
 
+    private void addButtons(List<Artifact> artifacts, RunOutcome outcome) {
+        for (Artifact artifact : artifacts) {
+            buttons.add(openButton(artifact));
+        }
+        if (ResultsExport.available(artifacts)) {
+            JButton export = new BrandButton("Export all…", false);
+            export.addActionListener(event -> ResultsExport.chooseAndWrite(this, artifacts,
+                    outcome.run().directory()));
+            buttons.add(export);
+        }
+    }
+
     private JButton openButton(Artifact artifact) {
-        JButton button = new JButton(artifact.label());
-        button.addActionListener(event -> ArtifactOpener.open(this, artifact.path()));
+        JButton button = new BrandButton(artifact.label(), false);
+        button.addActionListener(event -> open(artifact));
         return button;
+    }
+
+    private void open(Artifact artifact) {
+        if (artifact.view() == Artifact.View.EXTERNAL) {
+            ArtifactOpener.open(this, artifact.path());
+            return;
+        }
+        if (viewer == null) {
+            viewer = new OutputViewer(SwingUtilities.getWindowAncestor(this));
+        }
+        viewer.display(artifact);
     }
 
     private void configureHeadline() {
@@ -93,6 +119,7 @@ final class ResultsPanel extends JPanel {
         headline.setWrapStyleWord(true);
         headline.setOpaque(false);
         headline.setFont(headline.getFont().deriveFont(Font.BOLD));
+        headline.setForeground(Brand.INK);
         headline.getAccessibleContext().setAccessibleName("Result");
     }
 
@@ -108,6 +135,7 @@ final class ResultsPanel extends JPanel {
     private void configureTable() {
         table.setAutoCreateRowSorter(true);
         table.setFillsViewportHeight(true);
+        Brand.style(table);
         table.getAccessibleContext().setAccessibleName("Student scores");
         tableScroll.setPreferredSize(new Dimension(TABLE_WIDTH, TABLE_HEIGHT));
         NumberFormat format = NumberFormat.getNumberInstance();

@@ -19,8 +19,8 @@ final class RunBar extends JPanel {
 
     private final JLabel status = new JLabel(" ");
     private final JProgressBar progress = new JProgressBar();
-    private final JButton grade = new JButton("Grade");
-    private final JButton stop = new JButton("Stop");
+    private final JButton grade = new BrandButton("Grade", true);
+    private final JButton stop = new BrandButton("Stop", false);
     private final Timer clock = new Timer(CLOCK_TICK_MILLIS, event -> refreshStatus());
 
     private final JComboBox<Integer> workers = new JComboBox<>();

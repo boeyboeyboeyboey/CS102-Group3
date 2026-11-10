@@ -27,7 +27,7 @@ final class PathRow extends JPanel {
 
     private final JLabel label = new JLabel();
     private final JTextField field = new JTextField(FIELD_COLUMNS);
-    private final JButton choose = new JButton("Choose…");
+    private final JButton choose = new BrandButton("Choose…", false);
     private final JLabel status = new JLabel(" ");
     private final boolean directories;
     private final FileNameExtensionFilter filter;
