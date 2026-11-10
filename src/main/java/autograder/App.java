@@ -186,7 +186,7 @@ public final class App {
         return 0;
     }
 
-    // a bad seed prints a plain sentence and the usage; exit code stays 1 as before
+    // a bad seed prints a plain sentence and the usage, and the command exits with 1
     private static OptionalLong parseSeed(String[] args) {
         if (args.length != 5) {
             return OptionalLong.of(new SecureRandom().nextLong());

@@ -65,7 +65,7 @@ public final class CsvScoreReportWriter {
             Map<String, Integer> studentRows, List<List<String>> outputRows, int numeratorIndex)
             throws IOException {
         List<String> headers = sheet.getHeaders();
-        // looked up on first use so a missing header still fails at the same point as before
+        // looked up on first use so a missing header is reported only when a score needs it
         int denominatorIndex = -1;
         for (Map.Entry<String, Double> scoreEntry : scoresByStudentId.entrySet()) {
             String studentId = scoreEntry.getKey();
