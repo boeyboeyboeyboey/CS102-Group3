@@ -1,6 +1,7 @@
 package autograder.config;
 
 import autograder.model.QuestionDefinition;
+import autograder.report.ReportFiles;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -19,8 +20,8 @@ public record ExecutionConfig(Path directory, String reportFile, String javaExec
     private static final String AUTO_WORKERS = "auto";
     // compared ignoring case because macos and windows filesystems treat Cases.csv as cases.csv
     private static final List<String> RESERVED_REPORT_FILES = List.of(
-            "cases.csv", "submissions.csv", "similarity.csv", "starter-analysis.csv",
-            "sanity-checks.csv");
+            ReportFiles.CASES, ReportFiles.SUBMISSIONS, ReportFiles.SIMILARITY,
+            ReportFiles.STARTER_ANALYSIS, ReportFiles.SANITY_CHECKS);
 
     public ExecutionConfig(Path directory, String reportFile, String javaExecutable,
                            String javacExecutable, long compileTimeoutMillis,
@@ -54,7 +55,8 @@ public record ExecutionConfig(Path directory, String reportFile, String javaExec
     // limits are a parameter so tests can resolve auto without the real cpu count
     static ExecutionConfig load(Properties properties, Path baseDirectory, AppConfig app,
                                 WorkerLimits limits) throws IOException {
-        Path directory = AppConfig.canonicalize(baseDirectory.resolve(required(properties, "grading.directory")));
+        Path directory = AppConfig.canonicalize(
+                baseDirectory.resolve(PropertyParsers.required(properties, "grading.directory")));
         List<Path> protectedPaths = new ArrayList<>(List.of(app.getInputDirectory(),
                 app.getExtractionDirectory(), app.getWorkingDirectory(), app.getScoreSheetPath(),
                 app.getAnomalyLog(), app.getCorrectionLog()));
@@ -69,7 +71,7 @@ public record ExecutionConfig(Path directory, String reportFile, String javaExec
                         + protectedPath);
             }
         }
-        String report = required(properties, "grading.report.file");
+        String report = PropertyParsers.required(properties, "grading.report.file");
         if (!report.endsWith(".csv") || report.contains("/") || report.contains("\\")
                 || report.contains(":") || isReservedReportFile(report)) {
             throw new IllegalArgumentException("grading.report.file must be a distinct CSV filename");
@@ -131,7 +133,7 @@ public record ExecutionConfig(Path directory, String reportFile, String javaExec
     }
 
     private static String executable(Properties properties, String key, Path baseDirectory) {
-        String value = required(properties, key);
+        String value = PropertyParsers.required(properties, key);
         if (value.equals("JDK")) {
             String name = key.equals("execution.java") ? "java" : "javac";
             if (System.getProperty("os.name").startsWith("Windows")) {
@@ -147,7 +149,7 @@ public record ExecutionConfig(Path directory, String reportFile, String javaExec
 
     private static long positive(Properties properties, String key) {
         try {
-            long value = Long.parseLong(required(properties, key));
+            long value = Long.parseLong(PropertyParsers.required(properties, key));
             if (value > 0) {
                 return value;
             }
@@ -155,13 +157,5 @@ public record ExecutionConfig(Path directory, String reportFile, String javaExec
             throw new IllegalArgumentException("invalid positive integer: " + key, exception);
         }
         throw new IllegalArgumentException("configuration must be positive: " + key);
-    }
-
-    private static String required(Properties properties, String key) {
-        String value = properties.getProperty(key);
-        if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException("missing required configuration value: " + key);
-        }
-        return value.trim();
     }
 }

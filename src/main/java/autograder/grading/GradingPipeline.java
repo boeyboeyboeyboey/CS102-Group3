@@ -2,6 +2,7 @@ package autograder.grading;
 
 import autograder.api.PlagiarismDetector;
 import autograder.api.ProgressListener;
+import autograder.api.ProgressStages;
 import autograder.api.TestCaseProvider;
 import autograder.config.AppConfig;
 import autograder.config.CaseIsolation;
@@ -21,6 +22,7 @@ import autograder.model.SubmissionStatus;
 import autograder.model.TestCaseDefinition;
 import autograder.model.TestCaseResult;
 import autograder.model.TestStatus;
+import autograder.report.ReportFiles;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -33,7 +35,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /** Grades every submission in the input directory and exports the score reports. */
 public final class GradingPipeline {
-    public static final String SIMILARITY_REPORT = "similarity.csv";
+    public static final String SIMILARITY_REPORT = ReportFiles.SIMILARITY;
 
     private final AppConfig app;
     private final ExecutionConfig execution;
@@ -117,10 +119,10 @@ public final class GradingPipeline {
                 compareSimilarity(submissions));
         GradingRun result = new GradingRun(batch, run, withheld);
         checkCancelled();
-        notifyProgress("reporting", "Writing score and diagnostic CSV files", 0, 2);
+        notifyProgress(ProgressStages.REPORTING, "Writing score and diagnostic CSV files", 0, 2);
         checkCancelled();
         new GradingDiagnosticsWriter(app, execution).write(result);
-        notifyProgress("reporting", "Score and diagnostic CSV files ready", 1, 2);
+        notifyProgress(ProgressStages.REPORTING, "Score and diagnostic CSV files ready", 1, 2);
         return result;
     }
 
@@ -135,7 +137,7 @@ public final class GradingPipeline {
 
     // the count is read under the listener lock so parallel events never go backwards
     private synchronized void notifyCount(String item, AtomicInteger finished, int step, int total) {
-        notifyProgress("grading", item, finished.addAndGet(step), total);
+        notifyProgress(ProgressStages.GRADING, item, finished.addAndGet(step), total);
     }
 
     // a failing listener must not stop grading and is disabled for the rest of the run

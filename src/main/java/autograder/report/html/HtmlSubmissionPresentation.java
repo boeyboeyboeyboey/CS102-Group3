@@ -6,6 +6,8 @@ import java.nio.file.Path;
 
 /** Chooses the names and path text shown for a submission, falling back when data is missing. */
 final class HtmlSubmissionPresentation {
+    static final String NOT_RECORDED = "Not recorded";
+
     private HtmlSubmissionPresentation() { }
 
     static String displayName(StudentIdentity identity, int ordinal) {
@@ -26,12 +28,12 @@ final class HtmlSubmissionPresentation {
     }
 
     static String pathText(Path path) {
-        return path == null ? "Not recorded" : path.toString();
+        return path == null ? NOT_RECORDED : path.toString();
     }
 
     static String archiveName(Path path) {
         if (path == null || path.getFileName() == null) {
-            return "Not recorded";
+            return NOT_RECORDED;
         }
         return path.getFileName().toString();
     }

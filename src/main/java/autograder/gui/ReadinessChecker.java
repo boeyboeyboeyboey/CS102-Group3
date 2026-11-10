@@ -73,19 +73,7 @@ public final class ReadinessChecker {
     }
 
     private static FieldStatus checkConfig(Path config) {
-        if (config == null) {
-            return FieldStatus.error(InputField.CONFIG, "Choose a config file");
-        }
-        if (!Files.exists(config)) {
-            return FieldStatus.error(InputField.CONFIG, "File not found");
-        }
-        if (!Files.isRegularFile(config)) {
-            return FieldStatus.error(InputField.CONFIG, "Not a file");
-        }
-        if (!Files.isReadable(config)) {
-            return FieldStatus.error(InputField.CONFIG, "Can't read this file");
-        }
-        return FieldStatus.ok(InputField.CONFIG, "");
+        return checkFile(config, InputField.CONFIG, "Choose a config file");
     }
 
     private static FieldStatus checkSubmissions(Path folder, Pattern pattern) {
@@ -138,19 +126,23 @@ public final class ReadinessChecker {
     }
 
     private static FieldStatus checkScoreSheet(Path file) {
+        return checkFile(file, InputField.SCORE_SHEET, "Choose a file");
+    }
+
+    private static FieldStatus checkFile(Path file, InputField field, String chooseMessage) {
         if (file == null) {
-            return FieldStatus.error(InputField.SCORE_SHEET, "Choose a file");
+            return FieldStatus.error(field, chooseMessage);
         }
         if (!Files.exists(file)) {
-            return FieldStatus.error(InputField.SCORE_SHEET, "File not found");
+            return FieldStatus.error(field, "File not found");
         }
         if (!Files.isRegularFile(file)) {
-            return FieldStatus.error(InputField.SCORE_SHEET, "Not a file");
+            return FieldStatus.error(field, "Not a file");
         }
         if (!Files.isReadable(file)) {
-            return FieldStatus.error(InputField.SCORE_SHEET, "Can't read this file");
+            return FieldStatus.error(field, "Can't read this file");
         }
-        return FieldStatus.ok(InputField.SCORE_SHEET, "");
+        return FieldStatus.ok(field, "");
     }
 
     private static FieldStatus checkOutput(Path output) {

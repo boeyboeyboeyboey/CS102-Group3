@@ -52,6 +52,21 @@ public final class CsvScoreReportWriter {
             outputRows.add(new ArrayList<>(originalRow));
         }
 
+        applyScores(sheet, scoresByStudentId, studentRows, outputRows, numeratorIndex);
+
+        String content = CsvCodec.write(outputRows);
+        if (sheet.hasByteOrderMark()) {
+            content = '\uFEFF' + content;
+        }
+        writeAtomically(outputPath, content);
+    }
+
+    private void applyScores(ScoreSheet sheet, Map<String, Double> scoresByStudentId,
+            Map<String, Integer> studentRows, List<List<String>> outputRows, int numeratorIndex)
+            throws IOException {
+        List<String> headers = sheet.getHeaders();
+        // looked up on first use so a missing header still fails at the same point as before
+        int denominatorIndex = -1;
         for (Map.Entry<String, Double> scoreEntry : scoresByStudentId.entrySet()) {
             String studentId = scoreEntry.getKey();
             Double score = scoreEntry.getValue();
@@ -64,8 +79,10 @@ public final class CsvScoreReportWriter {
                         + " must be finite and nonnegative");
             }
             List<String> row = outputRows.get(rowIndex + 1);
-            double denominator = parseDenominator(row, findHeaderIndex(
-                    headers, sheet.getColumns().get("denominator")), studentId);
+            if (denominatorIndex < 0) {
+                denominatorIndex = findHeaderIndex(headers, sheet.getColumns().get("denominator"));
+            }
+            double denominator = parseDenominator(row, denominatorIndex, studentId);
             if (score > denominator) {
                 throw new IOException("score for student " + studentId
                         + " exceeds the configured denominator");
@@ -73,12 +90,6 @@ public final class CsvScoreReportWriter {
             row.set(numeratorIndex, BigDecimal.valueOf(score)
                     .setScale(SCORE_DECIMAL_PLACES, RoundingMode.HALF_UP).toPlainString());
         }
-
-        String content = CsvCodec.write(outputRows);
-        if (sheet.hasByteOrderMark()) {
-            content = '\uFEFF' + content;
-        }
-        writeAtomically(outputPath, content);
     }
 
     private int findHeaderIndex(List<String> headers, String name) throws IOException {

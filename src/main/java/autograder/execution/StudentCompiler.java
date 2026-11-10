@@ -44,12 +44,7 @@ public final class StudentCompiler {
         String adapterName = question.getId() + "Adapter.java";
         String resourceName = ADAPTER_RESOURCE + adapterName;
         Path adapterPath = sourceDirectory.resolve(adapterName);
-        try (InputStream adapter = StudentCompiler.class.getResourceAsStream(resourceName)) {
-            if (adapter == null) {
-                throw new IOException("required adapter resource is missing: " + resourceName);
-            }
-            Files.copy(adapter, adapterPath, StandardCopyOption.REPLACE_EXISTING);
-        }
+        copyResource(resourceName, adapterPath, true);
         sources.add(adapterPath);
 
         // the dynamic test runner is compiled into the student classes directory so it can
@@ -57,12 +52,8 @@ public final class StudentCompiler {
         // dependency on any student class and compiles for every question part
         String dynamicRunnerName = DYNAMIC_RUNNER_CLASS + ".java";
         Path dynamicRunnerPath = sourceDirectory.resolve(dynamicRunnerName);
-        try (InputStream dynamicRunner =
-                     StudentCompiler.class.getResourceAsStream(ADAPTER_RESOURCE + dynamicRunnerName)) {
-            if (dynamicRunner != null) {
-                Files.copy(dynamicRunner, dynamicRunnerPath, StandardCopyOption.REPLACE_EXISTING);
-                sources.add(dynamicRunnerPath);
-            }
+        if (copyResource(ADAPTER_RESOURCE + dynamicRunnerName, dynamicRunnerPath, false)) {
+            sources.add(dynamicRunnerPath);
         }
 
         List<String> command = new ArrayList<>();
@@ -80,6 +71,20 @@ public final class StudentCompiler {
             command.add(source.toString());
         }
         return ProcessRunner.run(command, workspace, timeoutMillis, maxOutputBytes);
+    }
+
+    private static boolean copyResource(String resourceName, Path target, boolean required)
+            throws IOException {
+        try (InputStream resource = StudentCompiler.class.getResourceAsStream(resourceName)) {
+            if (resource == null) {
+                if (required) {
+                    throw new IOException("required adapter resource is missing: " + resourceName);
+                }
+                return false;
+            }
+            Files.copy(resource, target, StandardCopyOption.REPLACE_EXISTING);
+            return true;
+        }
     }
 
     private static Path copyStudentSource(Path studentQuestionDirectory, String fileName,

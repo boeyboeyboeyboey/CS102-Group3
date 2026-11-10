@@ -55,11 +55,7 @@ final class WorkingCopyPreparer {
     }
 
     private String safeUsername(StudentRecord student) throws IOException {
-        String username = student.getUsername().trim();
-        String prefix = config.getRosterPrefix();
-        if (username.startsWith(prefix)) {
-            username = username.substring(prefix.length());
-        }
+        String username = RosterPrefix.strip(config, student.getUsername());
         Path usernamePath;
         try {
             usernamePath = Path.of(username);

@@ -28,11 +28,8 @@ public record HtmlReportConfig(boolean enabled, String file) {
 
     static HtmlReportConfig load(Properties properties, Path baseDirectory)
             throws IOException {
-        String enabled = properties.getProperty("grading.html.enabled", "false").trim();
-        if (!enabled.equalsIgnoreCase("true") && !enabled.equalsIgnoreCase("false")) {
-            throw new IllegalArgumentException("grading.html.enabled must be true or false");
-        }
-        return new HtmlReportConfig(Boolean.parseBoolean(enabled),
+        boolean enabled = PropertyParsers.optionalBoolean(properties, "grading.html.enabled", false);
+        return new HtmlReportConfig(enabled,
                 properties.getProperty("grading.html.file", DEFAULT_FILE).trim());
     }
 }

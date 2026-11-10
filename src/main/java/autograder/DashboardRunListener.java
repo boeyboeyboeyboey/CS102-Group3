@@ -1,5 +1,6 @@
 package autograder;
 
+import autograder.api.ProgressStages;
 import autograder.config.AppConfig;
 import autograder.config.RunSettings;
 import autograder.grading.GradingRun;
@@ -36,13 +37,13 @@ final class DashboardRunListener implements RunListener {
     @Override
     public void gradingProgress(String item, int completed, int total) {
         console.gradingProgress(item, completed, total);
-        dashboard.onProgress("grading", item, completed, total);
+        dashboard.onProgress(ProgressStages.GRADING, item, completed, total);
     }
 
     @Override
     public void reportingProgress(String item, int completed, int total) {
         console.reportingProgress(item, completed, total);
-        dashboard.onProgress("reporting", item, completed, total);
+        dashboard.onProgress(ProgressStages.REPORTING, item, completed, total);
     }
 
     @Override

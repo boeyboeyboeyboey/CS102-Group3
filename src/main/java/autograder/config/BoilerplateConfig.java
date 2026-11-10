@@ -38,11 +38,8 @@ public record BoilerplateConfig(boolean enabled, Path starterDirectory,
 
     static BoilerplateConfig load(Properties properties, Path baseDirectory)
             throws IOException {
-        String enabled = properties.getProperty("grading.boilerplate.enabled", "false").trim();
-        if (!enabled.equalsIgnoreCase("true") && !enabled.equalsIgnoreCase("false")) {
-            throw new IllegalArgumentException("grading.boilerplate.enabled must be true or false");
-        }
-        return new BoilerplateConfig(Boolean.parseBoolean(enabled), baseDirectory.resolve(
+        boolean enabled = PropertyParsers.optionalBoolean(properties, "grading.boilerplate.enabled", false);
+        return new BoilerplateConfig(enabled, baseDirectory.resolve(
                 properties.getProperty("grading.boilerplate.starter.directory",
                         DEFAULT_STARTER_DIRECTORY).trim()),
                 parseDecimal(properties, "grading.boilerplate.similarity.threshold",

@@ -10,19 +10,21 @@ public final class AssessmentDefinition {
     private final String id;
     private final String name;
     private final List<QuestionDefinition> questions;
+    private final double maxScore;
 
     public AssessmentDefinition(String id, String name, List<QuestionDefinition> questions) {
         this.id = id;
         this.name = name;
         this.questions = Collections.unmodifiableList(new ArrayList<>(questions));
-        BigDecimal maxScore = BigDecimal.ZERO;
+        BigDecimal total = BigDecimal.ZERO;
         for (QuestionDefinition question : this.questions) {
-            maxScore = maxScore.add(question.getMaxScoreDecimal());
+            total = total.add(question.getMaxScoreDecimal());
         }
-        double numericMaxScore = maxScore.doubleValue();
+        double numericMaxScore = total.doubleValue();
         if (!Double.isFinite(numericMaxScore) || numericMaxScore <= 0.0) {
             throw new IllegalArgumentException("assessment max score must be finite and positive");
         }
+        this.maxScore = numericMaxScore;
     }
 
     public String getId() {
@@ -38,10 +40,6 @@ public final class AssessmentDefinition {
     }
 
     public double getMaxScore() {
-        BigDecimal maxScore = BigDecimal.ZERO;
-        for (QuestionDefinition question : questions) {
-            maxScore = maxScore.add(question.getMaxScoreDecimal());
-        }
-        return maxScore.doubleValue();
+        return maxScore;
     }
 }

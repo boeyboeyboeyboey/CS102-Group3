@@ -52,12 +52,13 @@ final class RosterIdentityMatcher {
         for (StudentRecord student : roster) {
             boolean matchesStudent = false;
             if (evidence.type() == IdentityEvidence.EvidenceType.STUDENT_ID) {
-                matchesStudent = stripRosterPrefix(student.getId()).equalsIgnoreCase(evidence.value());
+                matchesStudent = RosterPrefix.strip(config, student.getId())
+                        .equalsIgnoreCase(evidence.value());
             } else if (evidence.type() == IdentityEvidence.EvidenceType.EMAIL_OR_USERNAME
                     && evidence.value().contains("@")) {
                 matchesStudent = student.getEmail().trim().equalsIgnoreCase(evidence.value());
             } else {
-                matchesStudent = stripRosterPrefix(student.getUsername())
+                matchesStudent = RosterPrefix.strip(config, student.getUsername())
                         .equalsIgnoreCase(evidence.value());
             }
             if (matchesStudent) {
@@ -65,14 +66,6 @@ final class RosterIdentityMatcher {
             }
         }
         return matches;
-    }
-
-    private String stripRosterPrefix(String value) {
-        String trimmed = value.trim();
-        if (trimmed.startsWith(config.getRosterPrefix())) {
-            return trimmed.substring(config.getRosterPrefix().length());
-        }
-        return trimmed;
     }
 
     record Result(StudentRecord studentRecord, List<String> anomalies) {

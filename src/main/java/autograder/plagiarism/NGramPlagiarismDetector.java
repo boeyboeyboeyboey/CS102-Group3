@@ -22,8 +22,6 @@ import java.util.Set;
 /** Flags pairs for instructor review; a high score is evidence to inspect, not proof of copying. */
 public final class NGramPlagiarismDetector implements PlagiarismDetector {
     public static final String ALGORITHM_NAME = "n-gram";
-    private static final int MAX_EVIDENCE_BLOCKS = 5;
-    private static final double PERCENT = 100.0;
 
     private final PlagiarismConfig config;
     private final JavaTokenizer tokenizer = new JavaTokenizer();
@@ -83,7 +81,7 @@ public final class NGramPlagiarismDetector implements PlagiarismDetector {
         List<String> evidence = new ArrayList<>();
         evidence.add(String.format(Locale.ROOT,
                 "%s (%s): %.1f%% similar; %d shared %d-token sequences out of %d distinct, starter code excluded",
-                question.getId(), ALGORITHM_NAME, similarity * PERCENT, shared, config.ngramSize(),
+                question.getId(), ALGORITHM_NAME, similarity * DetectorConstants.PERCENT, shared, config.ngramSize(),
                 first.size() + second.size() - shared));
         for (LineRange[] block : matchingBlocks(first, second)) {
             String line = "first " + block[0].describe() + " matches second " + block[1].describe();
@@ -114,8 +112,8 @@ public final class NGramPlagiarismDetector implements PlagiarismDetector {
         }
         blocks.sort(Comparator.comparingInt((LineRange[] block) -> block[0].endLine() - block[0].startLine())
                 .reversed());
-        if (blocks.size() > MAX_EVIDENCE_BLOCKS) {
-            return blocks.subList(0, MAX_EVIDENCE_BLOCKS);
+        if (blocks.size() > DetectorConstants.MAX_EVIDENCE_BLOCKS) {
+            return blocks.subList(0, DetectorConstants.MAX_EVIDENCE_BLOCKS);
         }
         return blocks;
     }

@@ -1,6 +1,7 @@
 package autograder.submission;
 
 import autograder.api.ProgressListener;
+import autograder.api.ProgressStages;
 import autograder.config.AppConfig;
 import autograder.model.ScoreSheet;
 import autograder.model.StudentIdentity;
@@ -69,7 +70,7 @@ public final class SubmissionProcessor {
             if (Thread.currentThread().isInterrupted()) {
                 break;
             }
-            notifyProgress("ingestion", archive.getFileName().toString(), completed,
+            notifyProgress(ProgressStages.INGESTION, archive.getFileName().toString(), completed,
                     archives.size());
             checkCancelled();
             Path extractionPath = extractionRun.resolve(
@@ -78,7 +79,7 @@ public final class SubmissionProcessor {
                     scoreSheet.getStudents());
             results.add(result);
             completed++;
-            notifyProgress("ingestion", archive.getFileName().toString(), completed,
+            notifyProgress(ProgressStages.INGESTION, archive.getFileName().toString(), completed,
                     archives.size());
         }
         markDuplicateStudents(results);
@@ -105,41 +106,23 @@ public final class SubmissionProcessor {
             extracted = true;
         } catch (IOException | RuntimeException exception) {
             addAnomaly(archive, anomalies, "archive extraction failed: " + message(exception));
-            try {
-                IdentityResolver.Resolution resolution = identityResolver.resolve(archive,
-                        extractionPath, null, config.getAssessment(), roster);
-                identity = resolution.getIdentity();
-                for (String anomaly : resolution.getAnomalies()) {
-                    addAnomaly(archive, anomalies, anomaly);
-                }
-            } catch (IOException | RuntimeException identityException) {
-                addAnomaly(archive, anomalies, "identity could not be checked: "
-                        + message(identityException));
-            }
-            return new SubmissionResult(archive, extractionPath, null, null, identity,
-                    List.of(), anomalies, corrections, SubmissionStatus.FAILED, false);
+            return extractionFailed(archive, extractionPath, roster, anomalies, corrections, identity);
         }
 
         try {
             SubmissionValidator.RootSelection selection = validator.selectStudentRoot(extractionPath);
             studentRoot = selection.getRoot();
-            for (String anomaly : selection.getAnomalies()) {
-                addAnomaly(archive, anomalies, anomaly);
-            }
+            addAnomalies(archive, anomalies, selection.getAnomalies());
             List<String> questionDirectories = new ArrayList<>();
             if (studentRoot != null) {
                 questionDirectories = validator.findQuestionDirectories(studentRoot);
-                for (String anomaly : validator.findMissingQuestionDirectories(studentRoot)) {
-                    addAnomaly(archive, anomalies, anomaly);
-                }
+                addAnomalies(archive, anomalies, validator.findMissingQuestionDirectories(studentRoot));
             }
 
             IdentityResolver.Resolution resolution = identityResolver.resolve(archive,
                     extractionPath, studentRoot, config.getAssessment(), roster);
             identity = resolution.getIdentity();
-            for (String anomaly : resolution.getAnomalies()) {
-                addAnomaly(archive, anomalies, anomaly);
-            }
+            addAnomalies(archive, anomalies, resolution.getAnomalies());
 
             StudentRecord student = identity.getStudentRecord();
             if (student != null && studentRoot != null) {
@@ -147,13 +130,7 @@ public final class SubmissionProcessor {
                         extractionPath, studentRoot, workingRun, student, resolution.getCorrections());
                 workingRoot = preparation.getWorkingRoot();
                 corrections.addAll(preparation.getCorrections());
-                for (SubmissionCorrection correction : corrections) {
-                    if (!correctionLog.record(archive, correction)) {
-                        addAnomaly(archive, anomalies,
-                                "could not persist a submission correction record");
-                        break;
-                    }
-                }
+                recordCorrections(archive, corrections, anomalies);
             }
 
             SubmissionStatus status = SubmissionStatus.REVIEW_REQUIRED;
@@ -166,6 +143,40 @@ public final class SubmissionProcessor {
             addAnomaly(archive, anomalies, "submission preparation failed: " + message(exception));
             return new SubmissionResult(archive, extractionPath, studentRoot, workingRoot,
                     identity, List.of(), anomalies, corrections, SubmissionStatus.FAILED, extracted);
+        }
+    }
+
+    private SubmissionResult extractionFailed(Path archive, Path extractionPath, List<StudentRecord> roster,
+                                              List<String> anomalies,
+                                              List<SubmissionCorrection> corrections,
+                                              StudentIdentity fallback) {
+        StudentIdentity identity = fallback;
+        try {
+            IdentityResolver.Resolution resolution = identityResolver.resolve(archive,
+                    extractionPath, null, config.getAssessment(), roster);
+            identity = resolution.getIdentity();
+            addAnomalies(archive, anomalies, resolution.getAnomalies());
+        } catch (IOException | RuntimeException identityException) {
+            addAnomaly(archive, anomalies, "identity could not be checked: "
+                    + message(identityException));
+        }
+        return new SubmissionResult(archive, extractionPath, null, null, identity,
+                List.of(), anomalies, corrections, SubmissionStatus.FAILED, false);
+    }
+
+    private void recordCorrections(Path archive, List<SubmissionCorrection> corrections,
+                                   List<String> anomalies) {
+        for (SubmissionCorrection correction : corrections) {
+            if (!correctionLog.record(archive, correction)) {
+                addAnomaly(archive, anomalies, "could not persist a submission correction record");
+                break;
+            }
+        }
+    }
+
+    private void addAnomalies(Path archive, List<String> anomalies, List<String> additions) {
+        for (String anomaly : additions) {
+            addAnomaly(archive, anomalies, anomaly);
         }
     }
 

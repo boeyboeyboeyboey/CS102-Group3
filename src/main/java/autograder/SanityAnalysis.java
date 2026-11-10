@@ -5,6 +5,7 @@ import autograder.analysis.sanity.SanityCsvWriter;
 import autograder.analysis.sanity.SanityFinding;
 import autograder.config.SanityConfig;
 import autograder.grading.GradingRun;
+import autograder.report.ReportFiles;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -14,7 +15,7 @@ import java.util.function.Consumer;
 
 /** Runs the optional score sanity checks on a finished run and writes their report. */
 final class SanityAnalysis {
-    static final String REPORT = "sanity-checks.csv";
+    static final String REPORT = ReportFiles.SANITY_CHECKS;
 
     private SanityAnalysis() {
     }

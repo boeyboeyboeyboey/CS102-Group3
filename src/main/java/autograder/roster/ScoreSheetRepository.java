@@ -60,25 +60,31 @@ public final class ScoreSheetRepository {
             }
             rows.add(row);
 
-            String id = value(row, columnIndexes, "id");
-            String username = value(row, columnIndexes, "username");
-            String firstName = value(row, columnIndexes, "firstName");
-            String lastName = value(row, columnIndexes, "lastName");
-            String email = value(row, columnIndexes, "email");
-            requireNonempty(id, "id", csvLine);
-            requireNonempty(username, "username", csvLine);
-            requireNonempty(email, "email", csvLine);
-            addUnique(ids, id.trim(), "id", csvLine);
-            addUnique(usernames, username.trim().toLowerCase(Locale.ROOT), "username", csvLine);
-            addUnique(emails, email.trim().toLowerCase(Locale.ROOT), "email", csvLine);
-            validateDenominator(value(row, columnIndexes, "denominator"), csvLine);
-            students.add(new StudentRecord(id, username, firstName, lastName, email));
+            students.add(readStudent(row, columnIndexes, csvLine, ids, usernames, emails));
         }
         if (students.isEmpty()) {
             throw new IOException("score sheet has no student rows");
         }
 
         return new ScoreSheet(sourcePath, byteOrderMark, headers, rows, students, columns);
+    }
+
+    private StudentRecord readStudent(List<String> row, Map<String, Integer> columnIndexes,
+            int csvLine, Set<String> ids, Set<String> usernames, Set<String> emails)
+            throws IOException {
+        String id = value(row, columnIndexes, "id");
+        String username = value(row, columnIndexes, "username");
+        String firstName = value(row, columnIndexes, "firstName");
+        String lastName = value(row, columnIndexes, "lastName");
+        String email = value(row, columnIndexes, "email");
+        requireNonempty(id, "id", csvLine);
+        requireNonempty(username, "username", csvLine);
+        requireNonempty(email, "email", csvLine);
+        addUnique(ids, id.trim(), "id", csvLine);
+        addUnique(usernames, username.trim().toLowerCase(Locale.ROOT), "username", csvLine);
+        addUnique(emails, email.trim().toLowerCase(Locale.ROOT), "email", csvLine);
+        validateDenominator(value(row, columnIndexes, "denominator"), csvLine);
+        return new StudentRecord(id, username, firstName, lastName, email);
     }
 
     private Map<String, Integer> findRequiredColumns(List<String> headers) throws IOException {

@@ -95,6 +95,10 @@ final class CaseHostProcess implements AutoCloseable {
             int exitCode = exitCodeAfterEnd();
             return new HostCaseOutcome(exitCode, false, false, true, duration, drainedErrors());
         }
+        return parseDone(reply, duration);
+    }
+
+    private HostCaseOutcome parseDone(String reply, long duration) throws HostFailureException {
         String[] fields = reply.split(CaseHost.REPLY_SEPARATOR);
         if (fields.length != 3 || !fields[0].equals(CaseHost.DONE)) {
             close();

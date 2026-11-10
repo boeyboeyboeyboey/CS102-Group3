@@ -37,6 +37,14 @@ public final class StarterCodeDetector implements BoilerplateDetector {
                     "No working copy; starter comparison did not run"));
             return List.copyOf(findings);
         }
+        for (Path relative : comparedFiles(assessment)) {
+            compareFile(findings, submission, starterDirectory, relative);
+        }
+        return List.copyOf(findings);
+    }
+
+    // answer and companion files in assessment order, shared with the comparison report
+    static Set<Path> comparedFiles(AssessmentDefinition assessment) {
         Set<Path> relativeFiles = new LinkedHashSet<>();
         for (QuestionDefinition question : assessment.getQuestions()) {
             relativeFiles.add(Path.of(question.getFolder(), question.getSourceFile()));
@@ -44,31 +52,40 @@ public final class StarterCodeDetector implements BoilerplateDetector {
                 relativeFiles.add(Path.of(question.getFolder(), companion));
             }
         }
-        for (Path relative : relativeFiles) {
-            Path source = root.resolve(relative).toAbsolutePath().normalize();
-            try {
-                List<String> starter = read(starterDirectory, relative);
-                List<String> answer = read(root, relative);
-                if (starter.isEmpty()) {
-                    throw new IOException("starter has no comparable code tokens");
-                }
-                int edits = starter.equals(answer) ? 0 : JavaSourceTokens.editDistance(starter, answer);
-                double similarity = 1.0 - (double) edits / Math.max(starter.size(), answer.size());
-                if (edits == 0 || similarity >= config.similarityThreshold()) {
-                    String code = edits == 0 ? UNCHANGED : MINIMAL_CHANGES;
-                    String description = edits == 0 ? "Code tokens match the starter after ignoring comments and formatting"
-                            : "High whole-file starter similarity; inspect the implementation before drawing conclusions";
-                    findings.add(new AnalysisFinding(code, source, String.format(Locale.ROOT,
-                            "%s: %s; %d token edits, %.2f%% similarity (%d starter / %d answer tokens). "
-                                    + "Review warning only; marks unchanged", submission.getArchivePath().getFileName(),
-                            description, edits, similarity * 100, starter.size(), answer.size())));
-                }
-            } catch (IOException | IllegalArgumentException exception) {
-                findings.add(new AnalysisFinding(UNAVAILABLE, source,
-                        submission.getArchivePath().getFileName() + ": " + relative + ": " + exception.getMessage()));
+        return relativeFiles;
+    }
+
+    private void compareFile(List<AnalysisFinding> findings, SubmissionResult submission,
+                             Path starterDirectory, Path relative) {
+        Path root = submission.getWorkingRoot();
+        Path source = root.resolve(relative).toAbsolutePath().normalize();
+        try {
+            List<String> starter = read(starterDirectory, relative);
+            List<String> answer = read(root, relative);
+            if (starter.isEmpty()) {
+                throw new IOException("starter has no comparable code tokens");
             }
+            int edits = starter.equals(answer) ? 0 : JavaSourceTokens.editDistance(starter, answer);
+            double similarity = 1.0 - (double) edits / Math.max(starter.size(), answer.size());
+            if (edits == 0 || similarity >= config.similarityThreshold()) {
+                findings.add(starterFinding(submission, source, edits, similarity,
+                        starter.size(), answer.size()));
+            }
+        } catch (IOException | IllegalArgumentException exception) {
+            findings.add(new AnalysisFinding(UNAVAILABLE, source,
+                    submission.getArchivePath().getFileName() + ": " + relative + ": " + exception.getMessage()));
         }
-        return List.copyOf(findings);
+    }
+
+    private static AnalysisFinding starterFinding(SubmissionResult submission, Path source, int edits,
+                                                  double similarity, int starterTokens, int answerTokens) {
+        String code = edits == 0 ? UNCHANGED : MINIMAL_CHANGES;
+        String description = edits == 0 ? "Code tokens match the starter after ignoring comments and formatting"
+                : "High whole-file starter similarity; inspect the implementation before drawing conclusions";
+        return new AnalysisFinding(code, source, String.format(Locale.ROOT,
+                "%s: %s; %d token edits, %.2f%% similarity (%d starter / %d answer tokens). "
+                        + "Review warning only; marks unchanged", submission.getArchivePath().getFileName(),
+                description, edits, similarity * 100, starterTokens, answerTokens));
     }
 
     private List<String> read(Path directory, Path relative) throws IOException {

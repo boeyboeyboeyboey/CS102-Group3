@@ -46,11 +46,8 @@ public record SanityConfig(boolean enabled, int minGraded, int zeroPercent, int 
     }
 
     static SanityConfig load(Properties properties, Path baseDirectory) {
-        String enabled = properties.getProperty("grading.sanity.enabled", "true").trim();
-        if (!enabled.equalsIgnoreCase("true") && !enabled.equalsIgnoreCase("false")) {
-            throw new IllegalArgumentException("grading.sanity.enabled must be true or false");
-        }
-        return new SanityConfig(Boolean.parseBoolean(enabled),
+        boolean enabled = PropertyParsers.optionalBoolean(properties, "grading.sanity.enabled", true);
+        return new SanityConfig(enabled,
                 integer(properties, "min.graded", DEFAULT_MIN_GRADED, Integer.MAX_VALUE),
                 integer(properties, "zero.percent", DEFAULT_ZERO_PERCENT, MAX_PERCENT),
                 integer(properties, "same.failure.percent", DEFAULT_SAME_FAILURE_PERCENT, MAX_PERCENT),

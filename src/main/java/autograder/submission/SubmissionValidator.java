@@ -3,7 +3,6 @@ package autograder.submission;
 import autograder.config.AppConfig;
 
 import java.io.IOException;
-import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -42,7 +41,7 @@ final class SubmissionValidator {
     List<String> findQuestionDirectories(Path studentRoot) throws IOException {
         List<String> questionDirectories = new ArrayList<>();
         for (String questionDirectory : config.getRequiredQuestionDirectories()) {
-            if (hasExactDirectory(studentRoot, questionDirectory)) {
+            if (ExactEntries.hasDirectory(studentRoot, questionDirectory)) {
                 questionDirectories.add(questionDirectory);
             }
         }
@@ -52,7 +51,7 @@ final class SubmissionValidator {
     List<String> findMissingQuestionDirectories(Path studentRoot) throws IOException {
         List<String> missingDirectories = new ArrayList<>();
         for (String questionDirectory : config.getRequiredQuestionDirectories()) {
-            if (!hasExactDirectory(studentRoot, questionDirectory)) {
+            if (!ExactEntries.hasDirectory(studentRoot, questionDirectory)) {
                 missingDirectories.add("required question directory is missing: " + questionDirectory);
             }
         }
@@ -71,23 +70,8 @@ final class SubmissionValidator {
 
     private boolean containsRequiredQuestionDirectory(Path path) throws IOException {
         for (String questionDirectory : config.getRequiredQuestionDirectories()) {
-            if (hasExactDirectory(path, questionDirectory)) {
+            if (ExactEntries.hasDirectory(path, questionDirectory)) {
                 return true;
-            }
-        }
-        return false;
-    }
-
-    private boolean hasExactDirectory(Path parent, String expectedName) throws IOException {
-        if (!Files.isDirectory(parent)) {
-            return false;
-        }
-        try (DirectoryStream<Path> entries = Files.newDirectoryStream(parent)) {
-            for (Path entry : entries) {
-                if (entry.getFileName().toString().equals(expectedName)
-                        && Files.isDirectory(entry)) {
-                    return true;
-                }
             }
         }
         return false;

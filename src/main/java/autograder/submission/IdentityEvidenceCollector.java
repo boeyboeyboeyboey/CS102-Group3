@@ -7,7 +7,6 @@ import autograder.model.QuestionDefinition;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -96,8 +95,8 @@ final class IdentityEvidenceCollector {
             Path questionDirectory = studentRoot.resolve(question.getFolder()).normalize();
             Path sourcePath = questionDirectory.resolve(question.getSourceFile()).normalize();
             if (!sourcePath.startsWith(studentRoot)
-                    || !hasExactDirectory(studentRoot, question.getFolder())
-                    || !hasExactFile(questionDirectory, question.getSourceFile())) {
+                    || !ExactEntries.hasDirectory(studentRoot, question.getFolder())
+                    || !ExactEntries.hasFile(questionDirectory, question.getSourceFile())) {
                 anomalies.add("required source is missing: " + question.getId() + " ("
                         + question.getFolder() + "/" + question.getSourceFile() + ")");
             } else {
@@ -107,8 +106,8 @@ final class IdentityEvidenceCollector {
             for (String companion : question.getCompanionSourceFiles()) {
                 Path companionPath = questionDirectory.resolve(companion).normalize();
                 if (!companionPath.startsWith(studentRoot)
-                        || !hasExactDirectory(studentRoot, question.getFolder())
-                        || !hasExactFile(questionDirectory, companion)) {
+                        || !ExactEntries.hasDirectory(studentRoot, question.getFolder())
+                        || !ExactEntries.hasFile(questionDirectory, companion)) {
                     anomalies.add("required companion source is missing: " + question.getId()
                             + " (" + question.getFolder() + "/" + companion + ")");
                 } else {
@@ -154,36 +153,6 @@ final class IdentityEvidenceCollector {
                     IdentityEvidence.EvidenceType.USERNAME, value,
                     "header username in " + sourcePath.getFileName()));
         }
-    }
-
-    private boolean hasExactFile(Path directory, String expectedName) throws IOException {
-        if (!Files.isDirectory(directory)) {
-            return false;
-        }
-        try (DirectoryStream<Path> entries = Files.newDirectoryStream(directory)) {
-            for (Path entry : entries) {
-                if (entry.getFileName().toString().equals(expectedName)
-                        && Files.isRegularFile(entry)) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    private boolean hasExactDirectory(Path parent, String expectedName) throws IOException {
-        if (!Files.isDirectory(parent)) {
-            return false;
-        }
-        try (DirectoryStream<Path> entries = Files.newDirectoryStream(parent)) {
-            for (Path entry : entries) {
-                if (entry.getFileName().toString().equals(expectedName)
-                        && Files.isDirectory(entry)) {
-                    return true;
-                }
-            }
-        }
-        return false;
     }
 
     private IdentityEvidence.HeaderField readField(List<String> lines, Pattern pattern) {

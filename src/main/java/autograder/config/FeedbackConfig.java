@@ -35,10 +35,7 @@ public record FeedbackConfig(boolean enabled, String directory, int maxDiagnosti
 
     static FeedbackConfig load(Properties properties, Path baseDirectory)
             throws IOException {
-        String enabled = properties.getProperty("grading.feedback.enabled", "false").trim();
-        if (!enabled.equalsIgnoreCase("true") && !enabled.equalsIgnoreCase("false")) {
-            throw new IllegalArgumentException("grading.feedback.enabled must be true or false");
-        }
+        boolean enabled = PropertyParsers.optionalBoolean(properties, "grading.feedback.enabled", false);
         String lines = properties.getProperty("grading.feedback.max.diagnostic.lines",
                 DEFAULT_MAX_DIAGNOSTIC_LINES).trim();
         int maxLines;
@@ -48,7 +45,7 @@ public record FeedbackConfig(boolean enabled, String directory, int maxDiagnosti
             throw new IllegalArgumentException(
                     "grading.feedback.max.diagnostic.lines must be a positive whole number", exception);
         }
-        return new FeedbackConfig(Boolean.parseBoolean(enabled),
+        return new FeedbackConfig(enabled,
                 properties.getProperty("grading.feedback.directory", DEFAULT_DIRECTORY).trim(), maxLines);
     }
 }

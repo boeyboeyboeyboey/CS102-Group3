@@ -26,34 +26,16 @@ final class Literals {
             return number + "L";
         }
         if (value instanceof Double number) {
-            if (number.isNaN()) {
-                return "Double.NaN";
-            }
-            if (number == Double.POSITIVE_INFINITY) {
-                return "Double.POSITIVE_INFINITY";
-            }
-            if (number == Double.NEGATIVE_INFINITY) {
-                return "Double.NEGATIVE_INFINITY";
-            }
-            return number.toString();
+            return doubleSource(number);
         }
         if (value instanceof Integer || value instanceof Boolean) {
             return value.toString();
         }
         if (value instanceof ShapeInput shape) {
-            if (shape.kind().equals(ShapeInput.CIRCLE)) {
-                return "new Circle(" + quote(shape.id()) + ", " + shape.firstDimension() + ")";
-            }
-            return "new Rectangle(" + quote(shape.id()) + ", " + shape.firstDimension()
-                    + ", " + shape.secondDimension() + ")";
+            return shapeSource(shape);
         }
         if (value instanceof Collection<?> values) {
-            String elementType = "Object";
-            if (targetType != null && targetType.contains("<") && targetType.endsWith(">")) {
-                elementType = targetType.substring(targetType.indexOf('<') + 1, targetType.length() - 1);
-            }
-            return "new ArrayList<" + elementType + ">(java.util.Arrays.asList(" + values.stream()
-                    .map(Literals::source).collect(Collectors.joining(", ")) + "))";
+            return collectionSource(values, targetType);
         }
         if (value instanceof Object[] values) {
             return "new Object[] {" + Arrays.stream(values).map(Literals::source)
@@ -68,6 +50,36 @@ final class Literals {
         }
         throw new IllegalArgumentException("value type cannot be written as a Java literal: "
                 + value.getClass().getTypeName());
+    }
+
+    private static String doubleSource(Double number) {
+        if (number.isNaN()) {
+            return "Double.NaN";
+        }
+        if (number == Double.POSITIVE_INFINITY) {
+            return "Double.POSITIVE_INFINITY";
+        }
+        if (number == Double.NEGATIVE_INFINITY) {
+            return "Double.NEGATIVE_INFINITY";
+        }
+        return number.toString();
+    }
+
+    private static String shapeSource(ShapeInput shape) {
+        if (shape.kind().equals(ShapeInput.CIRCLE)) {
+            return "new Circle(" + quote(shape.id()) + ", " + shape.firstDimension() + ")";
+        }
+        return "new Rectangle(" + quote(shape.id()) + ", " + shape.firstDimension()
+                + ", " + shape.secondDimension() + ")";
+    }
+
+    private static String collectionSource(Collection<?> values, String targetType) {
+        String elementType = "Object";
+        if (targetType != null && targetType.contains("<") && targetType.endsWith(">")) {
+            elementType = targetType.substring(targetType.indexOf('<') + 1, targetType.length() - 1);
+        }
+        return "new ArrayList<" + elementType + ">(java.util.Arrays.asList(" + values.stream()
+                .map(Literals::source).collect(Collectors.joining(", ")) + "))";
     }
 
     static String show(Object value) {

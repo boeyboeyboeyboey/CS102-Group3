@@ -4,7 +4,6 @@ import autograder.model.AnalysisFinding;
 import autograder.model.SimilarityFinding;
 
 import java.math.BigDecimal;
-import java.nio.file.Path;
 import java.util.List;
 
 /** Renders the code-analysis and similarity findings section of the dashboard. */
@@ -31,7 +30,8 @@ final class HtmlAnalysisRenderer {
             html.append("<h3>Code analysis findings</h3><ul class=\"analysis-list\">");
             for (AnalysisFinding finding : findings) {
                 html.append("<li><strong>").append(HtmlEscaper.escape(finding.getCode())).append("</strong><span>")
-                        .append(HtmlEscaper.escape(pathText(finding.getSourceFile()))).append("</span><p>")
+                        .append(HtmlEscaper.escape(HtmlSubmissionPresentation.pathText(finding.getSourceFile())))
+                        .append("</span><p>")
                         .append(HtmlEscaper.escape(finding.getMessage())).append("</p></li>");
             }
             html.append("</ul>\n");
@@ -49,8 +49,10 @@ final class HtmlAnalysisRenderer {
                         .multiply(BigDecimal.valueOf(100));
                 html.append("<li><strong>Similarity: ").append(HtmlScoreFormatter.format(percent))
                         .append("%</strong><span>")
-                        .append(HtmlEscaper.escape(pathText(finding.getFirstArchive()))).append(" ↔ ")
-                        .append(HtmlEscaper.escape(pathText(finding.getSecondArchive()))).append("</span>");
+                        .append(HtmlEscaper.escape(HtmlSubmissionPresentation.pathText(finding.getFirstArchive())))
+                        .append(" ↔ ")
+                        .append(HtmlEscaper.escape(HtmlSubmissionPresentation.pathText(finding.getSecondArchive())))
+                        .append("</span>");
                 if (finding.getEvidence().isEmpty()) {
                     html.append("<p>No evidence details recorded.</p>");
                 } else {
@@ -64,9 +66,5 @@ final class HtmlAnalysisRenderer {
             }
             html.append("</ul>\n");
         }
-    }
-
-    private static String pathText(Path path) {
-        return path == null ? "Not recorded" : path.toString();
     }
 }

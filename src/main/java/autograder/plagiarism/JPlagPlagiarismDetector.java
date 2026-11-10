@@ -29,9 +29,7 @@ import java.util.Set;
 /** Uses JPlag's greedy string tiling over Java syntax tokens, passing starter files as base code. */
 public final class JPlagPlagiarismDetector implements PlagiarismDetector {
     public static final String ALGORITHM_NAME = "JPlag";
-    private static final int MAX_EVIDENCE_BLOCKS = 5;
     private static final int MINIMUM_SUBMISSIONS = 2;
-    private static final double PERCENT = 100.0;
     private static final String SUBMISSION_PREFIX = "s";
 
     private final PlagiarismConfig config;
@@ -125,8 +123,8 @@ public final class JPlagPlagiarismDetector implements PlagiarismDetector {
             List<String> evidence = new ArrayList<>();
             evidence.add(String.format(Locale.ROOT,
                     "%s (%s): %.1f%% similar; %d matching blocks of at least %d tokens, %s",
-                    question.getId(), ALGORITHM_NAME, similarity * PERCENT, comparison.matches().size(),
-                    config.jplagMinimumTokens(),
+                    question.getId(), ALGORITHM_NAME, similarity * DetectorConstants.PERCENT,
+                    comparison.matches().size(), config.jplagMinimumTokens(),
                     starterExcluded ? "starter code excluded" : "no starter file found"));
             evidence.addAll(matchEvidence(comparison, swapped));
             SubmissionResult first = owners.get(swapped ? secondName : firstName);
@@ -144,7 +142,7 @@ public final class JPlagPlagiarismDetector implements PlagiarismDetector {
         List<de.jplag.Token> secondTokens = comparison.secondSubmission().getTokenList();
         List<String> evidence = new ArrayList<>();
         for (Match match : matches) {
-            if (evidence.size() == MAX_EVIDENCE_BLOCKS) {
+            if (evidence.size() == DetectorConstants.MAX_EVIDENCE_BLOCKS) {
                 break;
             }
             LineRange firstRange = lines(firstTokens, match.startOfFirst(), match.length());

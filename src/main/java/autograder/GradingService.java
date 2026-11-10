@@ -3,6 +3,7 @@ package autograder;
 import autograder.analysis.boilerplate.StarterCodeDetector;
 import autograder.api.PlagiarismDetector;
 import autograder.api.ProgressListener;
+import autograder.api.ProgressStages;
 import autograder.config.AppConfig;
 import autograder.config.RunSettings;
 import autograder.grading.GradingPipeline;
@@ -23,9 +24,6 @@ import java.util.List;
  * never exits the JVM.
  */
 public final class GradingService {
-    private static final String GRADING_STAGE = "grading";
-    private static final String REPORTING_STAGE = "reporting";
-
     public RunOutcome run(RunSettings settings, RunListener suppliedListener) {
         RunListener listener = new GuardedListener(suppliedListener);
         if (Thread.currentThread().isInterrupted()) {
@@ -123,9 +121,9 @@ public final class GradingService {
 
     private static ProgressListener gradingAdapter(RunListener listener) {
         return (stage, item, completed, total) -> {
-            if (GRADING_STAGE.equals(stage)) {
+            if (ProgressStages.GRADING.equals(stage)) {
                 listener.gradingProgress(item, completed, total);
-            } else if (REPORTING_STAGE.equals(stage)) {
+            } else if (ProgressStages.REPORTING.equals(stage)) {
                 listener.reportingProgress(item, completed, total);
             }
         };

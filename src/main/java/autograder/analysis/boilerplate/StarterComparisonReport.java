@@ -2,7 +2,6 @@ package autograder.analysis.boilerplate;
 
 import autograder.config.BoilerplateConfig;
 import autograder.model.BatchResult;
-import autograder.model.QuestionDefinition;
 import autograder.model.SubmissionResult;
 import autograder.util.ExceptionMessages;
 import java.io.IOException;
@@ -11,7 +10,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -33,7 +31,7 @@ public final class StarterComparisonReport {
             output.write("<p>Assessment: " + MethodDiffHtml.escape(
                     batch.getAssessment().getName()) + "</p>");
             StringBuilder rows = new StringBuilder();
-            Set<Path> files = files(batch);
+            Set<Path> files = StarterCodeDetector.comparedFiles(batch.getAssessment());
             int ordinal = 0;
             try (Writer detailOutput = Files.newBufferedWriter(details, StandardCharsets.UTF_8)) {
                 for (var grade : batch.getGrades()) {
@@ -55,19 +53,6 @@ public final class StarterComparisonReport {
             Files.deleteIfExists(details);
         }
         return report;
-    }
-
-    private static Set<Path> files(BatchResult batch) {
-        Set<Path> files = new LinkedHashSet<>();
-        for (QuestionDefinition question
-                : batch.getAssessment().getQuestions()) {
-            files.add(Path.of(question.getFolder(),
-                    question.getSourceFile()));
-            for (String companion : question.getCompanionSourceFiles()) {
-                files.add(Path.of(question.getFolder(), companion));
-            }
-        }
-        return files;
     }
 
     private static void writeFile(Writer output, SubmissionResult submission,

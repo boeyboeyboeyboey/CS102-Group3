@@ -56,18 +56,18 @@ public record PlagiarismConfig(boolean enabled, List<String> algorithms, int ngr
 
     static PlagiarismConfig load(Properties properties, Path baseDirectory)
             throws IOException {
-        String enabled = required(properties, "plagiarism.enabled");
+        String enabled = PropertyParsers.required(properties, "plagiarism.enabled");
         if (!enabled.equals("true") && !enabled.equals("false")) {
             throw new IllegalArgumentException("plagiarism.enabled must be true or false");
         }
         Path starterDirectory = AppConfig.canonicalize(
-                baseDirectory.resolve(required(properties, "plagiarism.starter.directory")));
+                baseDirectory.resolve(PropertyParsers.required(properties, "plagiarism.starter.directory")));
         if (!Files.isDirectory(starterDirectory)) {
             throw new IllegalArgumentException("plagiarism.starter.directory is not a directory: "
                     + starterDirectory);
         }
         return new PlagiarismConfig(Boolean.parseBoolean(enabled),
-                algorithmList(required(properties, "plagiarism.algorithms")),
+                algorithmList(PropertyParsers.required(properties, "plagiarism.algorithms")),
                 integer(properties, "plagiarism.ngram.size"),
                 decimal(properties, "plagiarism.threshold"),
                 integer(properties, "plagiarism.min.ngrams"),
@@ -98,7 +98,7 @@ public record PlagiarismConfig(boolean enabled, List<String> algorithms, int ngr
 
     private static int integer(Properties properties, String key) {
         try {
-            return Integer.parseInt(required(properties, key));
+            return Integer.parseInt(PropertyParsers.required(properties, key));
         } catch (NumberFormatException exception) {
             throw new IllegalArgumentException("invalid whole number: " + key, exception);
         }
@@ -106,17 +106,9 @@ public record PlagiarismConfig(boolean enabled, List<String> algorithms, int ngr
 
     private static double decimal(Properties properties, String key) {
         try {
-            return Double.parseDouble(required(properties, key));
+            return Double.parseDouble(PropertyParsers.required(properties, key));
         } catch (NumberFormatException exception) {
             throw new IllegalArgumentException("invalid number: " + key, exception);
         }
-    }
-
-    private static String required(Properties properties, String key) {
-        String value = properties.getProperty(key);
-        if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException("missing required configuration value: " + key);
-        }
-        return value.trim();
     }
 }

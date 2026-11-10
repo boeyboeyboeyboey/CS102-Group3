@@ -18,7 +18,9 @@ import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 
 /** The instructor window: inputs with inline readiness, run controls and results. */
 final class MainWindow extends JFrame {
@@ -32,6 +34,7 @@ final class MainWindow extends JFrame {
     private final PathRow submissions;
     private final PathRow scoreSheet;
     private final PathRow output;
+    private final Map<InputField, PathRow> rows = new EnumMap<>(InputField.class);
     private final JPanel advanced = new JPanel(new BorderLayout());
     private final JToggleButton advancedToggle = new JToggleButton(ADVANCED_CLOSED);
     private final JButton editConfig = new BrandButton("Edit config…", false);
@@ -53,6 +56,10 @@ final class MainWindow extends JFrame {
         output = new PathRow("Output folder", 'O', true, null, changed);
         config = new PathRow("Config file", 'f', false,
                 new FileNameExtensionFilter("Properties files", "properties"), changed);
+        rows.put(InputField.CONFIG, config);
+        rows.put(InputField.SUBMISSIONS, submissions);
+        rows.put(InputField.SCORE_SHEET, scoreSheet);
+        rows.put(InputField.OUTPUT, output);
         bar = new RunBar(this::startGrading, this::stopGrading, workerChoice.options());
         buildLayout();
         fill(values);
@@ -141,12 +148,7 @@ final class MainWindow extends JFrame {
     }
 
     private void showReadiness(Readiness readiness) {
-        PathRow[] rows = {config, submissions, scoreSheet, output};
-        InputField[] fields = {InputField.CONFIG, InputField.SUBMISSIONS,
-                InputField.SCORE_SHEET, InputField.OUTPUT};
-        for (int index = 0; index < rows.length; index++) {
-            rows[index].showStatus(readiness.status(fields[index]).orElse(null));
-        }
+        rows.forEach((field, row) -> row.showStatus(readiness.status(field).orElse(null)));
         if (readiness.status(InputField.CONFIG).filter(status -> !status.ok()).isPresent()) {
             setAdvanced(true);
         }
@@ -191,12 +193,7 @@ final class MainWindow extends JFrame {
         if (bad.isEmpty()) {
             return;
         }
-        switch (bad.get(0).field()) {
-            case CONFIG -> config.focusField();
-            case SUBMISSIONS -> submissions.focusField();
-            case SCORE_SHEET -> scoreSheet.focusField();
-            default -> output.focusField();
-        }
+        rows.get(bad.get(0).field()).focusField();
     }
 
     private void stopGrading() {
@@ -242,7 +239,7 @@ final class MainWindow extends JFrame {
     }
 
     private void setInputsEnabled(boolean enabled) {
-        for (PathRow row : List.of(config, submissions, scoreSheet, output)) {
+        for (PathRow row : rows.values()) {
             row.setInputEnabled(enabled);
         }
         advancedToggle.setEnabled(enabled);

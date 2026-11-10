@@ -3,11 +3,11 @@ package autograder;
 import autograder.config.AppConfig;
 import autograder.config.PlagiarismConfig;
 import autograder.config.RunSettings;
-import autograder.grading.GradingPipeline;
 import autograder.grading.GradingRun;
 import autograder.model.StudentGrade;
 import autograder.model.SubmissionResult;
 import autograder.model.SubmissionStatus;
+import autograder.report.ReportFiles;
 import autograder.ui.ConsoleProgressListener;
 
 import java.util.ArrayList;
@@ -44,9 +44,9 @@ final class ConsoleRunListener implements RunListener {
                     : "WITHHELD: " + reason));
         }
         System.out.println("Score report: " + run.directory().resolve(settings.execution().reportFile()));
-        System.out.println("Per-case diagnostics: " + run.directory().resolve("cases.csv"));
+        System.out.println("Per-case diagnostics: " + run.directory().resolve(ReportFiles.CASES));
         System.out.println("Export decisions and review warnings: "
-                + run.directory().resolve("submissions.csv"));
+                + run.directory().resolve(ReportFiles.SUBMISSIONS));
         System.out.println("Withheld or absent students retain their original score-sheet rows");
         printSimilarity(run, settings.plagiarism());
     }
@@ -95,7 +95,7 @@ final class ConsoleRunListener implements RunListener {
         }
         int pairs = run.batch().getSimilarities().size();
         System.out.println("Similarity review: " + pairs + " finding(s) (" + String.join(", ", thresholds)
-                + "), starter code excluded: " + run.directory().resolve(GradingPipeline.SIMILARITY_REPORT));
+                + "), starter code excluded: " + run.directory().resolve(ReportFiles.SIMILARITY));
         if (pairs > 0) {
             System.out.println("Similarity needs instructor judgement and is not proof of copying");
         }

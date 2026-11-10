@@ -54,6 +54,15 @@ final class QuestionOutcome {
         configuredMaximum = configuredMaximum(question);
         this.earnedScore = earnedScore;
 
+        EnumMap<TestStatus, Integer> counts = countStatuses(results);
+        statusCounts = nonzeroStatusCounts(counts);
+        evidenceNotes = List.copyOf(buildNotes(configuredCaseCount, recordedCaseCount, counts,
+                configuredMaximum, earnedScore));
+        creditBand = evidenceNotes.isEmpty()
+                ? bandFor(earnedScore, configuredMaximum) : null;
+    }
+
+    private static EnumMap<TestStatus, Integer> countStatuses(List<TestCaseResult> results) {
         EnumMap<TestStatus, Integer> counts = new EnumMap<>(TestStatus.class);
         for (TestStatus status : TestStatus.values()) {
             counts.put(status, 0);
@@ -61,6 +70,10 @@ final class QuestionOutcome {
         for (TestCaseResult result : results) {
             counts.compute(result.getStatus(), (status, count) -> count + 1);
         }
+        return counts;
+    }
+
+    private List<StatusCount> nonzeroStatusCounts(EnumMap<TestStatus, Integer> counts) {
         List<StatusCount> nonzeroCounts = new ArrayList<>();
         for (TestStatus status : TestStatus.values()) {
             int count = counts.get(status);
@@ -68,8 +81,12 @@ final class QuestionOutcome {
                 nonzeroCounts.add(new StatusCount(status, statusLabel(status), count));
             }
         }
-        statusCounts = List.copyOf(nonzeroCounts);
+        return List.copyOf(nonzeroCounts);
+    }
 
+    private static List<String> buildNotes(int configuredCaseCount, int recordedCaseCount,
+                                           EnumMap<TestStatus, Integer> counts,
+                                           BigDecimal configuredMaximum, BigDecimal earnedScore) {
         List<String> notes = new ArrayList<>();
         if (recordedCaseCount == 0) {
             notes.add("No case results recorded.");
@@ -92,9 +109,7 @@ final class QuestionOutcome {
                 && (earnedScore.signum() < 0 || earnedScore.compareTo(configuredMaximum) > 0)) {
             notes.add("Question score is outside the configured range.");
         }
-        evidenceNotes = List.copyOf(notes);
-        creditBand = evidenceNotes.isEmpty()
-                ? bandFor(earnedScore, configuredMaximum) : null;
+        return notes;
     }
 
     static QuestionOutcome from(QuestionDefinition question, BigDecimal earnedScore,

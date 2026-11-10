@@ -54,10 +54,7 @@ public final class JavaTokenizer {
                 tokens.add(new Token(NUMBER, line));
                 index = endOfNumber(source, index);
             } else if (Character.isJavaIdentifierStart(current)) {
-                int end = index + 1;
-                while (end < source.length() && Character.isJavaIdentifierPart(source.charAt(end))) {
-                    end++;
-                }
+                int end = endOfIdentifier(source, index);
                 String word = source.substring(index, end);
                 tokens.add(new Token(KEYWORDS.contains(word) ? word : IDENTIFIER, line));
                 index = end;
@@ -78,6 +75,14 @@ public final class JavaTokenizer {
     private int endOf(String source, int index, String terminator) {
         int end = source.indexOf(terminator, index);
         return end < 0 ? source.length() : end + terminator.length();
+    }
+
+    private int endOfIdentifier(String source, int index) {
+        int end = index + 1;
+        while (end < source.length() && Character.isJavaIdentifierPart(source.charAt(end))) {
+            end++;
+        }
+        return end;
     }
 
     private int endOfQuoted(String source, int index, char quote) {

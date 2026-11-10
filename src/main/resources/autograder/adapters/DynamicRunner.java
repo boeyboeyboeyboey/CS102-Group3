@@ -218,14 +218,7 @@ public final class DynamicRunner {
     // keep the answer logic in step with autotester/question/Q2b
     private static String trialQ2b(Random random) throws IOException {
         List<String> lines = readLines("studentstester.txt");
-        Set<String> candidates = new HashSet<>();
-        for (String line : lines) {
-            for (String course : coursesOf(line)) {
-                if (!FIXED_Q2B_COURSES.contains(course.toUpperCase(Locale.ROOT))) {
-                    candidates.add(course);
-                }
-            }
-        }
+        Set<String> candidates = nonFixedCourses(lines);
         if (candidates.isEmpty()) {
             return "no non-fixed courses available to probe";
         }
@@ -246,7 +239,22 @@ public final class DynamicRunner {
         if (!(resultObj instanceof String)) {
             return "result is not a String";
         }
-        String actual = (String) resultObj;
+        return checkTopStudent((String) resultObj, course, expected);
+    }
+
+    private static Set<String> nonFixedCourses(List<String> lines) {
+        Set<String> candidates = new HashSet<>();
+        for (String line : lines) {
+            for (String course : coursesOf(line)) {
+                if (!FIXED_Q2B_COURSES.contains(course.toUpperCase(Locale.ROOT))) {
+                    candidates.add(course);
+                }
+            }
+        }
+        return candidates;
+    }
+
+    private static String checkTopStudent(String actual, String course, TopStudent expected) {
         // Parse "Name-GPA"; names contain no dash, so split on the last dash.
         int dash = actual.lastIndexOf('-');
         if (dash < 0) {

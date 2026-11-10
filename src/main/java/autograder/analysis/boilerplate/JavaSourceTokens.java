@@ -26,52 +26,20 @@ final class JavaSourceTokens {
                 continue;
             }
             if (source.startsWith("//", index)) {
-                while (index < source.length() && source.charAt(index) != '\n'
-                        && source.charAt(index) != '\r') {
-                    index++;
-                }
+                index = skipLineComment(source, index);
                 continue;
             }
             if (source.startsWith("/*", index)) {
-                int end = source.indexOf("*/", index + 2);
-                if (end < 0) {
-                    throw new IOException("unterminated block comment");
-                }
-                index = end + 2;
+                index = skipBlockComment(source, index);
                 continue;
             }
             int start = index;
             if (current == '"' || current == '\'') {
-                String delimiter = source.startsWith("\"\"\"", index) ? "\"\"\"" : String.valueOf(current);
-                index += delimiter.length();
-                boolean closed = false;
-                while (index < source.length()) {
-                    if (source.charAt(index) == '\\') {
-                        index += 2;
-                    } else if (source.startsWith(delimiter, index)) {
-                        index += delimiter.length();
-                        closed = true;
-                        break;
-                    } else {
-                        index++;
-                    }
-                }
-                if (!closed) {
-                    throw new IOException("unterminated string, character literal or text block");
-                }
+                index = skipQuotedLiteral(source, index, current);
             } else if (Character.isJavaIdentifierPart(current)) {
-                index++;
-                while (index < source.length() && Character.isJavaIdentifierPart(source.charAt(index))) {
-                    index++;
-                }
+                index = skipIdentifier(source, index);
             } else {
-                index++;
-                for (String operator : OPERATORS) {
-                    if (source.startsWith(operator, start)) {
-                        index = start + operator.length();
-                        break;
-                    }
-                }
+                index = skipOperator(source, start);
             }
             tokens.add(source.substring(start, index));
             if (tokens.size() > limit) {
@@ -79,6 +47,63 @@ final class JavaSourceTokens {
             }
         }
         return List.copyOf(tokens);
+    }
+
+    private static int skipLineComment(String source, int start) {
+        int index = start;
+        while (index < source.length() && source.charAt(index) != '\n'
+                && source.charAt(index) != '\r') {
+            index++;
+        }
+        return index;
+    }
+
+    private static int skipBlockComment(String source, int start) throws IOException {
+        int end = source.indexOf("*/", start + 2);
+        if (end < 0) {
+            throw new IOException("unterminated block comment");
+        }
+        return end + 2;
+    }
+
+    private static int skipQuotedLiteral(String source, int start, char current)
+            throws IOException {
+        int index = start;
+        String delimiter = source.startsWith("\"\"\"", index) ? "\"\"\"" : String.valueOf(current);
+        index += delimiter.length();
+        boolean closed = false;
+        while (index < source.length()) {
+            if (source.charAt(index) == '\\') {
+                index += 2;
+            } else if (source.startsWith(delimiter, index)) {
+                index += delimiter.length();
+                closed = true;
+                break;
+            } else {
+                index++;
+            }
+        }
+        if (!closed) {
+            throw new IOException("unterminated string, character literal or text block");
+        }
+        return index;
+    }
+
+    private static int skipIdentifier(String source, int start) {
+        int index = start + 1;
+        while (index < source.length() && Character.isJavaIdentifierPart(source.charAt(index))) {
+            index++;
+        }
+        return index;
+    }
+
+    private static int skipOperator(String source, int start) {
+        for (String operator : OPERATORS) {
+            if (source.startsWith(operator, start)) {
+                return start + operator.length();
+            }
+        }
+        return start + 1;
     }
 
     static int editDistance(List<String> first, List<String> second) {

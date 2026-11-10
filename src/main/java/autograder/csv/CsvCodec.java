@@ -22,42 +22,9 @@ public final class CsvCodec {
             while (!rowComplete) {
                 StringBuilder field = new StringBuilder();
                 if (text.charAt(position) == '"') {
-                    position++;
-                    boolean closed = false;
-                    while (position < text.length()) {
-                        char current = text.charAt(position);
-                        if (current == '"') {
-                            if (position + 1 < text.length()
-                                    && text.charAt(position + 1) == '"') {
-                                field.append('"');
-                                position += 2;
-                            } else {
-                                position++;
-                                closed = true;
-                                break;
-                            }
-                        } else {
-                            field.append(current);
-                            position++;
-                        }
-                    }
-                    if (!closed) {
-                        throw new IOException("unterminated quoted CSV field");
-                    }
-                    if (position < text.length() && text.charAt(position) != ','
-                            && !isLineBreak(text.charAt(position))) {
-                        throw new IOException("unexpected character after quoted CSV field");
-                    }
+                    position = readQuotedField(text, position + 1, field);
                 } else {
-                    while (position < text.length() && text.charAt(position) != ','
-                            && !isLineBreak(text.charAt(position))) {
-                        char current = text.charAt(position);
-                        if (current == '"') {
-                            throw new IOException("quote inside unquoted CSV field");
-                        }
-                        field.append(current);
-                        position++;
-                    }
+                    position = readUnquotedField(text, position, field);
                 }
                 row.add(field.toString());
 
@@ -77,6 +44,52 @@ public final class CsvCodec {
             rows.add(row);
         }
         return rows;
+    }
+
+    private static int readQuotedField(String text, int start, StringBuilder field)
+            throws IOException {
+        int position = start;
+        boolean closed = false;
+        while (position < text.length()) {
+            char current = text.charAt(position);
+            if (current == '"') {
+                if (position + 1 < text.length()
+                        && text.charAt(position + 1) == '"') {
+                    field.append('"');
+                    position += 2;
+                } else {
+                    position++;
+                    closed = true;
+                    break;
+                }
+            } else {
+                field.append(current);
+                position++;
+            }
+        }
+        if (!closed) {
+            throw new IOException("unterminated quoted CSV field");
+        }
+        if (position < text.length() && text.charAt(position) != ','
+                && !isLineBreak(text.charAt(position))) {
+            throw new IOException("unexpected character after quoted CSV field");
+        }
+        return position;
+    }
+
+    private static int readUnquotedField(String text, int start, StringBuilder field)
+            throws IOException {
+        int position = start;
+        while (position < text.length() && text.charAt(position) != ','
+                && !isLineBreak(text.charAt(position))) {
+            char current = text.charAt(position);
+            if (current == '"') {
+                throw new IOException("quote inside unquoted CSV field");
+            }
+            field.append(current);
+            position++;
+        }
+        return position;
     }
 
     public static String write(List<List<String>> rows) {

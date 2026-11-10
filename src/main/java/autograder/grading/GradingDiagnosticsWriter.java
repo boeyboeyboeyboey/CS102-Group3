@@ -10,6 +10,7 @@ import autograder.model.StudentRecord;
 import autograder.model.SubmissionResult;
 import autograder.model.TestCaseResult;
 import autograder.report.CsvScoreReportWriter;
+import autograder.report.ReportFiles;
 import autograder.roster.ScoreSheetRepository;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -58,9 +59,9 @@ final class GradingDiagnosticsWriter {
                         result.getStandardError()));
             }
         }
-        Files.writeString(run.directory().resolve("cases.csv"), CsvCodec.write(caseRows));
-        Files.writeString(run.directory().resolve("submissions.csv"), CsvCodec.write(submissionRows));
-        Files.writeString(run.directory().resolve(GradingPipeline.SIMILARITY_REPORT),
+        Files.writeString(run.directory().resolve(ReportFiles.CASES), CsvCodec.write(caseRows));
+        Files.writeString(run.directory().resolve(ReportFiles.SUBMISSIONS), CsvCodec.write(submissionRows));
+        Files.writeString(run.directory().resolve(ReportFiles.SIMILARITY),
                 CsvCodec.write(similarityRows(run)));
         ScoreSheet sheet = new ScoreSheetRepository(app.getScoreSheetPath(),
                 app.getScoreSheetColumns()).load();

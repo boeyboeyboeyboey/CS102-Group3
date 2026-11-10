@@ -49,27 +49,7 @@ public class CombinedTestCaseProvider implements TestCaseProvider {
             if (questionCases == null || questionCases.isEmpty()) {
                 throw new IllegalArgumentException("no test cases were provided for " + question.getId());
             }
-
-            BigDecimal questionMaximum = question.getMaxScoreDecimal();
-            BigDecimal caseMaximum = questionMaximum.divide(
-                    BigDecimal.valueOf(questionCases.size()), MathContext.DECIMAL128);
-            BigDecimal recordedCaseMaximum = BigDecimal.valueOf(caseMaximum.doubleValue());
-            BigDecimal assignedMaximum = BigDecimal.ZERO;
-            for (int index = 0; index < questionCases.size(); index++) {
-                TestCaseDefinition original = questionCases.get(index);
-                BigDecimal maximum = index == questionCases.size() - 1
-                        ? questionMaximum.subtract(assignedMaximum)
-                        : recordedCaseMaximum;
-                double numericMaximum = maximum.doubleValue();
-                if (index == questionCases.size() - 1
-                        && BigDecimal.valueOf(numericMaximum).compareTo(maximum) > 0) {
-                    numericMaximum = Math.nextDown(numericMaximum);
-                }
-                weightedCasesById.put(original.getId(), new TestCaseDefinition(
-                        original.getId(), original.getQuestionId(), original.getRunnerClass(),
-                        original.getArguments(), numericMaximum));
-                assignedMaximum = assignedMaximum.add(maximum);
-            }
+            weightQuestionCases(question, questionCases, weightedCasesById);
         }
 
         List<TestCaseDefinition> weighted = new ArrayList<>(cases.size());
@@ -82,5 +62,30 @@ public class CombinedTestCaseProvider implements TestCaseProvider {
             weighted.add(replacement);
         }
         return List.copyOf(weighted);
+    }
+
+    private static void weightQuestionCases(QuestionDefinition question,
+                                            List<TestCaseDefinition> questionCases,
+                                            Map<String, TestCaseDefinition> weightedCasesById) {
+        BigDecimal questionMaximum = question.getMaxScoreDecimal();
+        BigDecimal caseMaximum = questionMaximum.divide(
+                BigDecimal.valueOf(questionCases.size()), MathContext.DECIMAL128);
+        BigDecimal recordedCaseMaximum = BigDecimal.valueOf(caseMaximum.doubleValue());
+        BigDecimal assignedMaximum = BigDecimal.ZERO;
+        for (int index = 0; index < questionCases.size(); index++) {
+            TestCaseDefinition original = questionCases.get(index);
+            BigDecimal maximum = index == questionCases.size() - 1
+                    ? questionMaximum.subtract(assignedMaximum)
+                    : recordedCaseMaximum;
+            double numericMaximum = maximum.doubleValue();
+            if (index == questionCases.size() - 1
+                    && BigDecimal.valueOf(numericMaximum).compareTo(maximum) > 0) {
+                numericMaximum = Math.nextDown(numericMaximum);
+            }
+            weightedCasesById.put(original.getId(), new TestCaseDefinition(
+                    original.getId(), original.getQuestionId(), original.getRunnerClass(),
+                    original.getArguments(), numericMaximum));
+            assignedMaximum = assignedMaximum.add(maximum);
+        }
     }
 }

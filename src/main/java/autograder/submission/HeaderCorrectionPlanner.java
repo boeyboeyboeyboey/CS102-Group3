@@ -32,7 +32,7 @@ final class HeaderCorrectionPlanner {
                                           List<String> anomalies) {
         String expectedName = rosterName(student);
         String expectedEmail = student.getEmail().trim();
-        String expectedUsername = stripRosterPrefix(student.getUsername());
+        String expectedUsername = RosterPrefix.strip(config, student.getUsername());
         for (IdentityEvidence.ParsedSource source : sources) {
             if (expectedName.isEmpty()) {
                 anomalies.add(source.questionId() + ": roster name is empty");
@@ -122,14 +122,6 @@ final class HeaderCorrectionPlanner {
             }
         }
         return normalized.toString();
-    }
-
-    private String stripRosterPrefix(String value) {
-        String trimmed = value.trim();
-        if (trimmed.startsWith(config.getRosterPrefix())) {
-            return trimmed.substring(config.getRosterPrefix().length());
-        }
-        return trimmed;
     }
 
     record Plan(List<SubmissionCorrection> corrections, List<String> anomalies) {

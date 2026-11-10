@@ -9,6 +9,7 @@ import autograder.model.AnalysisFinding;
 import autograder.model.BatchResult;
 import autograder.model.StudentGrade;
 import autograder.model.SubmissionResult;
+import autograder.report.ReportFiles;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -78,7 +79,7 @@ final class StarterAnalysis {
     }
 
     private static int writeReport(Path directory, List<List<String>> rows, Consumer<String> problems) {
-        Path report = directory.resolve("starter-analysis.csv");
+        Path report = directory.resolve(ReportFiles.STARTER_ANALYSIS);
         try {
             Files.writeString(report, CsvCodec.write(rows),
                     StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);

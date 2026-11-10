@@ -50,6 +50,14 @@ final class PropertyParsers {
         return value.trim();
     }
 
+    static boolean optionalBoolean(Properties properties, String key, boolean defaultValue) {
+        String value = properties.getProperty(key, String.valueOf(defaultValue)).trim();
+        if (!value.equalsIgnoreCase("true") && !value.equalsIgnoreCase("false")) {
+            throw new IllegalArgumentException(key + " must be true or false");
+        }
+        return Boolean.parseBoolean(value);
+    }
+
     static String pathPrefix(Properties properties, String key) {
         String value = required(properties, key);
         Path path;
