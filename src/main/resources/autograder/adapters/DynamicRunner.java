@@ -113,9 +113,11 @@ public final class DynamicRunner {
     // letters only), as the question defines it; keep in step with autotester/question/Q1a
     private static String trialQ1a(Random random) {
         ArrayList<String> inputs = randomWordList(random);
+        // the student gets its own copy so changing it cannot change the expected answer
+        ArrayList<String> studentInputs = new ArrayList<>(inputs);
         Object resultObj;
         try {
-            resultObj = invokeStatic("Q1a", "getIsogramWords", new Class[] {ArrayList.class}, inputs);
+            resultObj = invokeStatic("Q1a", "getIsogramWords", new Class[] {ArrayList.class}, studentInputs);
         } catch (Throwable t) {
             return "invocation threw: " + t;
         }
@@ -150,9 +152,12 @@ public final class DynamicRunner {
     // and Strings are ignored), exactly as the question defines it.
     private static String trialQ1b(Random random) {
         ArrayList<Object> inputs = randomMixedList(random);
+        // the student gets its own copy so changing it cannot change the expected answer
+        ArrayList<Object> studentInputs = new ArrayList<>(inputs);
         Object resultObj;
         try {
-            resultObj = invokeStatic("Q1b", "getSumOfEvenIntegers", new Class[] {ArrayList.class}, inputs);
+            resultObj = invokeStatic("Q1b", "getSumOfEvenIntegers", new Class[] {ArrayList.class},
+                    studentInputs);
         } catch (Throwable t) {
             return "invocation threw: " + t;
         }
@@ -197,6 +202,9 @@ public final class DynamicRunner {
             return "result is not a Double";
         }
         double actual = (Double) resultObj;
+        if (!Double.isFinite(actual)) {
+            return "average for " + surname + " is not a finite number: " + actual;
+        }
         if (Math.abs(actual - expected) > EPSILON) {
             return "average mismatch for " + surname + ": expected " + expected + " but got " + actual;
         }
@@ -251,6 +259,9 @@ public final class DynamicRunner {
         } catch (NumberFormatException e) {
             return "result GPA not numeric: " + actual;
         }
+        if (!Double.isFinite(gpa)) {
+            return "result GPA not a finite number: " + actual;
+        }
         if (!name.equals(expected.name)) {
             return "wrong top student for " + course + ": expected " + expected.name + " but got " + name;
         }
@@ -264,9 +275,11 @@ public final class DynamicRunner {
     // Invariant: retain eligible inputs and sort by descending area, then perimeter.
     private static String trialQ3(Random random) throws Exception {
         List<Object> shapes = randomShapes(random);
+        // the student gets its own copy so changing it cannot change the expected answer
+        List<Object> studentShapes = new ArrayList<>(shapes);
         Object resultObj;
         try {
-            resultObj = invokeStatic("Q3", "sortShapes", new Class[] {List.class}, shapes);
+            resultObj = invokeStatic("Q3", "sortShapes", new Class[] {List.class}, studentShapes);
         } catch (Throwable t) {
             return "invocation threw: " + t;
         }

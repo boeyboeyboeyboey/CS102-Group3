@@ -70,8 +70,89 @@ class DynamicRunnerTest {
             }
             """;
 
+    private static final String CORRECT_Q1A = """
+            import java.util.ArrayList;
+            public class Q1a {
+                public static ArrayList<String> getIsogramWords(ArrayList<String> words) {
+                    ArrayList<String> result = new ArrayList<>();
+                    for (String word : words) {
+                        boolean[] seen = new boolean[26];
+                        boolean isogram = true;
+                        for (char letter : word.toLowerCase().toCharArray()) {
+                            if (letter < 'a' || letter > 'z') {
+                                continue;
+                            }
+                            if (seen[letter - 'a']) {
+                                isogram = false;
+                            }
+                            seen[letter - 'a'] = true;
+                        }
+                        if (isogram) {
+                            result.add(word);
+                        }
+                    }
+                    return result;
+                }
+            }
+            """;
+
+    private static final String CLEARING_Q1A = """
+            import java.util.ArrayList;
+            public class Q1a {
+                public static ArrayList<String> getIsogramWords(ArrayList<String> words) {
+                    words.clear();
+                    return new ArrayList<>();
+                }
+            }
+            """;
+
+    private static final String CLEARING_Q3 = """
+            import java.util.ArrayList;
+            import java.util.List;
+            public class Q3 {
+                public static List<Shape> sortShapes(List<Shape> shapes) {
+                    shapes.clear();
+                    return new ArrayList<>();
+                }
+            }
+            """;
+
+    private static final String NAN_Q2A = """
+            public class Q2a {
+                public static double getAverageAge(String filename, String surname) {
+                    return Double.NaN;
+                }
+            }
+            """;
+
     @TempDir
     Path temporaryDirectory;
+
+    @Test
+    void acceptsCorrectIsogramFilter() throws Exception {
+        Path classes = compile("Q1a", CORRECT_Q1A, null);
+
+        for (long seed : List.of(7L, 42L, 99L)) {
+            assertRunnerPasses("Q1a", seed, classes, classes);
+        }
+    }
+
+    @Test
+    void rejectsSubmissionThatClearsItsInput() throws Exception {
+        Path q1a = compile("Q1a", CLEARING_Q1A, null);
+        assertRunnerResult("FAILED", "Q1a", 7L, q1a, q1a);
+
+        Path q3 = compile("Q3", CLEARING_Q3, Q3_SUPPORT);
+        assertRunnerResult("FAILED", "Q3", 7L, q3, Q3_SUPPORT);
+    }
+
+    @Test
+    void rejectsNotANumberAverage() throws Exception {
+        Path classes = compile("Q2a", NAN_Q2A, null);
+        Files.copy(PERSONS_FIXTURE, classes.resolve("personstester.txt"));
+
+        assertRunnerResult("FAILED", "Q2a", 7L, classes, classes);
+    }
 
     @Test
     void acceptsUppercaseSurnameAtEitherEndOfName() throws Exception {
@@ -112,6 +193,11 @@ class DynamicRunnerTest {
 
     private void assertRunnerPasses(String questionId, long seed, Path classes, Path support)
             throws Exception {
+        assertRunnerResult("PASSED", questionId, seed, classes, support);
+    }
+
+    private void assertRunnerResult(String expected, String questionId, long seed, Path classes,
+            Path support) throws Exception {
         Path resultFile = classes.resolve("result-" + seed + ".txt");
         String classpath = support.equals(classes)
                 ? classes.toString()
@@ -128,6 +214,6 @@ class DynamicRunnerTest {
         assertTrue(finished, questionId + " runner timed out");
         String output = new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
         assertEquals(0, process.exitValue(), output);
-        assertEquals("PASSED", Files.readString(resultFile, StandardCharsets.UTF_8).trim(), output);
+        assertEquals(expected, Files.readString(resultFile, StandardCharsets.UTF_8).trim(), output);
     }
 }
