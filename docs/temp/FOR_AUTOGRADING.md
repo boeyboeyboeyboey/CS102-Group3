@@ -913,15 +913,15 @@ input generation and checks out of the central orchestration classes.
 ## Where to read next
 
 - For the exact Feature 4 invariants, seed formula and runner protocol, see
-  [`docs/f4/HOW_THIS_FEAT_4_WORKS.md`](docs/f4/HOW_THIS_FEAT_4_WORKS.md).
+  [`HOW_THIS_FEAT_4_WORKS.md`](HOW_THIS_FEAT_4_WORKS.md).
 - For Question-object signatures, generator rules and all randomized settings,
-  see [`docs/f4/RANDOMIZED_AUTOGRADER.md`](docs/f4/RANDOMIZED_AUTOGRADER.md).
+  see [`RANDOMIZED_AUTOGRADER.md`](../RANDOMIZED_AUTOGRADER.md).
 - For setup, sample run commands, outputs and GUI use, see
-  [`README.md`](README.md).
+  [`README.md`](../../README.md).
 - For the larger component map and execution boundaries, see
-  [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+  [`ARCHITECTURE.md`](../ARCHITECTURE.md).
 
 Feature 4 remains **REVIEW** on the project board. The latest repository record
 still requires William's human clean-build confirmation before it can move to
 DONE. The previous recorded Feature 4 evidence is summarized in
-[`docs/f4/DYNAMIC_TEST_FEATURE_SUMMARY.md`](docs/f4/DYNAMIC_TEST_FEATURE_SUMMARY.md).\n
+[`DYNAMIC_TEST_FEATURE_SUMMARY.md`](DYNAMIC_TEST_FEATURE_SUMMARY.md).\n

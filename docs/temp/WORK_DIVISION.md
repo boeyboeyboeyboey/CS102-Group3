@@ -2,7 +2,7 @@
 
 Updated 2026-10-16 after PR #1 merged and PR #5 began integrating feature 1 with modularisation. The original proposals remain available in Git history. This document describes the current integration points; algorithms and implementation details still require an approved feature plan.
 
-[agents.md](agents.md) is the authoritative ownership/status board. Start with the [README kickoff](README.md#start-here-teammate-agent-kickoff), confirm identity and coordinate claims before editing. The core MVP and feature 2 are DONE. Features 1 (Kiya), 3 (Sera), 4 (William), 5 (Gabriel), and 6 (Kai Cong) are in REVIEW pending their recorded human completion gates. See [the dashboard architecture](offline_html_dashboard_architecture.md).
+[agents.md](../../agents.md) is the authoritative ownership/status board. Start with the [README kickoff](../../README.md#start-here-teammate-agent-kickoff), confirm identity and coordinate claims before editing. The core MVP and feature 2 are DONE. Features 1 (Kiya), 3 (Sera), 4 (William), 5 (Gabriel), and 6 (Kai Cong) are in REVIEW pending their recorded human completion gates. See [the dashboard architecture](../offline_html_dashboard_architecture.md).
 
 | Feature | Owner | Goal | Existing contract in autograder.api |
 | --- | --- | --- | --- |
@@ -18,8 +18,8 @@ Kiya owns feature 1; its PR #1 is merged, while the combined PR #5 integration c
 ## Implementation boundaries
 
 - Every member implements each feature in their own feature branch, starting new branches from current `main`; coordinate shared changes even across separate branches
-- Use descriptive new branch names without a `codex/` prefix and follow [docs/CODING_STYLE.md](docs/CODING_STYLE.md). Shared-code refactoring requires a concrete approved plan; [docs/CODE_REVIEW.md](docs/CODE_REVIEW.md) records recommendations, not implementation approval
-- After approved implementation and verification, commit/push only the reviewed feature files and create/update a PR from that branch into `main`. Use a draft for pending checks/human acceptance, tell the driver the PR URL and ask them to contact the group for review. Leave merging for explicit authorization after teammate review and required checks; see [the team PR workflow](docs/TEAM_WORKFLOW.md#feature-branches-and-pull-requests)
+- Use descriptive new branch names without a `codex/` prefix and follow [CODING_STYLE.md](CODING_STYLE.md). Shared-code refactoring requires a concrete approved plan; [CODE_REVIEW.md](CODE_REVIEW.md) records recommendations, not implementation approval
+- After approved implementation and verification, commit/push only the reviewed feature files and create/update a PR from that branch into `main`. Use a draft for pending checks/human acceptance, tell the driver the PR URL and ask them to contact the group for review. Leave merging for explicit authorization after teammate review and required checks; see [the team PR workflow](TEAM_WORKFLOW.md#feature-branches-and-pull-requests)
 - Use the existing contracts under src/main/java/autograder/api and shared models under autograder.model; do not recreate the older proposed interfaces or restore the legacy src/autograder tree
 - Give each bonus its own implementation package after the plan/interfaces are approved; coordinate shared configuration, models and GradingPipeline integration with the main agent
 - Token normalization, n-grams/winnowing, starter normalization and configurable similarity/edit thresholds are candidate approaches, not already implemented requirements
@@ -30,7 +30,7 @@ Kiya owns feature 1; its PR #1 is merged, while the combined PR #5 integration c
 - Obtain approval before substantial implementation. Move implemented work to REVIEW, provide exact build/run commands, and wait for human clean-build confirmation before DONE
 - When a bonus becomes DONE, create its required architecture document with actual OOP principles and slide talking points
 
-Read [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md) and [docs/TEAM_WORKFLOW.md](docs/TEAM_WORKFLOW.md) for the current design, acceptance criteria and human-owned submission responsibilities.
+Read [../ARCHITECTURE.md](../ARCHITECTURE.md), [../REQUIREMENTS.md](../REQUIREMENTS.md) and [TEAM_WORKFLOW.md](TEAM_WORKFLOW.md) for the current design, acceptance criteria and human-owned submission responsibilities.
 
 ## Feature 4 status (2026-10-18): REVIEW
 

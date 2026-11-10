@@ -114,7 +114,7 @@ The 14 October modularisation checks used `/tmp/cs102-modularisation-tools/apach
 
 Boey directly requested the code extraction and replacement PR on 14 October 2026. The renderer components above now implement that split; `QuestionOutcome`, CSS, JavaScript and public reporting contracts remain unchanged. The original dashboard remains accepted DONE. This refactor has its own human clean-build/behaviour gate.
 
-Clean verification passed 86 tests with zero failures/errors/skips. The packaged sample retained the same totals and 120 case rows, and produced the dashboard plus six Markdown files in `build/grading/run-13212618080201842227`. Three deterministic HTML fixtures matched the saved pre-refactor JAR byte-for-byte, covering empty, complex and all-withheld contexts. [docs/CODE_REVIEW.md](docs/CODE_REVIEW.md) records complete refactor evidence, preservation checks and limits. No new actual-browser, Windows or Java 17 runtime verification is claimed; the previously reported Windows fixture defect remains a separate unapproved fix.
+Clean verification passed 86 tests with zero failures/errors/skips. The packaged sample retained the same totals and 120 case rows, and produced the dashboard plus six Markdown files in `build/grading/run-13212618080201842227`. Three deterministic HTML fixtures matched the saved pre-refactor JAR byte-for-byte, covering empty, complex and all-withheld contexts. [the internal code review](temp/CODE_REVIEW.md) records complete refactor evidence, preservation checks and limits. No new actual-browser, Windows or Java 17 runtime verification is claimed; the previously reported Windows fixture defect remains a separate unapproved fix.
 
 ## Slide Deck Talking Points
 

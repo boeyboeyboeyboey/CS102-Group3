@@ -37,7 +37,7 @@ The public entry points remain stable. Implementation collaborators are package-
 | `report.html` | `OfflineHtmlReportGenerator` | Summary, table/details, cases and analysis renderers; one escaper, decimal formatter, submission presentation helper and immutable `QuestionSection` |
 | `report.feedback` | `MarkdownFeedbackGenerator` | `MarkdownDiagnosticFormatter` for recorded diagnostics and `FeedbackFileWriter` for safe unique filenames/CREATE_NEW persistence |
 
-The generator still embeds the same CSS and JavaScript. Report classes render completed evidence; they do not rerun cases, alter scores or decide export eligibility. The Markdown facade retains its existing NOT_RUN-derived notice because its public contract does not include the run's withholding map. Section composition remains a justified size exception; see [CODE_REVIEW.md](CODE_REVIEW.md) for checks and other exceptions.
+The generator still embeds the same CSS and JavaScript. Report classes render completed evidence; they do not rerun cases, alter scores or decide export eligibility. The Markdown facade retains its existing NOT_RUN-derived notice because its public contract does not include the run's withholding map. Section composition remains a justified size exception; see [CODE_REVIEW.md](temp/CODE_REVIEW.md) for checks and other exceptions.
 
 ## Bonus connections
 
@@ -53,10 +53,10 @@ Whole-file findings and CSV schema remain unchanged. No other bonus renderer,
 shared domain model/interface, grading decision or runtime dependency changes.
 The method report distinguishes unavailable files and files with no explicit
 methods, bounds alignment work, and never claims correctness or misconduct.
-See [the feature-3 testing guide](STARTER_CODE_TESTING.md) for matching semantics,
+See [the feature-3 testing guide](temp/STARTER_CODE_TESTING.md) for matching semantics,
 coverage boundaries and human acceptance steps. Feature 3 remains REVIEW.
 
-Feature 3 implements `BoilerplateDetector` with `StarterCodeDetector` in `autograder.analysis.boilerplate`. It compares only configured answer sources and student-written companions, reading bounded UTF-8 inputs and reporting per-file failures without stopping other comparisons. `JavaSourceTokens` ignores comments/formatting outside literals and computes token edit distance. `BoilerplateConfig` validates external enablement, starter path, similarity threshold and resource limits. After grading/CSV export, the App hook attaches immutable findings to a new `BatchResult`, writes `starter-analysis.csv` and supplies those findings to the existing HTML renderer. Grades, withholding, shared interfaces and the grading pipeline are unchanged. High whole-file similarity is a review heuristic; Unicode escapes and unsupported/malformed input require manual comparison. Feature 3 is REVIEW pending Sera's acceptance; see [testing instructions](STARTER_CODE_TESTING.md).
+Feature 3 implements `BoilerplateDetector` with `StarterCodeDetector` in `autograder.analysis.boilerplate`. It compares only configured answer sources and student-written companions, reading bounded UTF-8 inputs and reporting per-file failures without stopping other comparisons. `JavaSourceTokens` ignores comments/formatting outside literals and computes token edit distance. `BoilerplateConfig` validates external enablement, starter path, similarity threshold and resource limits. After grading/CSV export, the App hook attaches immutable findings to a new `BatchResult`, writes `starter-analysis.csv` and supplies those findings to the existing HTML renderer. Grades, withholding, shared interfaces and the grading pipeline are unchanged. High whole-file similarity is a review heuristic; Unicode escapes and unsupported/malformed input require manual comparison. Feature 3 is REVIEW pending Sera's acceptance; see [testing instructions](temp/STARTER_CODE_TESTING.md).
 
 | Contract | Input | Output |
 | --- | --- | --- |
@@ -75,13 +75,13 @@ After the pipeline has written its CSVs, `App` supplies the immutable `GradingRe
 
 `HtmlReportConfig` loads enablement and a safe `.html` basename from external properties. Generation defaults to disabled when older configurations omit these settings. `OfflineHtmlReportGenerator` encapsulates rendering in `autograder.report.html`, with classpath assets embedded into one UTF-8 file. Student-controlled text is escaped for HTML; filtering and sorting operate on rendered DOM data. The report opens directly from disk without external dependencies. An enabled report-write failure returns a nonzero CLI status after printing completed CSV locations; it does not remove those reports.
 
-Feature 2 is DONE after Boey's clean-build/run and displayed-dashboard acceptance. See [offline_html_dashboard_architecture.md](../offline_html_dashboard_architecture.md) for implementation details, actual OOP principles and Slide Deck Talking Points.
+Feature 2 is DONE after Boey's clean-build/run and displayed-dashboard acceptance. See [offline_html_dashboard_architecture.md](offline_html_dashboard_architecture.md) for implementation details, actual OOP principles and Slide Deck Talking Points.
 
 Boey approved a question heatmap revision on 2026-10-12. A package-private immutable `QuestionOutcome` assembles report-local scores, status counts, case-count evidence and a credit-band classification from existing models. The renderer uses it in the existing question columns and groups recorded diagnostics by configured question order. Safe ordinal/index anchors let browser code open and focus the matching group without changing active controls. Missing/mismatched evidence and all-NOT_RUN questions receive neutral treatment; every recorded case remains available, including unexpected question IDs. This revision changes presentation only: the shared models, eligibility decisions, CSV reports and pipeline contracts retain their existing responsibilities.
 
 ## Similarity analysis (feature 1, REVIEW)
 
-The merged Kiya implementation tokenizes Java source and composes token, n-gram and similarity helpers under the plagiarism package. The detector integration preserves the two-argument GradingPipeline constructor, which delegates to a no-op detector, and the three-argument GradingPipeline overload, which accepts an injected PlagiarismDetector. During pipeline integration, compare once after grading using the original full submission list and assessment. Similarity findings are written to their dedicated CSV after submissions.csv and before score export. This optional analysis does not affect scoring or export eligibility; I/O or runtime comparison failures are reported and grading continues with no findings. See [PR5_MERGE_RESOLUTION.md](PR5_MERGE_RESOLUTION.md) for the exact CSV schema, conflict record and verification status.
+The merged Kiya implementation tokenizes Java source and composes token, n-gram and similarity helpers under the plagiarism package. The detector integration preserves the two-argument GradingPipeline constructor, which delegates to a no-op detector, and the three-argument GradingPipeline overload, which accepts an injected PlagiarismDetector. During pipeline integration, compare once after grading using the original full submission list and assessment. Similarity findings are written to their dedicated CSV after submissions.csv and before score export. This optional analysis does not affect scoring or export eligibility; I/O or runtime comparison failures are reported and grading continues with no findings. See [PR5_MERGE_RESOLUTION.md](temp/PR5_MERGE_RESOLUTION.md) for the exact CSV schema, conflict record and verification status.
 
 ## Scoring foundation
 
@@ -107,7 +107,7 @@ These processes are not a security sandbox. The supported setting is controlled 
 
 ## Configuration and simplicity
 
-Follow [CODING_STYLE.md](CODING_STYLE.md) for class/method responsibilities and size review guidelines. [CODE_REVIEW.md](CODE_REVIEW.md) records the merged-main review and proposed extraction boundaries; M1-M5 were implemented and checked before PR #1 integration; the current PR #5 merge verification and human acceptance are pending. See [PR5_MERGE_RESOLUTION.md](PR5_MERGE_RESOLUTION.md).
+Follow [CODING_STYLE.md](temp/CODING_STYLE.md) for class/method responsibilities and size review guidelines. [CODE_REVIEW.md](temp/CODE_REVIEW.md) records the merged-main review and proposed extraction boundaries; M1-M5 were implemented and checked before PR #1 integration; the current PR #5 merge verification and human acceptance are pending. See [PR5_MERGE_RESOLUTION.md](temp/PR5_MERGE_RESOLUTION.md).
 
 Externalize settings the instructor or team may change: paths, assessment identifiers, required files, case counts, marks, matching rules, extraction limits, and execution limits. Language/protocol mechanics such as zero-based indexes, CSV quoting characters, and a success exit code are not configurable grading policy. Keep comments minimal, lowercase, and without full stops; agents must not add AI attribution comments.
 

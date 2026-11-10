@@ -1,6 +1,6 @@
 # Coding style and modularisation
 
-Approved by Boey on 2026-10-14 for application code and future agent-generated changes. These rules support the project brief's page 6 design criteria and page 7 robustness/usability criteria. Read this document before planning or editing code. [agents.md](../agents.md) governs identity, ownership, approval and publication; [TEAM_WORKFLOW.md](TEAM_WORKFLOW.md) governs collaboration and human acceptance.
+Approved by Boey on 2026-10-14 for application code and future agent-generated changes. These rules support the project brief's page 6 design criteria and page 7 robustness/usability criteria. Read this document before planning or editing code. [agents.md](../../agents.md) governs identity, ownership, approval and publication; [TEAM_WORKFLOW.md](TEAM_WORKFLOW.md) governs collaboration and human acceptance.
 
 ## Responsibilities and dependencies
 

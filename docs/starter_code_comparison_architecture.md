@@ -219,7 +219,7 @@ Sera subsequently confirmed the displayed report works. Her clean-build command
 initially failed because Maven was absent from PATH; a temporary-Maven command was
 provided, but no successful human build/run result has yet been reported here.
 
-See [the testing guide](docs/STARTER_CODE_TESTING.md) for commands, paths and full
+See [the testing guide](temp/STARTER_CODE_TESTING.md) for commands, paths and full
 evidence limits. Standard commands are:
 
 ```powershell

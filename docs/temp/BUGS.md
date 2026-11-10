@@ -1,6 +1,6 @@
 # Known bugs
 
-Updated 2026-10-14. This is the team's bug register: keep each issue's stable ID, status, evidence, affected area, contact and acceptance checks here. [CODE_REVIEW.md](CODE_REVIEW.md) retains the review context; [agents.md](../agents.md) remains the authoritative feature-ownership board. GitHub Issues can provide assignment/discussion later; add an issue URL here if one is created rather than maintaining conflicting statuses.
+Updated 2026-10-14. This is the team's bug register: keep each issue's stable ID, status, evidence, affected area, contact and acceptance checks here. [CODE_REVIEW.md](CODE_REVIEW.md) retains the review context; [agents.md](../../agents.md) remains the authoritative feature-ownership board. GitHub Issues can provide assignment/discussion later; add an issue URL here if one is created rather than maintaining conflicting statuses.
 
 Both issues below predate the modularisation and remain unfixed. Documentation is approved; their fixes have not been approved. Contacts are coordination recommendations, not new work assignments or changes to feature ownership. Source locations below were checked at modularisation commit `1c19147`.
 
@@ -23,9 +23,9 @@ P2 means a normal-priority correctness/portability fix to schedule and verify. I
 
 **Relevant code:**
 
-- [ExecutionConfig.java](../src/main/java/autograder/config/ExecutionConfig.java), lines 35-40: filename validation
-- [GradingDiagnosticsWriter.java](../src/main/java/autograder/grading/GradingDiagnosticsWriter.java), lines 57-61: diagnostics first, then score export; this logic previously lived in `GradingPipeline.writeReports`
-- [CsvScoreReportWriter.java](../src/main/java/autograder/report/CsvScoreReportWriter.java), lines 134-137: replacement of the configured destination
+- [ExecutionConfig.java](../../src/main/java/autograder/config/ExecutionConfig.java), lines 35-40: filename validation
+- [GradingDiagnosticsWriter.java](../../src/main/java/autograder/grading/GradingDiagnosticsWriter.java), lines 57-61: diagnostics first, then score export; this logic previously lived in `GradingPipeline.writeReports`
+- [CsvScoreReportWriter.java](../../src/main/java/autograder/report/CsvScoreReportWriter.java), lines 134-137: replacement of the configured destination
 
 **Suggested fix and acceptance checks:** Reject reserved names case-insensitively in `ExecutionConfig.load`. Add focused configuration tests for case variants of both reserved names and an accepted custom filename. Use an otherwise valid disposable fixture with protected inputs/output paths to demonstrate the guard; preserve supplied settings and inputs. Changing direct constructor invariants is a separate API decision, not an automatic part of this fix.
 
@@ -41,7 +41,7 @@ P2 means a normal-priority correctness/portability fix to schedule and verify. I
 
 **Evidence and limits:** The merged upstream record reports Windows 11, Temurin 25.0.4 and Maven 3.9.16, with 80/81 tests passing and this test failing. Source inspection supports the reported cause. The modularisation's 86-test macOS run passed with the fixture unchanged. The agent did not run Windows verification; the macOS pass does not resolve the Windows failure.
 
-**Relevant code:** [OfflineHtmlReportGeneratorTest.java](../src/test/java/autograder/report/html/OfflineHtmlReportGeneratorTest.java), line 175 (hostile display ID), lines 306-308 (tester-path fixture).
+**Relevant code:** [OfflineHtmlReportGeneratorTest.java](../../src/test/java/autograder/report/html/OfflineHtmlReportGeneratorTest.java), line 175 (hostile display ID), lines 306-308 (tester-path fixture).
 
 **Suggested fix and acceptance checks:** Decouple the synthetic tester basename from the display ID. Retain hostile IDs/output and the escaping, question-navigation and unmatched-evidence assertions. Run the affected test and obtain actual Windows confirmation when available; record any unavailable platform check honestly. The earlier CRLF tester fix is already merged and is a different issue.
 

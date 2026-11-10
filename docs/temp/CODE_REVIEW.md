@@ -196,93 +196,93 @@ This historical inventory is not the post-refactor file list. Line counts are ph
 
 | Reviewed file | Lines | Responsibility | Disposition |
 | --- | ---: | --- | --- |
-| [src/main/java/autograder/App.java](../src/main/java/autograder/App.java) | 168 | CLI orchestration, exit status and report coordination | Keep coordinator; method-size exception recorded in M4 |
-| [src/main/java/autograder/api/BoilerplateDetector.java](../src/main/java/autograder/api/BoilerplateDetector.java) | 12 | Starter-analysis extension contract | Keep; Sera owns implementation |
-| [src/main/java/autograder/api/FeedbackGenerator.java](../src/main/java/autograder/api/FeedbackGenerator.java) | 9 | Student-feedback extension contract | Keep; coordinate feature integration |
-| [src/main/java/autograder/api/HtmlReportGenerator.java](../src/main/java/autograder/api/HtmlReportGenerator.java) | 9 | Completed-context HTML output contract | Keep public boundary |
-| [src/main/java/autograder/api/PlagiarismDetector.java](../src/main/java/autograder/api/PlagiarismDetector.java) | 12 | Similarity-analysis extension contract | Keep; Kiya owns implementation |
-| [src/main/java/autograder/api/ProgressListener.java](../src/main/java/autograder/api/ProgressListener.java) | 5 | Progress event contract | Keep; coordinate richer events |
-| [src/main/java/autograder/api/TestCaseProvider.java](../src/main/java/autograder/api/TestCaseProvider.java) | 10 | Runnable-case provider contract | Keep; coordinate William’s feature |
-| [src/main/java/autograder/config/AppConfig.java](../src/main/java/autograder/config/AppConfig.java) | 611 | Immutable settings plus properties/assessment/path loading | Extract loading/policy (M2); retain facade |
-| [src/main/java/autograder/config/ExecutionConfig.java](../src/main/java/autograder/config/ExecutionConfig.java) | 86 | Execution settings and grading-output validation | Keep cohesive record; B1 requires separate fix |
-| [src/main/java/autograder/config/FeedbackConfig.java](../src/main/java/autograder/config/FeedbackConfig.java) | 47 | Feedback enablement, safe subdirectory and line cap | Keep cohesive record/loader |
-| [src/main/java/autograder/config/HtmlReportConfig.java](../src/main/java/autograder/config/HtmlReportConfig.java) | 29 | Optional report enablement and safe basename | Keep cohesive record |
-| [src/main/java/autograder/csv/CsvCodec.java](../src/main/java/autograder/csv/CsvCodec.java) | 128 | CSV quoting, records, parsing and serialization | Keep focused codec |
-| [src/main/java/autograder/execution/CaseExecutor.java](../src/main/java/autograder/execution/CaseExecutor.java) | 92 | Fixture copying, one case and result protocol | Keep execution boundary |
-| [src/main/java/autograder/execution/ProcessResult.java](../src/main/java/autograder/execution/ProcessResult.java) | 5 | Immutable child-process outcome | Keep small value record |
-| [src/main/java/autograder/execution/ProcessRunner.java](../src/main/java/autograder/execution/ProcessRunner.java) | 225 | Bounded streams, deadlines and cleanup | Keep coupled lifecycle service |
-| [src/main/java/autograder/execution/StudentCompiler.java](../src/main/java/autograder/execution/StudentCompiler.java) | 92 | Part workspace and selected compiler inputs | Keep compilation boundary |
-| [src/main/java/autograder/grading/GradingPipeline.java](../src/main/java/autograder/grading/GradingPipeline.java) | 193 | Batch/part execution, eligibility and CSV projections | Extract diagnostics; clarify private helpers (M4) |
-| [src/main/java/autograder/grading/GradingRun.java](../src/main/java/autograder/grading/GradingRun.java) | 13 | Completed batch, run path and copied decisions | Keep immutable result boundary |
-| [src/main/java/autograder/grading/InstructorTestCaseProvider.java](../src/main/java/autograder/grading/InstructorTestCaseProvider.java) | 91 | Fixed tester validation and case definitions | Keep supported-assessment boundary |
-| [src/main/java/autograder/model/AnalysisFinding.java](../src/main/java/autograder/model/AnalysisFinding.java) | 26 | Recorded source-analysis evidence | Keep small immutable model |
-| [src/main/java/autograder/model/AssessmentDefinition.java](../src/main/java/autograder/model/AssessmentDefinition.java) | 46 | Assessment metadata and decimal maximum | Keep coherent aggregate |
-| [src/main/java/autograder/model/BatchResult.java](../src/main/java/autograder/model/BatchResult.java) | 32 | Completed grades and supplied analysis lists | Keep copied result aggregate |
-| [src/main/java/autograder/model/GradingReportContext.java](../src/main/java/autograder/model/GradingReportContext.java) | 22 | Batch and validated copied withholding decisions | Keep authoritative reporting boundary |
-| [src/main/java/autograder/model/QuestionDefinition.java](../src/main/java/autograder/model/QuestionDefinition.java) | 78 | Question sources, resources, counts and weights | Keep coherent metadata model |
-| [src/main/java/autograder/model/ScoreSheet.java](../src/main/java/autograder/model/ScoreSheet.java) | 56 | Raw roster schema, rows and student mapping | Keep protected nested collections |
-| [src/main/java/autograder/model/SimilarityFinding.java](../src/main/java/autograder/model/SimilarityFinding.java) | 36 | Validated pairwise similarity/evidence | Keep focused result model |
-| [src/main/java/autograder/model/StudentGrade.java](../src/main/java/autograder/model/StudentGrade.java) | 49 | Recorded-case score aggregation and duplicate check | Keep scoring responsibility |
-| [src/main/java/autograder/model/StudentIdentity.java](../src/main/java/autograder/model/StudentIdentity.java) | 85 | Observed headers, matched record and evidence | Keep identity result model |
-| [src/main/java/autograder/model/StudentRecord.java](../src/main/java/autograder/model/StudentRecord.java) | 37 | Roster identity fields | Keep small model |
-| [src/main/java/autograder/model/SubmissionCorrection.java](../src/main/java/autograder/model/SubmissionCorrection.java) | 53 | Recorded proposed/applied correction data | Keep shared audit model |
-| [src/main/java/autograder/model/SubmissionResult.java](../src/main/java/autograder/model/SubmissionResult.java) | 89 | Preparation paths/status/anomalies/corrections | Keep preparation result aggregate |
-| [src/main/java/autograder/model/SubmissionStatus.java](../src/main/java/autograder/model/SubmissionStatus.java) | 7 | Preparation-state enum | Keep distinct from test states |
-| [src/main/java/autograder/model/TestCaseDefinition.java](../src/main/java/autograder/model/TestCaseDefinition.java) | 43 | Validated runnable case and maximum points | Keep execution contract |
-| [src/main/java/autograder/model/TestCaseResult.java](../src/main/java/autograder/model/TestCaseResult.java) | 46 | Status, captured output, timing and earned points | Keep scoring/result boundary |
-| [src/main/java/autograder/model/TestStatus.java](../src/main/java/autograder/model/TestStatus.java) | 10 | Recorded execution-status enum | Keep all six states |
-| [src/main/java/autograder/report/CsvScoreReportWriter.java](../src/main/java/autograder/report/CsvScoreReportWriter.java) | 143 | Schema-preserving score export and atomic write | Keep persistence/safety boundary |
-| [src/main/java/autograder/report/feedback/MarkdownFeedbackGenerator.java](../src/main/java/autograder/report/feedback/MarkdownFeedbackGenerator.java) | 397 | Markdown sections, diagnostics and unique file output | Coordinate diagnostic/output extraction with Gabriel (M5) |
-| [src/main/java/autograder/report/html/OfflineHtmlReportGenerator.java](../src/main/java/autograder/report/html/OfflineHtmlReportGenerator.java) | 681 | Document, sections, summaries and HTML persistence | Extract render collaborators (M1) |
-| [src/main/java/autograder/report/html/QuestionOutcome.java](../src/main/java/autograder/report/html/QuestionOutcome.java) | 175 | Recorded question evidence and credit bands | Keep existing report-local helper |
-| [src/main/java/autograder/roster/ScoreSheetRepository.java](../src/main/java/autograder/roster/ScoreSheetRepository.java) | 144 | CSV roster import and semantic validation | Keep import boundary |
-| [src/main/java/autograder/submission/CorrectionLog.java](../src/main/java/autograder/submission/CorrectionLog.java) | 43 | Correction audit persistence | Keep focused logger |
-| [src/main/java/autograder/submission/IdentityResolver.java](../src/main/java/autograder/submission/IdentityResolver.java) | 578 | Evidence, matching, repair planning and mutation | Extract staged collaborators (M3); retain facade |
-| [src/main/java/autograder/submission/SafeZipExtractor.java](../src/main/java/autograder/submission/SafeZipExtractor.java) | 144 | Bounded ZIP extraction, CRC and containment | Keep safety boundary |
-| [src/main/java/autograder/submission/SubmissionProcessor.java](../src/main/java/autograder/submission/SubmissionProcessor.java) | 268 | Intake coordination, duplicates and progress | Keep coordinator; reconsider only if growth warrants |
-| [src/main/java/autograder/submission/SubmissionValidator.java](../src/main/java/autograder/submission/SubmissionValidator.java) | 113 | Question-root selection and folder validation | Keep narrow package-local service |
-| [src/main/java/autograder/submission/WorkingCopyPreparer.java](../src/main/java/autograder/submission/WorkingCopyPreparer.java) | 118 | Canonical working copy and layout corrections | Keep copy concern; delegate repairs through facade initially |
-| [src/main/java/autograder/ui/ConsoleProgressListener.java](../src/main/java/autograder/ui/ConsoleProgressListener.java) | 10 | Plain console progress rendering | Keep ProgressListener adapter |
-| [src/main/java/autograder/util/AnomalyLog.java](../src/main/java/autograder/util/AnomalyLog.java) | 32 | Anomaly audit persistence and stderr | Keep; conditional hardening H1 |
+| [src/main/java/autograder/App.java](../../src/main/java/autograder/App.java) | 168 | CLI orchestration, exit status and report coordination | Keep coordinator; method-size exception recorded in M4 |
+| [src/main/java/autograder/api/BoilerplateDetector.java](../../src/main/java/autograder/api/BoilerplateDetector.java) | 12 | Starter-analysis extension contract | Keep; Sera owns implementation |
+| [src/main/java/autograder/api/FeedbackGenerator.java](../../src/main/java/autograder/api/FeedbackGenerator.java) | 9 | Student-feedback extension contract | Keep; coordinate feature integration |
+| [src/main/java/autograder/api/HtmlReportGenerator.java](../../src/main/java/autograder/api/HtmlReportGenerator.java) | 9 | Completed-context HTML output contract | Keep public boundary |
+| [src/main/java/autograder/api/PlagiarismDetector.java](../../src/main/java/autograder/api/PlagiarismDetector.java) | 12 | Similarity-analysis extension contract | Keep; Kiya owns implementation |
+| [src/main/java/autograder/api/ProgressListener.java](../../src/main/java/autograder/api/ProgressListener.java) | 5 | Progress event contract | Keep; coordinate richer events |
+| [src/main/java/autograder/api/TestCaseProvider.java](../../src/main/java/autograder/api/TestCaseProvider.java) | 10 | Runnable-case provider contract | Keep; coordinate William’s feature |
+| [src/main/java/autograder/config/AppConfig.java](../../src/main/java/autograder/config/AppConfig.java) | 611 | Immutable settings plus properties/assessment/path loading | Extract loading/policy (M2); retain facade |
+| [src/main/java/autograder/config/ExecutionConfig.java](../../src/main/java/autograder/config/ExecutionConfig.java) | 86 | Execution settings and grading-output validation | Keep cohesive record; B1 requires separate fix |
+| [src/main/java/autograder/config/FeedbackConfig.java](../../src/main/java/autograder/config/FeedbackConfig.java) | 47 | Feedback enablement, safe subdirectory and line cap | Keep cohesive record/loader |
+| [src/main/java/autograder/config/HtmlReportConfig.java](../../src/main/java/autograder/config/HtmlReportConfig.java) | 29 | Optional report enablement and safe basename | Keep cohesive record |
+| [src/main/java/autograder/csv/CsvCodec.java](../../src/main/java/autograder/csv/CsvCodec.java) | 128 | CSV quoting, records, parsing and serialization | Keep focused codec |
+| [src/main/java/autograder/execution/CaseExecutor.java](../../src/main/java/autograder/execution/CaseExecutor.java) | 92 | Fixture copying, one case and result protocol | Keep execution boundary |
+| [src/main/java/autograder/execution/ProcessResult.java](../../src/main/java/autograder/execution/ProcessResult.java) | 5 | Immutable child-process outcome | Keep small value record |
+| [src/main/java/autograder/execution/ProcessRunner.java](../../src/main/java/autograder/execution/ProcessRunner.java) | 225 | Bounded streams, deadlines and cleanup | Keep coupled lifecycle service |
+| [src/main/java/autograder/execution/StudentCompiler.java](../../src/main/java/autograder/execution/StudentCompiler.java) | 92 | Part workspace and selected compiler inputs | Keep compilation boundary |
+| [src/main/java/autograder/grading/GradingPipeline.java](../../src/main/java/autograder/grading/GradingPipeline.java) | 193 | Batch/part execution, eligibility and CSV projections | Extract diagnostics; clarify private helpers (M4) |
+| [src/main/java/autograder/grading/GradingRun.java](../../src/main/java/autograder/grading/GradingRun.java) | 13 | Completed batch, run path and copied decisions | Keep immutable result boundary |
+| [src/main/java/autograder/grading/InstructorTestCaseProvider.java](../../src/main/java/autograder/grading/InstructorTestCaseProvider.java) | 91 | Fixed tester validation and case definitions | Keep supported-assessment boundary |
+| [src/main/java/autograder/model/AnalysisFinding.java](../../src/main/java/autograder/model/AnalysisFinding.java) | 26 | Recorded source-analysis evidence | Keep small immutable model |
+| [src/main/java/autograder/model/AssessmentDefinition.java](../../src/main/java/autograder/model/AssessmentDefinition.java) | 46 | Assessment metadata and decimal maximum | Keep coherent aggregate |
+| [src/main/java/autograder/model/BatchResult.java](../../src/main/java/autograder/model/BatchResult.java) | 32 | Completed grades and supplied analysis lists | Keep copied result aggregate |
+| [src/main/java/autograder/model/GradingReportContext.java](../../src/main/java/autograder/model/GradingReportContext.java) | 22 | Batch and validated copied withholding decisions | Keep authoritative reporting boundary |
+| [src/main/java/autograder/model/QuestionDefinition.java](../../src/main/java/autograder/model/QuestionDefinition.java) | 78 | Question sources, resources, counts and weights | Keep coherent metadata model |
+| [src/main/java/autograder/model/ScoreSheet.java](../../src/main/java/autograder/model/ScoreSheet.java) | 56 | Raw roster schema, rows and student mapping | Keep protected nested collections |
+| [src/main/java/autograder/model/SimilarityFinding.java](../../src/main/java/autograder/model/SimilarityFinding.java) | 36 | Validated pairwise similarity/evidence | Keep focused result model |
+| [src/main/java/autograder/model/StudentGrade.java](../../src/main/java/autograder/model/StudentGrade.java) | 49 | Recorded-case score aggregation and duplicate check | Keep scoring responsibility |
+| [src/main/java/autograder/model/StudentIdentity.java](../../src/main/java/autograder/model/StudentIdentity.java) | 85 | Observed headers, matched record and evidence | Keep identity result model |
+| [src/main/java/autograder/model/StudentRecord.java](../../src/main/java/autograder/model/StudentRecord.java) | 37 | Roster identity fields | Keep small model |
+| [src/main/java/autograder/model/SubmissionCorrection.java](../../src/main/java/autograder/model/SubmissionCorrection.java) | 53 | Recorded proposed/applied correction data | Keep shared audit model |
+| [src/main/java/autograder/model/SubmissionResult.java](../../src/main/java/autograder/model/SubmissionResult.java) | 89 | Preparation paths/status/anomalies/corrections | Keep preparation result aggregate |
+| [src/main/java/autograder/model/SubmissionStatus.java](../../src/main/java/autograder/model/SubmissionStatus.java) | 7 | Preparation-state enum | Keep distinct from test states |
+| [src/main/java/autograder/model/TestCaseDefinition.java](../../src/main/java/autograder/model/TestCaseDefinition.java) | 43 | Validated runnable case and maximum points | Keep execution contract |
+| [src/main/java/autograder/model/TestCaseResult.java](../../src/main/java/autograder/model/TestCaseResult.java) | 46 | Status, captured output, timing and earned points | Keep scoring/result boundary |
+| [src/main/java/autograder/model/TestStatus.java](../../src/main/java/autograder/model/TestStatus.java) | 10 | Recorded execution-status enum | Keep all six states |
+| [src/main/java/autograder/report/CsvScoreReportWriter.java](../../src/main/java/autograder/report/CsvScoreReportWriter.java) | 143 | Schema-preserving score export and atomic write | Keep persistence/safety boundary |
+| [src/main/java/autograder/report/feedback/MarkdownFeedbackGenerator.java](../../src/main/java/autograder/report/feedback/MarkdownFeedbackGenerator.java) | 397 | Markdown sections, diagnostics and unique file output | Coordinate diagnostic/output extraction with Gabriel (M5) |
+| [src/main/java/autograder/report/html/OfflineHtmlReportGenerator.java](../../src/main/java/autograder/report/html/OfflineHtmlReportGenerator.java) | 681 | Document, sections, summaries and HTML persistence | Extract render collaborators (M1) |
+| [src/main/java/autograder/report/html/QuestionOutcome.java](../../src/main/java/autograder/report/html/QuestionOutcome.java) | 175 | Recorded question evidence and credit bands | Keep existing report-local helper |
+| [src/main/java/autograder/roster/ScoreSheetRepository.java](../../src/main/java/autograder/roster/ScoreSheetRepository.java) | 144 | CSV roster import and semantic validation | Keep import boundary |
+| [src/main/java/autograder/submission/CorrectionLog.java](../../src/main/java/autograder/submission/CorrectionLog.java) | 43 | Correction audit persistence | Keep focused logger |
+| [src/main/java/autograder/submission/IdentityResolver.java](../../src/main/java/autograder/submission/IdentityResolver.java) | 578 | Evidence, matching, repair planning and mutation | Extract staged collaborators (M3); retain facade |
+| [src/main/java/autograder/submission/SafeZipExtractor.java](../../src/main/java/autograder/submission/SafeZipExtractor.java) | 144 | Bounded ZIP extraction, CRC and containment | Keep safety boundary |
+| [src/main/java/autograder/submission/SubmissionProcessor.java](../../src/main/java/autograder/submission/SubmissionProcessor.java) | 268 | Intake coordination, duplicates and progress | Keep coordinator; reconsider only if growth warrants |
+| [src/main/java/autograder/submission/SubmissionValidator.java](../../src/main/java/autograder/submission/SubmissionValidator.java) | 113 | Question-root selection and folder validation | Keep narrow package-local service |
+| [src/main/java/autograder/submission/WorkingCopyPreparer.java](../../src/main/java/autograder/submission/WorkingCopyPreparer.java) | 118 | Canonical working copy and layout corrections | Keep copy concern; delegate repairs through facade initially |
+| [src/main/java/autograder/ui/ConsoleProgressListener.java](../../src/main/java/autograder/ui/ConsoleProgressListener.java) | 10 | Plain console progress rendering | Keep ProgressListener adapter |
+| [src/main/java/autograder/util/AnomalyLog.java](../../src/main/java/autograder/util/AnomalyLog.java) | 32 | Anomaly audit persistence and stderr | Keep; conditional hardening H1 |
 
 ### Tests
 
 | Reviewed file | Lines | Responsibility | Disposition |
 | --- | ---: | --- | --- |
-| [src/test/java/autograder/AppTest.java](../src/test/java/autograder/AppTest.java) | 129 | CLI/HTML handling plus disabled/failed feedback hooks | Keep observable CLI/report wrapper checks |
-| [src/test/java/autograder/config/ExecutionConfigTest.java](../src/test/java/autograder/config/ExecutionConfigTest.java) | 60 | Tool/path resolution, overlaps and invalid settings | Keep; add B1 cases only after fix approval |
-| [src/test/java/autograder/config/FeedbackConfigTest.java](../src/test/java/autograder/config/FeedbackConfigTest.java) | 55 | Defaults, valid settings and rejected feedback values | Keep public config validation scenarios |
-| [src/test/java/autograder/config/HtmlReportConfigTest.java](../src/test/java/autograder/config/HtmlReportConfigTest.java) | 39 | Report defaults, enablement and safe name | Keep public config tests |
-| [src/test/java/autograder/execution/ExecutionServicesTest.java](../src/test/java/autograder/execution/ExecutionServicesTest.java) | 181 | Timeout/output/interruption/compile/result protocol | Keep observable execution scenarios |
-| [src/test/java/autograder/grading/AdapterEquivalenceTest.java](../src/test/java/autograder/grading/AdapterEquivalenceTest.java) | 224 | Original/adapted scoring and exception comparisons | Keep; limitations recorded separately |
-| [src/test/java/autograder/grading/GradingPipelineTest.java](../src/test/java/autograder/grading/GradingPipelineTest.java) | 268 | Fair timeouts, independent parts, withholding and CSV/HTML | Keep end-to-end assertions |
-| [src/test/java/autograder/grading/InstructorTestCaseProviderTest.java](../src/test/java/autograder/grading/InstructorTestCaseProviderTest.java) | 109 | Case metadata, hashes and CRLF tester handling | Keep; includes already-merged CRLF correction |
-| [src/test/java/autograder/model/GradingReportContextTest.java](../src/test/java/autograder/model/GradingReportContextTest.java) | 40 | Copied authoritative/nonblank batch decisions | Keep immutable-context invariants |
-| [src/test/java/autograder/model/StudentGradeTest.java](../src/test/java/autograder/model/StudentGradeTest.java) | 53 | Independent marks, duplicate IDs and decimals | Keep score invariants |
-| [src/test/java/autograder/model/TestCaseResultTest.java](../src/test/java/autograder/model/TestCaseResultTest.java) | 34 | Only passes earn points; invalid maximum/duration | Keep status/score invariants |
-| [src/test/java/autograder/report/CsvScoreReportWriterTest.java](../src/test/java/autograder/report/CsvScoreReportWriterTest.java) | 110 | Schema/BOM preservation, source protection and bounds | Keep persistence invariants |
-| [src/test/java/autograder/report/feedback/MarkdownFeedbackGeneratorTest.java](../src/test/java/autograder/report/feedback/MarkdownFeedbackGeneratorTest.java) | 223 | Outcomes, escaping/fences, diagnostics and safe names | Keep observable feedback assertions |
-| [src/test/java/autograder/report/html/OfflineHtmlReportGeneratorTest.java](../src/test/java/autograder/report/html/OfflineHtmlReportGeneratorTest.java) | 371 | Inline assets, escaping, eligibility, links and edge cases | Keep cohesive black-box report assertions; test files have no automatic cap |
-| [src/test/java/autograder/report/html/QuestionOutcomeTest.java](../src/test/java/autograder/report/html/QuestionOutcomeTest.java) | 147 | Exact bands, mixed statuses and neutral states | Keep calculation/evidence invariants |
-| [src/test/java/autograder/roster/ScoreSheetRepositoryTest.java](../src/test/java/autograder/roster/ScoreSheetRepositoryTest.java) | 136 | Roster/schema/quoting and invalid-row validation | Keep import scenarios |
-| [src/test/java/autograder/submission/SubmissionProcessorTest.java](../src/test/java/autograder/submission/SubmissionProcessorTest.java) | 481 | Extraction, identity, repairs, duplicates and progress | Keep ingestion integration scenarios; review organisation when edited |
+| [src/test/java/autograder/AppTest.java](../../src/test/java/autograder/AppTest.java) | 129 | CLI/HTML handling plus disabled/failed feedback hooks | Keep observable CLI/report wrapper checks |
+| [src/test/java/autograder/config/ExecutionConfigTest.java](../../src/test/java/autograder/config/ExecutionConfigTest.java) | 60 | Tool/path resolution, overlaps and invalid settings | Keep; add B1 cases only after fix approval |
+| [src/test/java/autograder/config/FeedbackConfigTest.java](../../src/test/java/autograder/config/FeedbackConfigTest.java) | 55 | Defaults, valid settings and rejected feedback values | Keep public config validation scenarios |
+| [src/test/java/autograder/config/HtmlReportConfigTest.java](../../src/test/java/autograder/config/HtmlReportConfigTest.java) | 39 | Report defaults, enablement and safe name | Keep public config tests |
+| [src/test/java/autograder/execution/ExecutionServicesTest.java](../../src/test/java/autograder/execution/ExecutionServicesTest.java) | 181 | Timeout/output/interruption/compile/result protocol | Keep observable execution scenarios |
+| [src/test/java/autograder/grading/AdapterEquivalenceTest.java](../../src/test/java/autograder/grading/AdapterEquivalenceTest.java) | 224 | Original/adapted scoring and exception comparisons | Keep; limitations recorded separately |
+| [src/test/java/autograder/grading/GradingPipelineTest.java](../../src/test/java/autograder/grading/GradingPipelineTest.java) | 268 | Fair timeouts, independent parts, withholding and CSV/HTML | Keep end-to-end assertions |
+| [src/test/java/autograder/grading/InstructorTestCaseProviderTest.java](../../src/test/java/autograder/grading/InstructorTestCaseProviderTest.java) | 109 | Case metadata, hashes and CRLF tester handling | Keep; includes already-merged CRLF correction |
+| [src/test/java/autograder/model/GradingReportContextTest.java](../../src/test/java/autograder/model/GradingReportContextTest.java) | 40 | Copied authoritative/nonblank batch decisions | Keep immutable-context invariants |
+| [src/test/java/autograder/model/StudentGradeTest.java](../../src/test/java/autograder/model/StudentGradeTest.java) | 53 | Independent marks, duplicate IDs and decimals | Keep score invariants |
+| [src/test/java/autograder/model/TestCaseResultTest.java](../../src/test/java/autograder/model/TestCaseResultTest.java) | 34 | Only passes earn points; invalid maximum/duration | Keep status/score invariants |
+| [src/test/java/autograder/report/CsvScoreReportWriterTest.java](../../src/test/java/autograder/report/CsvScoreReportWriterTest.java) | 110 | Schema/BOM preservation, source protection and bounds | Keep persistence invariants |
+| [src/test/java/autograder/report/feedback/MarkdownFeedbackGeneratorTest.java](../../src/test/java/autograder/report/feedback/MarkdownFeedbackGeneratorTest.java) | 223 | Outcomes, escaping/fences, diagnostics and safe names | Keep observable feedback assertions |
+| [src/test/java/autograder/report/html/OfflineHtmlReportGeneratorTest.java](../../src/test/java/autograder/report/html/OfflineHtmlReportGeneratorTest.java) | 371 | Inline assets, escaping, eligibility, links and edge cases | Keep cohesive black-box report assertions; test files have no automatic cap |
+| [src/test/java/autograder/report/html/QuestionOutcomeTest.java](../../src/test/java/autograder/report/html/QuestionOutcomeTest.java) | 147 | Exact bands, mixed statuses and neutral states | Keep calculation/evidence invariants |
+| [src/test/java/autograder/roster/ScoreSheetRepositoryTest.java](../../src/test/java/autograder/roster/ScoreSheetRepositoryTest.java) | 136 | Roster/schema/quoting and invalid-row validation | Keep import scenarios |
+| [src/test/java/autograder/submission/SubmissionProcessorTest.java](../../src/test/java/autograder/submission/SubmissionProcessorTest.java) | 481 | Extraction, identity, repairs, duplicates and progress | Keep ingestion integration scenarios; review organisation when edited |
 
 ### Runtime resources
 
 | Reviewed file | Lines | Responsibility | Disposition |
 | --- | ---: | --- | --- |
-| [src/main/resources/autograder/adapters/Q1aAdapter.java](../src/main/resources/autograder/adapters/Q1aAdapter.java) | 59 | Fixed isogram cases/oracles and result protocol | Keep standalone compiler resource |
-| [src/main/resources/autograder/adapters/Q1bAdapter.java](../src/main/resources/autograder/adapters/Q1bAdapter.java) | 42 | Fixed even-sum cases/oracles and result protocol | Keep standalone compiler resource |
-| [src/main/resources/autograder/adapters/Q2aAdapter.java](../src/main/resources/autograder/adapters/Q2aAdapter.java) | 40 | Fixture-backed person cases and missing-file oracle | Keep standalone compiler resource |
-| [src/main/resources/autograder/adapters/Q2bAdapter.java](../src/main/resources/autograder/adapters/Q2bAdapter.java) | 47 | Student-file cases and expected DataException oracle | Keep standalone compiler resource |
-| [src/main/resources/autograder/adapters/Q3Adapter.java](../src/main/resources/autograder/adapters/Q3Adapter.java) | 55 | Shape sorting cases and expected output | Keep standalone compiler resource |
-| [src/main/resources/autograder/html/dashboard.css](../src/main/resources/autograder/html/dashboard.css) | 146 | Offline layout, statuses, credit/focus classes and breakpoints | Keep selectors/layout; documented 390px limit |
-| [src/main/resources/autograder/html/dashboard.js](../src/main/resources/autograder/html/dashboard.js) | 100 | Search/filter/sort pairing and detail/question navigation | Keep interactions; preserve emitted IDs/data |
+| [src/main/resources/autograder/adapters/Q1aAdapter.java](../../src/main/resources/autograder/adapters/Q1aAdapter.java) | 59 | Fixed isogram cases/oracles and result protocol | Keep standalone compiler resource |
+| [src/main/resources/autograder/adapters/Q1bAdapter.java](../../src/main/resources/autograder/adapters/Q1bAdapter.java) | 42 | Fixed even-sum cases/oracles and result protocol | Keep standalone compiler resource |
+| [src/main/resources/autograder/adapters/Q2aAdapter.java](../../src/main/resources/autograder/adapters/Q2aAdapter.java) | 40 | Fixture-backed person cases and missing-file oracle | Keep standalone compiler resource |
+| [src/main/resources/autograder/adapters/Q2bAdapter.java](../../src/main/resources/autograder/adapters/Q2bAdapter.java) | 47 | Student-file cases and expected DataException oracle | Keep standalone compiler resource |
+| [src/main/resources/autograder/adapters/Q3Adapter.java](../../src/main/resources/autograder/adapters/Q3Adapter.java) | 55 | Shape sorting cases and expected output | Keep standalone compiler resource |
+| [src/main/resources/autograder/html/dashboard.css](../../src/main/resources/autograder/html/dashboard.css) | 146 | Offline layout, statuses, credit/focus classes and breakpoints | Keep selectors/layout; documented 390px limit |
+| [src/main/resources/autograder/html/dashboard.js](../../src/main/resources/autograder/html/dashboard.js) | 100 | Search/filter/sort pairing and detail/question navigation | Keep interactions; preserve emitted IDs/data |
 
 ### Build and settings
 
 | Reviewed file | Lines | Responsibility | Disposition |
 | --- | ---: | --- | --- |
-| [pom.xml](../pom.xml) | 48 | Java 17/JUnit/Maven executable packaging | Keep build/dependencies; no new tooling proposed |
-| [config.properties](../config.properties) | 96 | Operational settings and supplied assessment mapping | Keep unchanged; defaults do not trigger B1 |
-| [.gitignore](../.gitignore) | 8 | Generated output and exact local-handoff ignore rules | Keep; tracked metadata remains unrelated |
+| [pom.xml](../../pom.xml) | 48 | Java 17/JUnit/Maven executable packaging | Keep build/dependencies; no new tooling proposed |
+| [config.properties](../../config.properties) | 96 | Operational settings and supplied assessment mapping | Keep unchanged; defaults do not trigger B1 |
+| [.gitignore](../../.gitignore) | 8 | Generated output and exact local-handoff ignore rules | Keep; tracked metadata remains unrelated |

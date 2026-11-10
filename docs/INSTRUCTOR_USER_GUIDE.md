@@ -136,4 +136,4 @@ This is the original fixed/dynamic grading workflow. The randomized ZIP command 
 - The generated practice tester uses a few visible examples. Randomized grading uses additional generated inputs and the instructor answer key kept in the host application.
 - The supplied `Project` files are not modified by resource generation or randomized grading.
 
-See [the randomized autograder technical notes](../RANDOMIZED_AUTOGRADER.md) for the design and instructor question-authoring details. See [the repository README](../README.md) for the build steps and existing batch-grading reports.
+See [the randomized autograder technical notes](RANDOMIZED_AUTOGRADER.md) for the design and instructor question-authoring details. See [the repository README](../README.md) for the build steps and existing batch-grading reports.
