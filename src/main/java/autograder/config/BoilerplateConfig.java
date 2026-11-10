@@ -45,10 +45,26 @@ public record BoilerplateConfig(boolean enabled, Path starterDirectory,
         return new BoilerplateConfig(Boolean.parseBoolean(enabled), baseDirectory.resolve(
                 properties.getProperty("grading.boilerplate.starter.directory",
                         DEFAULT_STARTER_DIRECTORY).trim()),
-                Double.parseDouble(properties.getProperty("grading.boilerplate.similarity.threshold",
-                        DEFAULT_SIMILARITY_THRESHOLD)),
-                Integer.parseInt(properties.getProperty("grading.boilerplate.max.source.bytes",
-                        DEFAULT_MAX_SOURCE_BYTES)),
-                Integer.parseInt(properties.getProperty("grading.boilerplate.max.tokens", DEFAULT_MAX_TOKENS)));
+                parseDecimal(properties, "grading.boilerplate.similarity.threshold",
+                        DEFAULT_SIMILARITY_THRESHOLD),
+                parseWholeNumber(properties, "grading.boilerplate.max.source.bytes",
+                        DEFAULT_MAX_SOURCE_BYTES),
+                parseWholeNumber(properties, "grading.boilerplate.max.tokens", DEFAULT_MAX_TOKENS));
+    }
+
+    private static double parseDecimal(Properties properties, String key, String defaultValue) {
+        try {
+            return Double.parseDouble(properties.getProperty(key, defaultValue));
+        } catch (NumberFormatException exception) {
+            throw new IllegalArgumentException(key + " must be a number", exception);
+        }
+    }
+
+    private static int parseWholeNumber(Properties properties, String key, String defaultValue) {
+        try {
+            return Integer.parseInt(properties.getProperty(key, defaultValue));
+        } catch (NumberFormatException exception) {
+            throw new IllegalArgumentException(key + " must be a whole number", exception);
+        }
     }
 }

@@ -216,8 +216,8 @@ final class MainWindow extends JFrame {
         }
         bar.setIdle();
         bar.setStatus("");
-        results.show(outcome, activeSettings, problems, elapsedMillis);
         setInputsEnabled(true);
+        results.show(outcome, activeSettings, problems, elapsedMillis);
         pack();
     }
 

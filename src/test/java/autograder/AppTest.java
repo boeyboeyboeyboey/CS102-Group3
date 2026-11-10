@@ -53,6 +53,26 @@ class AppTest {
     }
 
     @Test
+    void randomizedGradeRejectsNonNumericSeedWithPlainMessageAndExitOne() throws Exception {
+        Path config = temporaryDirectory.resolve("config.properties");
+        Files.writeString(config, "");
+        String question = autograder.autotester.question.QuestionRegistry.questionIds().get(0);
+        ByteArrayOutputStream errors = new ByteArrayOutputStream();
+        PrintStream original = System.err;
+        try (PrintStream capture = new PrintStream(errors, true, StandardCharsets.UTF_8)) {
+            System.setErr(capture);
+            assertEquals(1, App.run(new String[] {"--randomized-grade", question,
+                temporaryDirectory.toString(), config.toString(), "forty-two"}));
+        } finally {
+            System.setErr(original);
+        }
+        String error = errors.toString(StandardCharsets.UTF_8);
+        assertTrue(error.contains("The seed must be a whole number"));
+        assertTrue(error.contains("forty-two"));
+        assertFalse(error.contains("For input string"));
+    }
+
+    @Test
     void workersFlagRejectsBadValuesAndWrongArgumentCounts() {
         String config = temporaryDirectory.resolve("missing.properties").toString();
         for (String value : new String[] {"0", "33", "-1", "abc", ""}) {

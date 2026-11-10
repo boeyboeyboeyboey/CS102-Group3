@@ -5,7 +5,10 @@ import autograder.RunOutcome.Stage;
 import autograder.RunOutcome.Status;
 import org.junit.jupiter.api.Test;
 
+import java.io.UncheckedIOException;
 import java.nio.channels.ClosedByInterruptException;
+import java.nio.file.AccessDeniedException;
+import java.nio.file.NoSuchFileException;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -115,5 +118,17 @@ class OutcomeTextTest {
         assertEquals("Grading 3 of 6: chee · 0:42", OutcomeText.withClock("Grading 3 of 6: chee", 42_000));
         assertEquals("0:05", OutcomeText.withClock("", 5_000));
         assertEquals("0:05", OutcomeText.withClock(null, 5_000));
+    }
+
+    @Test
+    void missingFileAndPermissionFailuresReadAsSentences() {
+        assertEquals("Grading stopped while grading: The file or folder was not found: /tmp/x",
+                OutcomeText.headline(outcome(Status.FAILED, Stage.GRADING,
+                        new UncheckedIOException(new NoSuchFileException("/tmp/x")))));
+        assertEquals("Grading stopped while grading: Permission was denied: /tmp/y",
+                OutcomeText.headline(outcome(Status.FAILED, Stage.GRADING,
+                        new UncheckedIOException(new AccessDeniedException("/tmp/y")))));
+        assertEquals("Grading stopped while grading: The file or folder was not found",
+                OutcomeText.headline(outcome(Status.FAILED, Stage.GRADING, new NoSuchFileException(null))));
     }
 }

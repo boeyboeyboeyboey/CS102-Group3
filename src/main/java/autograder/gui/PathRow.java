@@ -56,6 +56,10 @@ final class PathRow extends JPanel {
         }
     }
 
+    private boolean isInvalidPath() {
+        return !field.getText().trim().isEmpty() && path() == null;
+    }
+
     void setPath(Path path) {
         field.setText(path == null ? "" : path.toString());
     }
@@ -67,6 +71,9 @@ final class PathRow extends JPanel {
             return;
         }
         String message = fieldStatus.message();
+        if (!fieldStatus.ok() && isInvalidPath()) {
+            message = "Invalid path";
+        }
         String text;
         if (fieldStatus.ok()) {
             text = message.isEmpty() ? " " : "✓ " + message;

@@ -4,6 +4,7 @@ import autograder.api.PlagiarismDetector;
 import autograder.model.AssessmentDefinition;
 import autograder.model.SimilarityFinding;
 import autograder.model.SubmissionResult;
+import autograder.util.ExceptionMessages;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -28,7 +29,7 @@ public final class CombinedPlagiarismDetector implements PlagiarismDetector {
                 findings.addAll(entry.getValue().compare(submissions, assessment));
             } catch (IOException | RuntimeException exception) {
                 System.err.println("similarity algorithm " + entry.getKey() + " skipped: "
-                        + exception.getMessage());
+                        + ExceptionMessages.describe(exception));
             }
         }
         findings.sort(Comparator.comparing(SimilarityFinding::getQuestion)

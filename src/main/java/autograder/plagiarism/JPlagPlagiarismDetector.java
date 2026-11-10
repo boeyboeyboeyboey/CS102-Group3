@@ -7,6 +7,7 @@ import autograder.model.AssessmentDefinition;
 import autograder.model.QuestionDefinition;
 import autograder.model.SimilarityFinding;
 import autograder.model.SubmissionResult;
+import autograder.util.ExceptionMessages;
 import de.jplag.JPlag;
 import de.jplag.JPlagComparison;
 import de.jplag.JPlagResult;
@@ -71,7 +72,8 @@ public final class JPlagPlagiarismDetector implements PlagiarismDetector {
                 result = new JPlag(options).run();
             } catch (ExitException exception) {
                 // jplag needs two parsable submissions; other questions are still compared
-                System.err.println("JPlag skipped " + question.getId() + ": " + exception.getMessage());
+                System.err.println("JPlag skipped " + question.getId() + ": "
+                        + ExceptionMessages.describe(exception));
                 return List.of();
             }
             return findingsFor(question, result, owners, starterExcluded);

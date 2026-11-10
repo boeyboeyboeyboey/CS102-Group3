@@ -194,6 +194,10 @@ public final class SubmissionProcessor {
         }
         for (int rowIndex = 0; rowIndex < scoreSheet.getRows().size(); rowIndex++) {
             List<String> row = scoreSheet.getRows().get(rowIndex);
+            if (row.size() <= denominatorIndex) {
+                throw new IOException("score sheet row " + (rowIndex + 1)
+                        + " has too few columns for the denominator: " + row);
+            }
             double denominator;
             try {
                 denominator = Double.parseDouble(row.get(denominatorIndex).trim());

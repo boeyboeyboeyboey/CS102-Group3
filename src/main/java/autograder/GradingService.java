@@ -12,6 +12,7 @@ import autograder.plagiarism.PlagiarismDetectorFactory;
 import autograder.report.feedback.MarkdownFeedbackGenerator;
 import autograder.report.html.OfflineHtmlReportGenerator;
 import autograder.submission.SubmissionProcessor;
+import autograder.util.ExceptionMessages;
 
 import java.nio.channels.ClosedByInterruptException;
 import java.util.List;
@@ -207,9 +208,7 @@ public final class GradingService {
             try {
                 callback.run();
             } catch (RuntimeException exception) {
-                String message = exception.getMessage();
-                System.err.println("Progress display failed: "
-                        + (message == null || message.isBlank() ? exception.getClass().getSimpleName() : message));
+                System.err.println("Progress display failed: " + ExceptionMessages.describe(exception));
             }
         }
     }

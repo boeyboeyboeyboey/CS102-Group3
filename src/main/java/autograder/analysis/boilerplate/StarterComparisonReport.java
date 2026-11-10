@@ -4,6 +4,7 @@ import autograder.config.BoilerplateConfig;
 import autograder.model.BatchResult;
 import autograder.model.QuestionDefinition;
 import autograder.model.SubmissionResult;
+import autograder.util.ExceptionMessages;
 import java.io.IOException;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
@@ -87,11 +88,11 @@ public final class StarterComparisonReport {
                     starter, answer, config.maxTokens());
         } catch (IOException | RuntimeException exception) {
             ComparisonOverview.row(rows, id, label, List.of(),
-                    "Unavailable: " + String.valueOf(exception.getMessage()));
+                    "Unavailable: " + ExceptionMessages.describe(exception));
             output.write("<article class=method data-status=UNAVAILABLE><h3>"
                     + "COMPARISON UNAVAILABLE</h3><p>"
                     + MethodDiffHtml.escape(
-                            String.valueOf(exception.getMessage()))
+                            ExceptionMessages.describe(exception))
                     + "</p></article></section>");
             return;
         }

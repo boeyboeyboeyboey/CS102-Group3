@@ -196,6 +196,10 @@ public final class RandomizedStudentRunner {
     }
 
     private static boolean isSupportedValue(Object value) {
+        // a null result is accepted at the top level, so a null list element is too
+        if (value == null) {
+            return true;
+        }
         if (value instanceof List<?> values) {
             return values.stream().allMatch(RandomizedStudentRunner::isSupportedValue);
         }

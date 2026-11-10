@@ -3,7 +3,10 @@ package autograder.gui;
 import autograder.RunOutcome;
 import autograder.util.ElapsedTime;
 
+import java.io.UncheckedIOException;
 import java.nio.channels.ClosedByInterruptException;
+import java.nio.file.AccessDeniedException;
+import java.nio.file.NoSuchFileException;
 import java.util.List;
 
 /** Wording for run progress and results, kept free of Swing so it can be tested headless. */
@@ -104,8 +107,22 @@ public final class OutcomeText {
                 return "the run was stopped";
             }
         }
+        Throwable cause = failure;
+        while (cause instanceof UncheckedIOException wrapper && wrapper.getCause() != null) {
+            cause = wrapper.getCause();
+        }
+        if (cause instanceof NoSuchFileException missing) {
+            return withPath("The file or folder was not found", missing.getFile());
+        }
+        if (cause instanceof AccessDeniedException denied) {
+            return withPath("Permission was denied", denied.getFile());
+        }
         String message = failure.getMessage();
         return message == null || message.isBlank() ? failure.getClass().getSimpleName() : message;
+    }
+
+    private static String withPath(String sentence, String path) {
+        return path == null || path.isBlank() ? sentence : sentence + ": " + path;
     }
 
     private static String step(String verb, String item, int completed, int total) {

@@ -30,4 +30,15 @@ class BoilerplateConfigTest {
             assertThrows(IllegalArgumentException.class, () -> BoilerplateConfig.load(file), setting);
         }
     }
+
+    @Test
+    void numberErrorsNameTheOffendingKey() throws Exception {
+        Path file = directory.resolve("config.properties");
+        for (String key : new String[] {"similarity.threshold", "max.source.bytes", "max.tokens"}) {
+            Files.writeString(file, "grading.boilerplate." + key + "=abc");
+            IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+                    () -> BoilerplateConfig.load(file), key);
+            assertTrue(error.getMessage().contains("grading.boilerplate." + key), key);
+        }
+    }
 }

@@ -27,12 +27,14 @@ import autograder.ui.DashboardSettings;
 import autograder.ui.TerminalCancellation;
 import autograder.ui.TerminalDashboard;
 import autograder.util.ElapsedTime;
+import autograder.util.ExceptionMessages;
 
 import java.io.Console;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.security.SecureRandom;
 import java.util.OptionalInt;
+import java.util.OptionalLong;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -118,7 +120,7 @@ public final class App {
                 System.err.println(CANCELLED_MESSAGE);
                 return CANCELLED_EXIT_CODE;
             }
-            System.err.println("could not complete grading: " + exception.getMessage());
+            System.err.println("could not complete grading: " + ExceptionMessages.describe(exception));
             return 1;
         } finally {
             if (cancellation != null) {
@@ -144,7 +146,7 @@ public final class App {
         if (outcome.status() == RunOutcome.Status.NO_SUBMISSIONS) {
             System.err.println("No submission archives matched the configured input directory and pattern");
         } else if (outcome.failure() != null) {
-            System.err.println("could not complete grading: " + outcome.failure().getMessage());
+            System.err.println("could not complete grading: " + ExceptionMessages.describe(outcome.failure()));
         }
         return outcome.exitCode();
     }
@@ -164,7 +166,7 @@ public final class App {
             if (exception instanceof InterruptedException) {
                 Thread.currentThread().interrupt();
             }
-            System.err.println("randomized autograder error: " + exception.getMessage());
+            System.err.println("randomized autograder error: " + ExceptionMessages.describe(exception));
             return 1;
         }
     }
@@ -184,6 +186,20 @@ public final class App {
         return 0;
     }
 
+    // a bad seed prints a plain sentence and the usage; exit code stays 1 as before
+    private static OptionalLong parseSeed(String[] args) {
+        if (args.length != 5) {
+            return OptionalLong.of(new SecureRandom().nextLong());
+        }
+        try {
+            return OptionalLong.of(Long.parseLong(args[4]));
+        } catch (NumberFormatException exception) {
+            System.err.println("The seed must be a whole number, for example 42, but was: " + args[4]);
+            printUsage();
+            return OptionalLong.empty();
+        }
+    }
+
     private static int gradeRandomizedSubmission(String[] args) throws Exception {
         if (args.length < 4 || args.length > 5) {
             printUsage();
@@ -191,7 +207,11 @@ public final class App {
         }
         Question question = QuestionRegistry.find(args[1]);
         RandomizedConfig config = RandomizedConfig.load(Path.of(args[3]));
-        long seed = args.length == 5 ? Long.parseLong(args[4]) : new SecureRandom().nextLong();
+        OptionalLong parsedSeed = parseSeed(args);
+        if (parsedSeed.isEmpty()) {
+            return 1;
+        }
+        long seed = parsedSeed.getAsLong();
         RandomizedGrader grader = new RandomizedGrader();
         RandomizedResult result = grader.grade(question, Path.of(args[2]), config, seed);
         Path report = grader.writeResult(question, Path.of(args[2]), config, result);
@@ -211,7 +231,11 @@ public final class App {
         Path configFile = Path.of(args[3]);
         AppConfig appConfig = AppConfig.load(configFile);
         RandomizedConfig config = RandomizedConfig.load(configFile);
-        long seed = args.length == 5 ? Long.parseLong(args[4]) : new SecureRandom().nextLong();
+        OptionalLong parsedSeed = parseSeed(args);
+        if (parsedSeed.isEmpty()) {
+            return 1;
+        }
+        long seed = parsedSeed.getAsLong();
         RandomizedBatchResult batch = new RandomizedBatchGrader().grade(question, zipDirectory,
                 appConfig, config, seed);
         for (RandomizedSubmissionResult submission : batch.submissions()) {
@@ -272,7 +296,8 @@ public final class App {
             } catch (IOException | RuntimeException exception) {
                 failed++;
                 problems.accept("could not write feedback for "
-                        + grade.getSubmission().getArchivePath().getFileName() + ": " + exception.getMessage());
+                        + grade.getSubmission().getArchivePath().getFileName() + ": "
+                        + ExceptionMessages.describe(exception));
             }
         }
         System.out.println("Student feedback: " + written + " Markdown files in " + directory);
@@ -301,7 +326,7 @@ public final class App {
             return 0;
         } catch (IOException exception) {
             problems.accept("could not write HTML dashboard " + run.directory().resolve(config.file())
-                    + ": " + exception.getMessage());
+                    + ": " + ExceptionMessages.describe(exception));
             problems.accept("Grading and CSV exports are complete; reports remain in " + run.directory());
             return 1;
         }

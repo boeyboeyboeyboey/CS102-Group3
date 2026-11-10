@@ -77,13 +77,15 @@ final class GradingRunWorker extends SwingWorker<RunOutcome, GradingRunWorker.Up
 
     @Override
     protected void done() {
+        RunOutcome outcome;
         try {
-            onFinished.accept(get());
+            outcome = get();
         } catch (InterruptedException | ExecutionException | RuntimeException exception) {
-            onFinished.accept(new RunOutcome(RunOutcome.Status.FAILED, RunOutcome.Stage.GRADING,
+            outcome = new RunOutcome(RunOutcome.Status.FAILED, RunOutcome.Stage.GRADING,
                     exception instanceof ExecutionException && exception.getCause() instanceof Exception cause
-                            ? cause : exception, List.of(), null, 1));
+                            ? cause : exception, List.of(), null, 1);
         }
+        onFinished.accept(outcome);
     }
 
     private final class Relay implements RunListener {

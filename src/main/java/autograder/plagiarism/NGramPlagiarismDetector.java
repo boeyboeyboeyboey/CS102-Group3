@@ -6,6 +6,7 @@ import autograder.model.AssessmentDefinition;
 import autograder.model.QuestionDefinition;
 import autograder.model.SimilarityFinding;
 import autograder.model.SubmissionResult;
+import autograder.util.ExceptionMessages;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -135,6 +136,8 @@ public final class NGramPlagiarismDetector implements PlagiarismDetector {
                     grams.putIfAbsent(entry.getKey(), entry.getValue());
                 }
             } catch (IOException exception) {
+                System.err.println("similarity skipped unreadable file " + file + ": "
+                        + ExceptionMessages.describe(exception));
                 if (file.equals(files.get(0))) {
                     return null;
                 }

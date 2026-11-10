@@ -11,7 +11,7 @@ public record ShapeInput(String kind, String id, double firstDimension, double s
     private static final double TWO_PI_APPROXIMATION = 6.28;
 
     public ShapeInput {
-        if (!(kind.equals(CIRCLE) || kind.equals(RECTANGLE)) || id == null || id.isBlank()) {
+        if (!(CIRCLE.equals(kind) || RECTANGLE.equals(kind)) || id == null || id.isBlank()) {
             throw new IllegalArgumentException("shape input requires a supported kind and non-empty id");
         }
         if (!Double.isFinite(firstDimension) || firstDimension <= 0
