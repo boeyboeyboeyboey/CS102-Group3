@@ -60,8 +60,9 @@ public final class PartCaseRunner {
         }
     }
 
-    // a host that dies or never starts costs at most this case: it is retried once on a fresh
-    // host, then recorded as a runtime error, so the submission is never withheld for it
+    // a host that dies during a case is retried once on a fresh host, then recorded as a runtime
+    // error, because student code can cause it; a host that cannot start on either attempt is the
+    // grader's fault, so it is raised as an infrastructure error and the submission is withheld
     private CaseHostProcess runWithRetry(CaseHostProcess host, FixtureDirectory hostDirectory,
                                          Path classes, TestCaseDefinition test, Path workspace,
                                          Consumer<TestCaseResult> results)
@@ -75,6 +76,11 @@ public final class PartCaseRunner {
         try {
             return attempt(null, hostDirectory, classes, test, workspace, results);
         } catch (CaseHostProcess.HostFailureException failure) {
+            if (firstFailure instanceof CaseHostProcess.StartupFailureException
+                    && failure instanceof CaseHostProcess.StartupFailureException) {
+                throw new IOException("case host could not start twice: first attempt: "
+                        + firstFailure.getMessage() + "; retry: " + failure.getMessage(), failure);
+            }
             results.accept(new TestCaseResult(test, TestStatus.RUNTIME_ERROR, 0, "",
                     "case host failed twice, so the case could not run\nfirst attempt: "
                             + firstFailure.getMessage() + "\nretry: " + failure.getMessage() + "\n"));

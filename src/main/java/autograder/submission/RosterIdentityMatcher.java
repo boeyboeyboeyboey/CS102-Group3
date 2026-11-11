@@ -4,11 +4,15 @@ import autograder.config.AppConfig;
 import autograder.model.StudentRecord;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 final class RosterIdentityMatcher {
+    private static final Set<String> WRAPPER_SOURCES = Set.of("wrapper username", "wrapper student id");
+
     private final AppConfig config;
 
     RosterIdentityMatcher(AppConfig config) {
@@ -18,19 +22,32 @@ final class RosterIdentityMatcher {
     Result match(List<IdentityEvidence.StrongEvidence> evidence, List<StudentRecord> roster) {
         Map<String, StudentRecord> matchedStudents = new LinkedHashMap<>();
         List<String> anomalies = new ArrayList<>();
+        Set<String> otherEvidenceStudents = new HashSet<>();
         boolean unresolvedEvidence = false;
+        boolean unmatchedWrapper = false;
         for (IdentityEvidence.StrongEvidence item : evidence) {
             List<StudentRecord> matches = findMatches(item, roster);
             if (matches.isEmpty()) {
                 anomalies.add(item.source() + " does not match a score sheet student");
-                unresolvedEvidence = true;
+                // a mistyped wrapper folder is only a warning when other evidence names one student
+                if (WRAPPER_SOURCES.contains(item.source())) {
+                    unmatchedWrapper = true;
+                } else {
+                    unresolvedEvidence = true;
+                }
             } else if (matches.size() > 1) {
                 anomalies.add(item.source() + " matches multiple score sheet students");
                 unresolvedEvidence = true;
             } else {
                 StudentRecord student = matches.get(0);
                 matchedStudents.put(student.getId(), student);
+                if (!WRAPPER_SOURCES.contains(item.source())) {
+                    otherEvidenceStudents.add(student.getId());
+                }
             }
+        }
+        if (unmatchedWrapper && otherEvidenceStudents.isEmpty()) {
+            unresolvedEvidence = true;
         }
         if (matchedStudents.size() > 1) {
             anomalies.add("conflicting strong identity evidence points to different score sheet students");

@@ -5,6 +5,8 @@ import autograder.model.TestCaseDefinition;
 import autograder.model.TestCaseResult;
 import autograder.model.TestStatus;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 import javax.tools.ToolProvider;
@@ -198,17 +200,36 @@ class PartCaseRunnerTest {
     }
 
     @Test
-    void hostThatNeverBecomesReadyCostsOnlyThoseCases() throws Exception {
+    void hostThatCannotStartTwiceIsAnInfrastructureError() throws Exception {
         Path part = part("never-ready");
         runner(part, "Pass", PASS);
         List<TestCaseResult> results = new ArrayList<>();
 
-        new PartCaseRunner(java(), CASE_TIMEOUT, 1, 4096)
+        IOException failure = assertThrows(IOException.class, () -> new PartCaseRunner(java(), CASE_TIMEOUT, 1, 4096)
+                .run(question(List.of()), List.of(test("a", "Pass"), test("b", "Pass")), part, results::add));
+
+        assertTrue(failure.getMessage().contains("could not start twice"));
+        assertTrue(failure.getMessage().contains("did not start within 1 ms"));
+        assertTrue(results.isEmpty());
+    }
+
+    @Test
+    @DisabledOnOs(OS.WINDOWS)
+    void hostThatDiesWhileRunningACaseStaysARuntimeErrorForThatCase() throws Exception {
+        Path part = part("dies-in-case");
+        runner(part, "Pass", PASS);
+        // a fake jvm that completes the ready handshake, then exits as soon as it gets a case
+        Path fakeJava = temporaryDirectory.resolve("fake-java.sh");
+        Files.writeString(fakeJava, "#!/bin/sh\necho \"$7 READY\"\nread line\nexit 0\n");
+        assertTrue(fakeJava.toFile().setExecutable(true));
+        List<TestCaseResult> results = new ArrayList<>();
+
+        new PartCaseRunner(fakeJava.toString(), CASE_TIMEOUT, STARTUP_TIMEOUT, 4096)
                 .run(question(List.of()), List.of(test("a", "Pass"), test("b", "Pass")), part, results::add);
 
         assertEquals(List.of(TestStatus.RUNTIME_ERROR, TestStatus.RUNTIME_ERROR), statuses(results));
         assertTrue(results.get(0).getStandardError().contains("case host failed twice"));
-        assertTrue(results.get(0).getStandardError().contains("did not start within 1 ms"));
+        assertTrue(results.get(0).getStandardError().contains("exited before accepting the case"));
     }
 
     @Test

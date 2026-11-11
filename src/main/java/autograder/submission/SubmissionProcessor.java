@@ -120,6 +120,7 @@ public final class SubmissionProcessor {
             if (studentRoot != null) {
                 questionDirectories = validator.findQuestionDirectories(studentRoot);
                 addAnomalies(archive, anomalies, validator.findMissingQuestionDirectories(studentRoot));
+                addAnomalies(archive, anomalies, validator.findWrongCaseQuestionDirectories(studentRoot));
             }
 
             IdentityResolver.Resolution resolution = identityResolver.resolve(archive,

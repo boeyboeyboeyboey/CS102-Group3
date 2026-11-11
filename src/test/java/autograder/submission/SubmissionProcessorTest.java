@@ -2,6 +2,7 @@ package autograder.submission;
 
 import autograder.config.AppConfig;
 import autograder.model.ScoreSheet;
+import autograder.model.StudentRecord;
 import autograder.model.SubmissionResult;
 import autograder.model.SubmissionStatus;
 import autograder.roster.ScoreSheetRepository;
@@ -146,7 +147,7 @@ class SubmissionProcessorTest {
         assertNull(result.getIdentity().getStudentRecord());
         assertNull(result.getWorkingRoot());
         assertTrue(result.getCorrections().isEmpty());
-        assertTrue(result.getAnomalies().stream().anyMatch(value -> value.contains("root")));
+        assertTrue(result.getAnomalies().stream().anyMatch(value -> value.contains("no strong identity evidence")));
         assertTrue(result.getIdentity().getName().contains("archive-derived fallback"));
     }
 
@@ -166,7 +167,7 @@ class SubmissionProcessorTest {
     }
 
     @Test
-    void duplicateSubmissionsAreAllMarkedForReviewAndWrongCaseSourceIsMissing() throws Exception {
+    void duplicateSubmissionsAreAllMarkedForReviewAndWrongCaseSourceIsCorrected() throws Exception {
         Path submissions = Files.createDirectories(temporaryDirectory.resolve("submissions"));
         createArchive(submissions.resolve("boey.tan.2026.zip"), validSubmission("boey"));
         Files.writeString(submissions.resolve("2023-2024-boey.tan.2026.zip"), "corrupt archive");
@@ -188,8 +189,112 @@ class SubmissionProcessorTest {
                 .anyMatch(value -> value.contains("duplicate")));
         assertEquals(SubmissionStatus.REVIEW_REQUIRED,
                 resultNamed(results, "sera.lim.2026.zip").getStatus());
-        assertTrue(resultNamed(results, "sera.lim.2026.zip").getAnomalies().stream()
-                .anyMatch(value -> value.contains("Q1a.java")));
+        SubmissionResult sera = resultNamed(results, "sera.lim.2026.zip");
+        assertTrue(sera.getAnomalies().stream().anyMatch(value -> value.contains(
+                "required source file has wrong case: Q1/Q1A.java (expected Q1/Q1a.java)")));
+        assertTrue(sera.getWorkingRoot() != null);
+        assertEquals(List.of("Q1a.java"), fileNames(sera.getWorkingRoot().resolve("Q1")));
+    }
+
+    @Test
+    void wrongCaseQuestionFolderAndSourceFileAreCorrectedInTheWorkingCopyOnly() throws Exception {
+        Path archive = archivePath("unknown.zip");
+        String q1 = source("boey.tan.2026", "boey.tan.2026@school.edu");
+        String q2 = "/*\n * Name:\n * Email ID: boey.tan.2026@school.edu\n */\nclass Q2a {}\n";
+        createArchive(archive, mapOf("q1/q1a.java", q1, "Q2/Q2a.java", q2));
+        AppConfig config = createConfig(temporaryDirectory);
+        byte[] originalArchive = Files.readAllBytes(archive);
+
+        SubmissionResult result = new SubmissionProcessor(config).processBatch().get(0);
+
+        assertEquals(SubmissionStatus.REVIEW_REQUIRED, result.getStatus());
+        assertEquals("boey.tan.2026", result.getIdentity().getStudentRecord().getUsername()
+                .replaceFirst("^#", ""));
+        assertEquals(List.of("Q1", "Q2"), result.getQuestionDirectories());
+        assertTrue(result.getAnomalies().contains(
+                "required question directory has wrong case: q1 (expected Q1)"));
+        assertTrue(result.getAnomalies().contains(
+                "required source file has wrong case: q1/q1a.java (expected Q1/Q1a.java)"));
+        assertEquals(2, result.getCorrections().stream()
+                .filter(value -> value.getType().equals("case")).count());
+        assertEquals(List.of("Q1", "Q2"), fileNames(result.getWorkingRoot()));
+        assertEquals(List.of("Q1a.java"), fileNames(result.getWorkingRoot().resolve("Q1")));
+        assertEquals(q1, Files.readString(result.getWorkingRoot().resolve("Q1/Q1a.java")));
+        assertTrue(Files.readString(result.getWorkingRoot().resolve("Q2/Q2a.java"))
+                .contains("Name: Boey Tan"));
+        assertEquals(q1, Files.readString(result.getStudentRoot().resolve("q1/q1a.java")));
+        assertArrayEquals(originalArchive, Files.readAllBytes(archive));
+        assertTrue(Files.readString(config.getCorrectionLog()).contains("question directory"));
+    }
+
+    @Test
+    void caseVariantFallbackNeedsAUniqueCandidateAndPrefersTheExactName() {
+        assertEquals("Q1a.java", ExactEntries.chooseName(List.of("q1a.java", "Q1a.java"), "Q1a.java"));
+        assertEquals("q1a.java", ExactEntries.chooseName(List.of("q1a.java", "other.java"), "Q1a.java"));
+        assertNull(ExactEntries.chooseName(List.of("q1a.java", "Q1A.java"), "Q1a.java"));
+        assertNull(ExactEntries.chooseName(List.of("other.java"), "Q1a.java"));
+    }
+
+    @Test
+    void mistypedWrapperFolderIsAWarningWhenOtherEvidenceNamesOneStudent() throws Exception {
+        Path archive = archivePath("boey.tan.2026.zip");
+        createArchive(archive, mapOf(
+                "bpey.tan.2026/Q1/Q1a.java", source("boey.tan.2026", "boey.tan.2026@school.edu"),
+                "bpey.tan.2026/Q2/Q2a.java", source("boey.tan.2026", "boey.tan.2026@school.edu")));
+        AppConfig config = createConfig(temporaryDirectory);
+
+        SubmissionResult result = new SubmissionProcessor(config).processBatch().get(0);
+
+        assertEquals(SubmissionStatus.REVIEW_REQUIRED, result.getStatus());
+        assertEquals("boey.tan.2026", result.getIdentity().getStudentRecord().getUsername()
+                .replaceFirst("^#", ""));
+        assertTrue(result.getWorkingRoot() != null);
+        assertTrue(result.getAnomalies().contains("wrapper username does not match a score sheet student"));
+        assertTrue(result.getCorrections().stream().anyMatch(value -> value.getType().equals("layout")));
+    }
+
+    @Test
+    void wrapperNamingADifferentRosterStudentStillWithholdsTheSubmission() throws Exception {
+        Path archive = archivePath("boey.tan.2026.zip");
+        createArchive(archive, mapOf(
+                "sera.lim.2026/Q1/Q1a.java", source("boey.tan.2026", "boey.tan.2026@school.edu"),
+                "sera.lim.2026/Q2/Q2a.java", source("boey.tan.2026", "boey.tan.2026@school.edu")));
+        AppConfig config = createConfig(temporaryDirectory);
+
+        SubmissionResult result = new SubmissionProcessor(config).processBatch().get(0);
+
+        assertNull(result.getIdentity().getStudentRecord());
+        assertNull(result.getWorkingRoot());
+        assertTrue(result.getAnomalies().stream().anyMatch(value -> value.contains("conflicting strong")));
+    }
+
+    @Test
+    void rosterMatcherForgivesAnUnmatchedWrapperOnlyWhenOtherEvidenceMatchesOneStudent() throws Exception {
+        RosterIdentityMatcher matcher = new RosterIdentityMatcher(createConfig(temporaryDirectory));
+        List<StudentRecord> roster = List.of(
+                new StudentRecord("001", "#boey.tan.2026", "Boey", "Tan", "boey.tan.2026@school.edu"),
+                new StudentRecord("002", "#sera.lim.2026", "Sera", "Lim", "sera.lim.2026@school.edu"));
+        var archiveBoey = new IdentityEvidence.StrongEvidence(
+                IdentityEvidence.EvidenceType.USERNAME, "boey.tan.2026", "archive");
+        var wrapperTypo = new IdentityEvidence.StrongEvidence(
+                IdentityEvidence.EvidenceType.USERNAME, "bpey.tan.2026", "wrapper username");
+        var wrapperIdTypo = new IdentityEvidence.StrongEvidence(
+                IdentityEvidence.EvidenceType.STUDENT_ID, "999", "wrapper student id");
+        var wrapperSera = new IdentityEvidence.StrongEvidence(
+                IdentityEvidence.EvidenceType.USERNAME, "sera.lim.2026", "wrapper username");
+        var archiveTypo = new IdentityEvidence.StrongEvidence(
+                IdentityEvidence.EvidenceType.USERNAME, "bpey.tan.2026", "archive");
+
+        RosterIdentityMatcher.Result forgiven = matcher.match(List.of(archiveBoey, wrapperTypo), roster);
+        assertEquals("001", forgiven.studentRecord().getId());
+        assertEquals(List.of("wrapper username does not match a score sheet student"), forgiven.anomalies());
+
+        assertEquals("001", matcher.match(List.of(archiveBoey, wrapperTypo, wrapperIdTypo), roster)
+                .studentRecord().getId());
+        assertNull(matcher.match(List.of(wrapperTypo), roster).studentRecord());
+        assertNull(matcher.match(List.of(archiveBoey, wrapperSera), roster).studentRecord());
+        assertNull(matcher.match(List.of(archiveTypo, wrapperTypo), roster).studentRecord());
+        assertNull(matcher.match(List.of(archiveTypo, archiveBoey), roster).studentRecord());
     }
 
     @Test
@@ -381,6 +486,12 @@ class SubmissionProcessorTest {
             properties.store(output, "invalid prefix configuration");
         }
         assertThrows(IllegalArgumentException.class, () -> AppConfig.load(configPath));
+    }
+
+    private List<String> fileNames(Path directory) throws IOException {
+        try (var entries = Files.list(directory)) {
+            return entries.map(path -> path.getFileName().toString()).sorted().toList();
+        }
     }
 
     private AppConfig createConfig(Path root) throws IOException {

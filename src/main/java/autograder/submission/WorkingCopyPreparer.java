@@ -9,16 +9,20 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 final class WorkingCopyPreparer {
     private final AppConfig config;
     private final IdentityResolver identityResolver;
+    private final CaseVariants caseVariants;
 
     WorkingCopyPreparer(AppConfig config, IdentityResolver identityResolver) {
         this.config = config;
         this.identityResolver = identityResolver;
+        this.caseVariants = new CaseVariants(config);
     }
 
     Preparation prepare(Path extractionPath, Path studentRoot, Path workingRun,
@@ -28,10 +32,15 @@ final class WorkingCopyPreparer {
         Path submissionDirectory = workingRun.resolve(
                 config.getWorkingSubmissionDirectoryPrefix() + UUID.randomUUID());
         Path workingRoot = submissionDirectory.resolve(username);
-        copyTree(studentRoot, workingRoot);
+        List<CaseVariants.Variant> variants = caseVariants.find(studentRoot);
+        copyTree(studentRoot, workingRoot, variants);
 
-        List<SubmissionCorrection> corrections = new ArrayList<>(
-                identityResolver.applyCorrections(workingRoot, headerCorrections));
+        List<SubmissionCorrection> corrections = new ArrayList<>();
+        for (CaseVariants.Variant variant : variants) {
+            corrections.add(new SubmissionCorrection("case", variant.actual(), variant.kind(),
+                    variant.actualName(), variant.canonicalName(), false));
+        }
+        corrections.addAll(identityResolver.applyCorrections(workingRoot, headerCorrections));
         String originalWrapper = extractionPath.relativize(studentRoot).toString();
         if (needsLayoutCorrection(extractionPath, studentRoot, username)) {
             Path relativePath = Path.of(originalWrapper);
@@ -70,11 +79,18 @@ final class WorkingCopyPreparer {
         return username;
     }
 
-    private void copyTree(Path sourceRoot, Path destinationRoot) throws IOException {
+    // required entries with the wrong case are written under their expected names, so the working
+    // copy is the same on case-sensitive and case-insensitive filesystems without any rename
+    private void copyTree(Path sourceRoot, Path destinationRoot,
+                          List<CaseVariants.Variant> variants) throws IOException {
+        Map<Path, String> expectedNames = new HashMap<>();
+        for (CaseVariants.Variant variant : variants) {
+            expectedNames.put(variant.actual(), variant.canonicalName());
+        }
         try (var paths = Files.walk(sourceRoot)) {
             for (Path source : paths.toList()) {
                 Path relative = sourceRoot.relativize(source);
-                Path destination = destinationRoot.resolve(relative).normalize();
+                Path destination = withExpectedNames(destinationRoot, relative, expectedNames).normalize();
                 if (!destination.startsWith(destinationRoot)) {
                     throw new IOException("working copy path escapes its destination");
                 }
@@ -89,6 +105,17 @@ final class WorkingCopyPreparer {
                 }
             }
         }
+    }
+
+    private Path withExpectedNames(Path destinationRoot, Path relative,
+                                   Map<Path, String> expectedNames) {
+        Path destination = destinationRoot;
+        Path original = null;
+        for (Path segment : relative) {
+            original = original == null ? segment : original.resolve(segment);
+            destination = destination.resolve(expectedNames.getOrDefault(original, segment.toString()));
+        }
+        return destination;
     }
 
     static final class Preparation {

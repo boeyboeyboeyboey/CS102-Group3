@@ -10,22 +10,31 @@ import java.util.List;
 
 final class SubmissionValidator {
     private final AppConfig config;
+    private final CaseVariants caseVariants;
 
     SubmissionValidator(AppConfig config) {
         this.config = config;
+        this.caseVariants = new CaseVariants(config);
     }
 
     RootSelection selectStudentRoot(Path extractionPath) throws IOException {
         List<Path> candidates = new ArrayList<>();
+        List<Path> wrongCaseCandidates = new ArrayList<>();
         try (var paths = Files.walk(extractionPath)) {
             for (Path path : paths.toList()) {
                 if (!Files.isDirectory(path) || containsMetadataDirectory(extractionPath, path)) {
                     continue;
                 }
-                if (containsRequiredQuestionDirectory(path)) {
+                if (containsRequiredQuestionDirectory(path, true)) {
                     candidates.add(path);
+                } else if (containsRequiredQuestionDirectory(path, false)) {
+                    wrongCaseCandidates.add(path);
                 }
             }
+        }
+        // a folder with exact names always wins; wrong-case folders only matter when none has them
+        if (candidates.isEmpty()) {
+            candidates = wrongCaseCandidates;
         }
         if (candidates.isEmpty()) {
             return new RootSelection(null,
@@ -41,7 +50,7 @@ final class SubmissionValidator {
     List<String> findQuestionDirectories(Path studentRoot) throws IOException {
         List<String> questionDirectories = new ArrayList<>();
         for (String questionDirectory : config.getRequiredQuestionDirectories()) {
-            if (ExactEntries.hasDirectory(studentRoot, questionDirectory)) {
+            if (ExactEntries.resolveDirectory(studentRoot, questionDirectory) != null) {
                 questionDirectories.add(questionDirectory);
             }
         }
@@ -51,11 +60,22 @@ final class SubmissionValidator {
     List<String> findMissingQuestionDirectories(Path studentRoot) throws IOException {
         List<String> missingDirectories = new ArrayList<>();
         for (String questionDirectory : config.getRequiredQuestionDirectories()) {
-            if (!ExactEntries.hasDirectory(studentRoot, questionDirectory)) {
+            if (ExactEntries.resolveDirectory(studentRoot, questionDirectory) == null) {
                 missingDirectories.add("required question directory is missing: " + questionDirectory);
             }
         }
         return missingDirectories;
+    }
+
+    List<String> findWrongCaseQuestionDirectories(Path studentRoot) throws IOException {
+        List<String> warnings = new ArrayList<>();
+        for (CaseVariants.Variant variant : caseVariants.find(studentRoot)) {
+            if (variant.directory()) {
+                warnings.add("required question directory has wrong case: " + variant.actualName()
+                        + " (expected " + variant.canonicalName() + ")");
+            }
+        }
+        return warnings;
     }
 
     private boolean containsMetadataDirectory(Path extractionPath, Path path) {
@@ -68,9 +88,12 @@ final class SubmissionValidator {
         return false;
     }
 
-    private boolean containsRequiredQuestionDirectory(Path path) throws IOException {
+    private boolean containsRequiredQuestionDirectory(Path path, boolean exactOnly) throws IOException {
         for (String questionDirectory : config.getRequiredQuestionDirectories()) {
-            if (ExactEntries.hasDirectory(path, questionDirectory)) {
+            boolean found = exactOnly
+                    ? ExactEntries.hasDirectory(path, questionDirectory)
+                    : ExactEntries.resolveDirectory(path, questionDirectory) != null;
+            if (found) {
                 return true;
             }
         }

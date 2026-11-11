@@ -140,12 +140,12 @@ final class CaseHostProcess implements AutoCloseable {
         long deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(startupTimeoutMillis);
         String reply = nextReply(deadline);
         if (reply == null) {
-            throw new HostFailureException("case host did not start within "
+            throw new StartupFailureException("case host did not start within "
                     + startupTimeoutMillis + " ms");
         }
         if (!reply.equals(CaseHost.READY)) {
             process.waitFor(STREAM_DRAIN_MILLIS, TimeUnit.MILLISECONDS);
-            throw new HostFailureException("case host failed to start: " + drainedErrors());
+            throw new StartupFailureException("case host failed to start: " + drainedErrors());
         }
     }
 
@@ -241,13 +241,21 @@ final class CaseHostProcess implements AutoCloseable {
 
     // the host jvm failed rather than the case; the runner retries the case on a fresh host,
     // while other i/o errors (such as a missing java executable) stay infrastructure errors
-    static final class HostFailureException extends IOException {
+    static class HostFailureException extends IOException {
         HostFailureException(String message) {
             super(message);
         }
 
         HostFailureException(String message, Throwable cause) {
             super(message, cause);
+        }
+    }
+
+    // the host never completed its ready handshake; no student class has been loaded at that point
+    // (the host only receives the classes directory as a url), so student code cannot cause this
+    static final class StartupFailureException extends HostFailureException {
+        StartupFailureException(String message) {
+            super(message);
         }
     }
 

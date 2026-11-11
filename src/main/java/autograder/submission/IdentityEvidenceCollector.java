@@ -92,33 +92,47 @@ final class IdentityEvidenceCollector {
                         + question.getId());
                 continue;
             }
-            Path questionDirectory = studentRoot.resolve(question.getFolder()).normalize();
-            Path sourcePath = questionDirectory.resolve(question.getSourceFile()).normalize();
-            if (!sourcePath.startsWith(studentRoot)
-                    || !ExactEntries.hasDirectory(studentRoot, question.getFolder())
-                    || !ExactEntries.hasFile(questionDirectory, question.getSourceFile())) {
-                anomalies.add("required source is missing: " + question.getId() + " ("
-                        + question.getFolder() + "/" + question.getSourceFile() + ")");
-            } else {
-                readSource(question.getId(), sourcePath, studentRoot, parsedSources,
-                        evidence, names, emailIds, usernames);
-            }
+            String directoryName = ExactEntries.resolveDirectory(studentRoot, question.getFolder());
+            Path questionDirectory = studentRoot.resolve(
+                    directoryName == null ? question.getFolder() : directoryName).normalize();
+            readRequiredSource(question, question.getSourceFile(), "required source is missing: ",
+                    directoryName, questionDirectory, studentRoot, parsedSources, evidence,
+                    names, emailIds, usernames, anomalies);
             for (String companion : question.getCompanionSourceFiles()) {
-                Path companionPath = questionDirectory.resolve(companion).normalize();
-                if (!companionPath.startsWith(studentRoot)
-                        || !ExactEntries.hasDirectory(studentRoot, question.getFolder())
-                        || !ExactEntries.hasFile(questionDirectory, companion)) {
-                    anomalies.add("required companion source is missing: " + question.getId()
-                            + " (" + question.getFolder() + "/" + companion + ")");
-                } else {
-                    readSource(question.getId(), companionPath, studentRoot, parsedSources,
-                            evidence, names, emailIds, usernames);
-                }
+                readRequiredSource(question, companion, "required companion source is missing: ",
+                        directoryName, questionDirectory, studentRoot, parsedSources, evidence,
+                        names, emailIds, usernames, anomalies);
             }
         }
     }
 
-    private void readSource(String questionId, Path sourcePath, Path studentRoot,
+    private void readRequiredSource(QuestionDefinition question, String expectedFile,
+                                    String missingMessage, String directoryName,
+                                    Path questionDirectory, Path studentRoot,
+                                    List<IdentityEvidence.ParsedSource> parsedSources,
+                                    List<IdentityEvidence.StrongEvidence> evidence,
+                                    Set<String> names, Set<String> emailIds,
+                                    Set<String> usernames, List<String> anomalies)
+            throws IOException {
+        String fileName = directoryName == null
+                ? null : ExactEntries.resolveFile(questionDirectory, expectedFile);
+        Path sourcePath = questionDirectory.resolve(fileName == null ? expectedFile : fileName).normalize();
+        if (fileName == null || !sourcePath.startsWith(studentRoot)) {
+            anomalies.add(missingMessage + question.getId() + " (" + question.getFolder() + "/"
+                    + expectedFile + ")");
+            return;
+        }
+        if (!fileName.equals(expectedFile)) {
+            anomalies.add("required source file has wrong case: " + directoryName + "/" + fileName
+                    + " (expected " + question.getFolder() + "/" + expectedFile + ")");
+        }
+        // headers are corrected in the working copy, which uses the expected names
+        Path canonicalPath = Path.of(question.getFolder(), expectedFile);
+        readSource(question.getId(), sourcePath, canonicalPath, parsedSources, evidence,
+                names, emailIds, usernames);
+    }
+
+    private void readSource(String questionId, Path sourcePath, Path relativePath,
                             List<IdentityEvidence.ParsedSource> parsedSources,
                             List<IdentityEvidence.StrongEvidence> evidence,
                             Set<String> names, Set<String> emailIds, Set<String> usernames)
@@ -135,7 +149,7 @@ final class IdentityEvidenceCollector {
         IdentityEvidence.HeaderField emailId = readField(lines, config.getIdentityEmailPattern());
         IdentityEvidence.HeaderField username = readField(lines, config.getIdentityUsernamePattern());
         IdentityEvidence.ParsedSource parsedSource = new IdentityEvidence.ParsedSource(
-                questionId, sourcePath, studentRoot.relativize(sourcePath), name, emailId, username);
+                questionId, sourcePath, relativePath, name, emailId, username);
         parsedSources.add(parsedSource);
 
         for (String value : name.nonemptyValues()) {
