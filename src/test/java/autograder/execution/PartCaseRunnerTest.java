@@ -179,7 +179,7 @@ class PartCaseRunnerTest {
     @Test
     void hostThatDiesBetweenCasesIsReplacedAndTheNextCaseStillRuns() throws Exception {
         Path part = part("dies");
-        // the thread escapes the case's thread group, so the host looks clean and is reused,
+        // the thread escapes the case's thread group, so the host looks clean and is reused
         // then it halts the host jvm while no case is running
         runner(part, "Halter", "Thread killer = new Thread(Thread.currentThread().getThreadGroup().getParent(),"
                 + " () -> { try { Thread.sleep(300); } catch (InterruptedException e) { }"

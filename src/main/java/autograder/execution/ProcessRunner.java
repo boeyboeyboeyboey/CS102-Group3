@@ -36,6 +36,7 @@ public final class ProcessRunner {
         Process process = new ProcessBuilder(command).directory(workingDirectory.toFile()).start();
         process.getOutputStream().close();
         List<ProcessHandle> knownDescendants = new ArrayList<>();
+        // snapshot descendants while the parent is alive; orphans cannot be found once it is killed
         collectDescendants(process, knownDescendants);
         BoundedCapture stdout = new BoundedCapture(process.getInputStream(), maxOutputBytes);
         BoundedCapture stderr = new BoundedCapture(process.getErrorStream(), maxOutputBytes);
@@ -46,6 +47,7 @@ public final class ProcessRunner {
         stdoutThread.start();
         stderrThread.start();
 
+        // order is wait, terminate on timeout, then join the capture threads
         boolean timedOut;
         try {
             timedOut = !process.waitFor(timeoutMillis, TimeUnit.MILLISECONDS);
@@ -74,6 +76,8 @@ public final class ProcessRunner {
             throw interrupted;
         }
         if (stdoutThread.isAlive() || stderrThread.isAlive()) {
+            // a surviving descendant holds the pipes open
+            // closing the capture inputs unblocks the reads so the joins finish
             collectDescendants(process, knownDescendants);
             boolean interrupted = terminateUninterruptibly(process, knownDescendants);
             closeCaptureInputs(process, stdout, stderr);

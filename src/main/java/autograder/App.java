@@ -169,6 +169,8 @@ public final class App {
                                SanityConfig sanity, HtmlReportConfig html, HtmlReportGenerator htmlGenerator,
                                FeedbackConfig feedback, FeedbackGenerator feedbackGenerator,
                                Consumer<String> problems) {
+        // stages run in order and a failing stage does not stop the later ones
+        // the exit code is the highest of the stage codes
         StarterAnalysis.Result analysis = StarterAnalysis.analyze(run, boilerplate, detector, problems);
         int sanityExit = SanityAnalysis.analyze(analysis.run(), sanity, problems).exitCode();
         int htmlExit = generateHtmlReport(analysis.run(), html, htmlGenerator, problems);

@@ -239,8 +239,8 @@ final class CaseHostProcess implements AutoCloseable {
         }
     }
 
-    // the host jvm failed rather than the case; the runner retries the case on a fresh host,
-    // while other i/o errors (such as a missing java executable) stay infrastructure errors
+    // marks the host jvm failing rather than the case, so the runner retries the case on a fresh host
+    // other i/o errors (such as a missing java executable) stay infrastructure errors
     static class HostFailureException extends IOException {
         HostFailureException(String message) {
             super(message);

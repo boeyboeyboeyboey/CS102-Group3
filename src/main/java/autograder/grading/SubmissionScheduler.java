@@ -27,6 +27,7 @@ final class SubmissionScheduler {
     }
 
     <T> List<T> run(int total, IndexedTask<T> task) throws IOException, InterruptedException {
+        // sequential path needs no pool
         if (workers <= 1 || total <= 1) {
             List<T> results = new ArrayList<>();
             for (int index = 0; index < total; index++) {
@@ -39,6 +40,7 @@ final class SubmissionScheduler {
 
     private <T> List<T> runParallel(int total, IndexedTask<T> task)
             throws IOException, InterruptedException {
+        // one task per submission; get() in collect() restores index order
         ExecutorService pool = Executors.newFixedThreadPool(Math.min(workers, total), threadFactory());
         List<Future<T>> futures = new ArrayList<>();
         try {
@@ -48,6 +50,8 @@ final class SubmissionScheduler {
             }
             return collect(futures);
         } finally {
+            // on failure or cancel, stop outstanding tasks and wait a bounded time
+            // so no worker outlives the run
             for (Future<T> future : futures) {
                 future.cancel(true);
             }

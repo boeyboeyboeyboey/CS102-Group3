@@ -162,7 +162,7 @@ class GradingPipelineTest {
         assertEquals(TestStatus.PASSED, loopingCases.get("Q1a-3"));
         var loopingGrade = run.batch().getGrades().stream()
                 .filter(grade -> grade.getSubmission() == looping).findFirst().orElseThrow();
-        // Q1a's three marks are shared evenly across its fixed and dynamic cases.
+        // Q1a's three marks are shared evenly across its fixed and dynamic cases
         assertEquals(0.75, fixedQuestionScore(loopingGrade, "Q1a"));
         assertEquals(3.0, questionMaximum(loopingGrade, "Q1a"));
         assertEquals(3.0, questionMaximum(loopingGrade, "Q1b"));
@@ -171,7 +171,7 @@ class GradingPipelineTest {
         assertEquals(4.0, questionMaximum(loopingGrade, "Q3"));
         assertEquals(20.0, totalMaximum(loopingGrade));
         assertTrue(loopingGrade.getTotalScore() <= 20.0);
-        // Dynamic cases now run (previously they all errored before this fix).
+        // dynamic cases run to a verdict rather than erroring out
         assertTrue(loopingCases.get("Q1a-dynamic-1") != TestStatus.NOT_RUN);
         assertTrue(loopingCases.get("Q1a-dynamic-1") != TestStatus.COMPILE_ERROR);
         assertEquals(TestStatus.PASSED, loopingCases.get("Q1b-1"));
@@ -179,7 +179,7 @@ class GradingPipelineTest {
         assertEquals(TestStatus.COMPILE_ERROR, brokenCases.get("Q1a-1"));
         assertEquals(TestStatus.COMPILE_ERROR, brokenCases.get("Q1a-3"));
         assertEquals(TestStatus.PASSED, brokenCases.get("Q1b-1"));
-        // Each submission has 45 results, but the original 20-point maximum is preserved.
+        // each submission has 45 results, but the original 20-point maximum is preserved
         assertEquals(45, run.batch().getGrades().get(0).getTestResults().size());
         assertEquals(45, run.batch().getGrades().get(1).getTestResults().size());
 

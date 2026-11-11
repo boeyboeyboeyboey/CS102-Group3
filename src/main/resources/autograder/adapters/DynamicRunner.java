@@ -1,20 +1,20 @@
 /*
  * DynamicRunner -- seeded dynamic test runner for the CS102 auto-grader.
  *
- * It is compiled into the student's classes directory exactly like the fixed Instructor adapters
+ * it is compiled into the student's classes directory exactly like the fixed Instructor adapters
  * (see StudentCompiler), so it runs on the same classpath the student code runs on. It is a
  * default-package class that invokes the student's static methods purely through reflection, which
  * means it has no compile-time dependency on any student class and therefore compiles for every
- * question part.
+ * question part
  *
- * For each question it generates many random inputs (seeded for reproducibility), works out the
- * expected answer from the question's own specification (isogram filter, even-integer sum,
- * surname average age, top student by GPA, eligible shapes in sorted order) and compares the
- * student's result with it. Q2a and Q2b probe only surnames and courses the fixed adapters do not
- * cover, so a solution that hard-codes the fixed instructor cases fails here.
+ * for each question it generates many random inputs (seeded for reproducibility), works out the
+ * expected answer from the question's own specification (isogram filter, even-integer sum, surname
+ * average age, top student by GPA, eligible shapes in sorted order) and compares the student's
+ * result with it. Q2a and Q2b probe only surnames and courses the fixed adapters do not cover, so
+ * a solution that hard-codes the fixed instructor cases fails here
  *
- * Result token is written to the result file and must be one of PASSED / FAILED / ERROR
- * (the pipeline caps the result file at 16 bytes).
+ * result token is written to the result file and must be one of PASSED / FAILED / ERROR
+ * (the pipeline caps the result file at 16 bytes)
  */
 
 import java.io.IOException;
@@ -40,11 +40,11 @@ public final class DynamicRunner {
     // Q3 keeps only shapes whose area is at most this value
     private static final double MAX_AREA = 1000.0;
     // keep these two sets in step with the cases in Q2aAdapter and Q2bAdapter
-    // Surnames the instructor's fixed adapter already exercises; we deliberately query OTHER
-    // surnames so a hard-coded solution is forced to produce a wrong answer.
+    // surnames the instructor's fixed adapter already exercises; we deliberately query OTHER
+    // surnames so a hard-coded solution is forced to produce a wrong answer
     private static final Set<String> FIXED_Q2A_SURNAMES =
             new HashSet<>(Arrays.asList("TAY", "LEE", "WONG", "ONG"));
-    // Courses the instructor's fixed adapter already exercises.
+    // courses the instructor's fixed adapter already exercises
     private static final Set<String> FIXED_Q2B_COURSES =
             new HashSet<>(Arrays.asList("SMU101", "CS101", "CS102", "CS103"));
 
@@ -108,9 +108,10 @@ public final class DynamicRunner {
         }
     }
 
-    // ---- Q1a: getIsogramWords(ArrayList<String>) -> ArrayList<String> ----
-    // Invariant: the result contains exactly the input words that are isograms (case-insensitive,
-    // letters only), as the question defines it; keep in step with autotester/question/Q1a
+    // Q1a getIsogramWords(ArrayList<String>) -> ArrayList<String>
+    // invariant: the result contains exactly the input words that are isograms
+    // (case-insensitive, letters only) as the question defines it
+    // keep in step with autotester/question/Q1a
     private static String trialQ1a(Random random) {
         ArrayList<String> inputs = randomWordList(random);
         // the student gets its own copy so changing it cannot change the expected answer
@@ -129,13 +130,13 @@ public final class DynamicRunner {
 
         Map<String, Integer> inputFreq = frequency(inputs);
         Map<String, Integer> resultFreq = frequency(result);
-        // Every word in the result must come from the input.
+        // every word in the result must come from the input
         for (String word : resultFreq.keySet()) {
             if (!inputFreq.containsKey(word)) {
                 return "result contains a word not in the input: " + word;
             }
         }
-        // Each input word must appear in the result exactly when it is an isogram.
+        // each input word must appear in the result exactly when it is an isogram
         for (Map.Entry<String, Integer> entry : inputFreq.entrySet()) {
             String word = entry.getKey();
             int expectedCount = isIsogram(word) ? entry.getValue() : 0;
@@ -147,9 +148,9 @@ public final class DynamicRunner {
         return null;
     }
 
-    // ---- Q1b: getSumOfEvenIntegers(ArrayList<Object>) -> int ----
-    // Invariant: the result equals the sum of the even-valued Integer elements (Booleans, Doubles
-    // and Strings are ignored), exactly as the question defines it.
+    // Q1b getSumOfEvenIntegers(ArrayList<Object>) -> int
+    // invariant: the result equals the sum of the even-valued Integer elements
+    // (Booleans, Doubles and Strings are ignored), exactly as the question defines it
     private static String trialQ1b(Random random) {
         ArrayList<Object> inputs = randomMixedList(random);
         // the student gets its own copy so changing it cannot change the expected answer
@@ -177,10 +178,11 @@ public final class DynamicRunner {
         return null;
     }
 
-    // ---- Q2a: getAverageAge(String file, String surname) -> double ----
-    // Invariant: the returned average must equal the mean age of persons whose SURNAME (the first
-    // or last whitespace token of the name, matched case-insensitively) equals the queried surname.
-    // We query only surnames the fixed adapter does NOT cover, so a hard-coded solution fails.
+    // Q2a getAverageAge(String file, String surname) -> double
+    // invariant: the returned average must equal the mean age of persons whose SURNAME
+    // (the first or last whitespace token of the name, matched case-insensitively) equals the
+    // queried surname
+    // we query only surnames the fixed adapter does NOT cover, so a hard-coded solution fails
     // keep the answer logic in step with autotester/question/Q2a
     private static String trialQ2a(Random random) throws IOException {
         List<String> lines = readLines("personstester.txt");
@@ -211,10 +213,10 @@ public final class DynamicRunner {
         return null;
     }
 
-    // ---- Q2b: getTopStudent(String file, String course) -> String ----
-    // Invariant: the returned "Name-GPA" must name a real student enrolled in the course with that
-    // exact GPA, and no other enrolled student may have a higher GPA. We probe only courses the
-    // fixed adapter does NOT cover, so a hard-coded solution fails.
+    // Q2b getTopStudent(String file, String course) -> String
+    // invariant: the returned "Name-GPA" must name a real student enrolled in the course with
+    // that exact GPA, and no other enrolled student may have a higher GPA
+    // we probe only courses the fixed adapter does NOT cover, so a hard-coded solution fails
     // keep the answer logic in step with autotester/question/Q2b
     private static String trialQ2b(Random random) throws IOException {
         List<String> lines = readLines("studentstester.txt");
@@ -255,7 +257,7 @@ public final class DynamicRunner {
     }
 
     private static String checkTopStudent(String actual, String course, TopStudent expected) {
-        // Parse "Name-GPA"; names contain no dash, so split on the last dash.
+        // parse "Name-GPA"; names contain no dash, so split on the last dash
         int dash = actual.lastIndexOf('-');
         if (dash < 0) {
             return "result not in Name-GPA format: " + actual;
@@ -279,8 +281,8 @@ public final class DynamicRunner {
         return null;
     }
 
-    // ---- Q3: sortShapes(List<Shape>) -> List<Shape> ----
-    // Invariant: retain eligible inputs and sort by descending area, then perimeter.
+    // Q3 sortShapes(List<Shape>) -> List<Shape>
+    // invariant: retain eligible inputs and sort by descending area, then perimeter
     private static String trialQ3(Random random) throws Exception {
         List<Object> shapes = randomShapes(random);
         // the student gets its own copy so changing it cannot change the expected answer
@@ -380,8 +382,6 @@ public final class DynamicRunner {
         return text.substring(0, separator).trim();
     }
 
-    // ---- reflection helpers ----
-
     private static Object invokeStatic(String className, String methodName, Class<?>[] paramTypes,
                                        Object... args) throws Exception {
         Class<?> clazz = Class.forName(className);
@@ -402,8 +402,6 @@ public final class DynamicRunner {
         Class<?> clazz = Class.forName(className);
         return clazz.getConstructor(paramTypes).newInstance(ctorArgs);
     }
-
-    // ---- file / parsing helpers ----
 
     private static List<String> readLines(String file) throws IOException {
         return Files.readAllLines(Path.of(file));
@@ -522,15 +520,13 @@ public final class DynamicRunner {
         }
     }
 
-    // ---- input generators ----
-
     private static ArrayList<String> randomWordList(Random random) {
         ArrayList<String> words = new ArrayList<>();
         int count = 2 + random.nextInt(5); // 2..6 words
         for (int i = 0; i < count; i++) {
             String word = WORD_BANK[random.nextInt(WORD_BANK.length)];
             if (random.nextInt(3) == 0 && word.length() > 1) {
-                // Make it a guaranteed non-isogram by duplicating the first letter.
+                // make it a guaranteed non-isogram by duplicating the first letter
                 word = word.charAt(0) + word;
             }
             words.add(word);
@@ -559,8 +555,6 @@ public final class DynamicRunner {
         }
         return items;
     }
-
-    // ---- small utilities ----
 
     private static boolean isIsogram(String word) {
         String lower = word.toLowerCase(Locale.ROOT);

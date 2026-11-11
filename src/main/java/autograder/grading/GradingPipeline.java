@@ -121,6 +121,7 @@ public final class GradingPipeline {
             return new GradedSubmission(grade, local);
         });
         checkCancelled();
+        // merged in submission order so output is the same whatever the worker count
         for (GradedSubmission item : graded) {
             grades.add(item.grade());
             withheld.putAll(item.withheld());
@@ -170,6 +171,8 @@ public final class GradingPipeline {
                                          Path run, int index, int total,
                                          Map<SubmissionResult, String> withheld)
             throws IOException, InterruptedException {
+        // identity, duplicate and preparation blockers withhold export, as do infrastructure errors
+        // name warnings alone do not
         String blocker = blocker(submission, identities);
         List<TestCaseResult> results = new ArrayList<>();
         notifier.submissionStarted(submission.getArchivePath().getFileName().toString(), index, total);

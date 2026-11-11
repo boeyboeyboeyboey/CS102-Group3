@@ -23,7 +23,7 @@ public record RunSettings(Path configFile, AppConfig app,
         configFile = configFile.toAbsolutePath().normalize();
     }
 
-    // keeps the constructor from before sanity checks existed
+    // convenience constructor for callers that do not configure sanity checks
     public RunSettings(Path configFile, AppConfig app, ExecutionConfig execution,
                        PlagiarismConfig plagiarism, HtmlReportConfig html,
                        FeedbackConfig feedback, BoilerplateConfig boilerplate) {
@@ -39,7 +39,6 @@ public record RunSettings(Path configFile, AppConfig app,
     public static RunSettings load(Path configFile,
                                    RuntimePathOverrides overrides)
             throws IOException {
-        // null overrides are treated as no overrides
         RuntimePathOverrides effective =
                 overrides == null ? RuntimePathOverrides.none() : overrides;
         Path absoluteConfig = configFile.toAbsolutePath().normalize();
