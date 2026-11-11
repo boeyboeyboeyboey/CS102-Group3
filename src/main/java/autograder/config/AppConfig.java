@@ -1,5 +1,15 @@
 package autograder.config;
 
+import autograder.config.AppConfigGroups.ArchiveIdentityPatterns;
+import autograder.config.AppConfigGroups.ArchiveLimits;
+import autograder.config.AppConfigGroups.DirectoryPrefixes;
+import autograder.config.AppConfigGroups.FileNamePatterns;
+import autograder.config.AppConfigGroups.IdentityLabels;
+import autograder.config.AppConfigGroups.IdentityPatterns;
+import autograder.config.AppConfigGroups.LogPaths;
+import autograder.config.AppConfigGroups.RosterSettings;
+import autograder.config.AppConfigGroups.RunDirectories;
+import autograder.config.AppConfigGroups.ScoreSheetSettings;
 import autograder.model.AssessmentDefinition;
 
 import java.io.IOException;
@@ -48,55 +58,45 @@ public final class AppConfig {
     private final Map<String, String> scoreSheetColumns;
     private final AssessmentDefinition assessment;
 
-    AppConfig(Path inputDirectory, Path extractionDirectory, Path workingDirectory,
-              String runDirectoryPrefix, String workingRunDirectoryPrefix,
-              String workingSubmissionDirectoryPrefix, Path anomalyLog,
-              Path correctionLog, Pattern archiveFilePattern, Pattern javaSourcePattern,
-              Pattern questionDirectoryPattern, List<String> requiredQuestionDirectories,
-              Pattern metadataDirectoryPattern, Pattern identityNamePattern,
-              Pattern identityEmailPattern, Pattern identityUsernamePattern,
-              String identityNameLabel, String identityEmailLabel,
-              String identityUsernameLabel, Pattern archiveUsernamePattern,
-              Pattern wrapperUsernamePattern, Pattern wrapperStudentIdPattern,
-              Pattern wrapperPlaceholderPattern, String rosterPrefix,
-              String rosterLastNamePlaceholder, int identityHeaderMaxLines,
-              int ioBufferBytes, int maxArchiveEntries, long maxEntryBytes,
-              long maxArchiveBytes, Path scoreSheetPath,
-              Map<String, String> scoreSheetColumns, AssessmentDefinition assessment) {
-        this.inputDirectory = inputDirectory;
-        this.extractionDirectory = extractionDirectory;
-        this.workingDirectory = workingDirectory;
-        this.runDirectoryPrefix = runDirectoryPrefix;
-        this.workingRunDirectoryPrefix = workingRunDirectoryPrefix;
-        this.workingSubmissionDirectoryPrefix = workingSubmissionDirectoryPrefix;
-        this.anomalyLog = anomalyLog;
-        this.correctionLog = correctionLog;
-        this.archiveFilePattern = archiveFilePattern;
-        this.javaSourcePattern = javaSourcePattern;
-        this.questionDirectoryPattern = questionDirectoryPattern;
+    AppConfig(RunDirectories directories, DirectoryPrefixes prefixes, LogPaths logs,
+              FileNamePatterns filePatterns, List<String> requiredQuestionDirectories,
+              IdentityPatterns identityPatterns, IdentityLabels identityLabels,
+              ArchiveIdentityPatterns archiveIdentityPatterns, RosterSettings roster,
+              ArchiveLimits limits, ScoreSheetSettings scoreSheet, AssessmentDefinition assessment) {
+        this.inputDirectory = directories.inputDirectory();
+        this.extractionDirectory = directories.extractionDirectory();
+        this.workingDirectory = directories.workingDirectory();
+        this.runDirectoryPrefix = prefixes.runDirectoryPrefix();
+        this.workingRunDirectoryPrefix = prefixes.workingRunDirectoryPrefix();
+        this.workingSubmissionDirectoryPrefix = prefixes.workingSubmissionDirectoryPrefix();
+        this.anomalyLog = logs.anomalyLog();
+        this.correctionLog = logs.correctionLog();
+        this.archiveFilePattern = filePatterns.archiveFilePattern();
+        this.javaSourcePattern = filePatterns.javaSourcePattern();
+        this.questionDirectoryPattern = filePatterns.questionDirectoryPattern();
         this.requiredQuestionDirectories = Collections.unmodifiableList(
                 new ArrayList<>(requiredQuestionDirectories));
-        this.metadataDirectoryPattern = metadataDirectoryPattern;
-        this.identityNamePattern = identityNamePattern;
-        this.identityEmailPattern = identityEmailPattern;
-        this.identityUsernamePattern = identityUsernamePattern;
-        this.identityNameLabel = identityNameLabel;
-        this.identityEmailLabel = identityEmailLabel;
-        this.identityUsernameLabel = identityUsernameLabel;
-        this.archiveUsernamePattern = archiveUsernamePattern;
-        this.wrapperUsernamePattern = wrapperUsernamePattern;
-        this.wrapperStudentIdPattern = wrapperStudentIdPattern;
-        this.wrapperPlaceholderPattern = wrapperPlaceholderPattern;
-        this.rosterPrefix = rosterPrefix;
-        this.rosterLastNamePlaceholder = rosterLastNamePlaceholder;
-        this.identityHeaderMaxLines = identityHeaderMaxLines;
-        this.ioBufferBytes = ioBufferBytes;
-        this.maxArchiveEntries = maxArchiveEntries;
-        this.maxEntryBytes = maxEntryBytes;
-        this.maxArchiveBytes = maxArchiveBytes;
-        this.scoreSheetPath = scoreSheetPath;
+        this.metadataDirectoryPattern = filePatterns.metadataDirectoryPattern();
+        this.identityNamePattern = identityPatterns.namePattern();
+        this.identityEmailPattern = identityPatterns.emailPattern();
+        this.identityUsernamePattern = identityPatterns.usernamePattern();
+        this.identityNameLabel = identityLabels.nameLabel();
+        this.identityEmailLabel = identityLabels.emailLabel();
+        this.identityUsernameLabel = identityLabels.usernameLabel();
+        this.archiveUsernamePattern = archiveIdentityPatterns.archiveUsernamePattern();
+        this.wrapperUsernamePattern = archiveIdentityPatterns.wrapperUsernamePattern();
+        this.wrapperStudentIdPattern = archiveIdentityPatterns.wrapperStudentIdPattern();
+        this.wrapperPlaceholderPattern = archiveIdentityPatterns.wrapperPlaceholderPattern();
+        this.rosterPrefix = roster.rosterPrefix();
+        this.rosterLastNamePlaceholder = roster.rosterLastNamePlaceholder();
+        this.identityHeaderMaxLines = roster.identityHeaderMaxLines();
+        this.ioBufferBytes = limits.ioBufferBytes();
+        this.maxArchiveEntries = limits.maxArchiveEntries();
+        this.maxEntryBytes = limits.maxEntryBytes();
+        this.maxArchiveBytes = limits.maxArchiveBytes();
+        this.scoreSheetPath = scoreSheet.scoreSheetPath();
         this.scoreSheetColumns = Collections.unmodifiableMap(
-                new LinkedHashMap<>(scoreSheetColumns));
+                new LinkedHashMap<>(scoreSheet.scoreSheetColumns()));
         this.assessment = assessment;
     }
 

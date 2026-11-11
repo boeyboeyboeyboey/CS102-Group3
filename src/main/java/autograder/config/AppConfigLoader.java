@@ -1,5 +1,15 @@
 package autograder.config;
 
+import autograder.config.AppConfigGroups.ArchiveIdentityPatterns;
+import autograder.config.AppConfigGroups.ArchiveLimits;
+import autograder.config.AppConfigGroups.DirectoryPrefixes;
+import autograder.config.AppConfigGroups.FileNamePatterns;
+import autograder.config.AppConfigGroups.IdentityLabels;
+import autograder.config.AppConfigGroups.IdentityPatterns;
+import autograder.config.AppConfigGroups.LogPaths;
+import autograder.config.AppConfigGroups.RosterSettings;
+import autograder.config.AppConfigGroups.RunDirectories;
+import autograder.config.AppConfigGroups.ScoreSheetSettings;
 import autograder.model.AssessmentDefinition;
 import autograder.model.QuestionDefinition;
 
@@ -116,38 +126,51 @@ final class AppConfigLoader {
     }
 
     private AppConfig createConfig() {
-        return new AppConfig(
-                inputDirectory,
-                extractionDirectory,
-                workingDirectory,
+        // groups are built in the order the properties were originally read, so the first invalid one is reported
+        DirectoryPrefixes prefixes = new DirectoryPrefixes(
                 PropertyParsers.pathPrefix(properties, "run.directory.prefix"),
                 PropertyParsers.pathPrefix(properties, "working.run.directory.prefix"),
-                PropertyParsers.pathPrefix(properties, "working.submission.directory.prefix"),
-                anomalyLog,
-                correctionLog,
+                PropertyParsers.pathPrefix(properties, "working.submission.directory.prefix"));
+        FileNamePatterns filePatterns = new FileNamePatterns(
                 PropertyParsers.compile(properties, "archive.file.regex", false),
                 javaSourcePattern,
                 questionDirectoryPattern,
-                requiredQuestionDirectories,
-                PropertyParsers.compile(properties, "metadata.directory.regex", false),
+                PropertyParsers.compile(properties, "metadata.directory.regex", false));
+        IdentityPatterns identityPatterns = new IdentityPatterns(
                 PropertyParsers.compile(properties, "identity.name.regex", true),
                 PropertyParsers.compile(properties, "identity.email.regex", true),
-                PropertyParsers.compile(properties, "identity.username.regex", true),
+                PropertyParsers.compile(properties, "identity.username.regex", true));
+        IdentityLabels identityLabels = new IdentityLabels(
                 PropertyParsers.required(properties, "identity.name.label"),
                 PropertyParsers.required(properties, "identity.email.label"),
-                PropertyParsers.required(properties, "identity.username.label"),
+                PropertyParsers.required(properties, "identity.username.label"));
+        ArchiveIdentityPatterns archiveIdentityPatterns = new ArchiveIdentityPatterns(
                 PropertyParsers.compile(properties, "identity.archive.username.regex", true),
                 PropertyParsers.compile(properties, "identity.wrapper.username.regex", false),
                 PropertyParsers.compile(properties, "identity.wrapper.student.id.regex", false),
-                PropertyParsers.compile(properties, "identity.wrapper.placeholder.regex", false),
+                PropertyParsers.compile(properties, "identity.wrapper.placeholder.regex", false));
+        RosterSettings roster = new RosterSettings(
                 PropertyParsers.required(properties, "identity.roster.prefix"),
                 PropertyParsers.required(properties, "identity.roster.last-name.placeholder"),
-                PropertyParsers.positiveInt(properties, "identity.header.max.lines"),
+                PropertyParsers.positiveInt(properties, "identity.header.max.lines"));
+        ArchiveLimits limits = new ArchiveLimits(
                 PropertyParsers.positiveInt(properties, "io.buffer.bytes"),
                 PropertyParsers.positiveInt(properties, "limits.archive.entries"),
                 PropertyParsers.positiveLong(properties, "limits.entry.bytes"),
-                PropertyParsers.positiveLong(properties, "limits.archive.bytes"),
-                scoreSheetPath, scoreSheetColumns, assessment);
+                PropertyParsers.positiveLong(properties, "limits.archive.bytes"));
+        return new AppConfig(
+                new RunDirectories(inputDirectory, extractionDirectory, workingDirectory),
+                prefixes,
+                new LogPaths(anomalyLog, correctionLog),
+                filePatterns,
+                requiredQuestionDirectories,
+                identityPatterns,
+                identityLabels,
+                archiveIdentityPatterns,
+                roster,
+                limits,
+                new ScoreSheetSettings(scoreSheetPath, scoreSheetColumns),
+                assessment);
     }
 
     private Map<String, String> loadScoreSheetColumns() {
