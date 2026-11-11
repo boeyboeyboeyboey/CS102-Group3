@@ -12,15 +12,16 @@ import java.util.Properties;
 
 /**
  * Settings for compiling and running student code: executables, timeouts, output limit and workers,
- * plus whether generated dynamic cases join the supplied fixed cases.
+ * plus whether generated dynamic cases join the supplied fixed cases and how many there are per question.
  */
 public record ExecutionConfig(Path directory, String reportFile, String javaExecutable,
                               String javacExecutable, long compileTimeoutMillis,
                               long caseTimeoutMillis, int maxOutputBytes, int workers,
                               CaseIsolation caseIsolation, long caseStartupTimeoutMillis,
-                              boolean dynamicEnabled) {
+                              boolean dynamicEnabled, int dynamicCasesPerQuestion) {
     public static final int MAX_WORKERS = 32;
     public static final long DEFAULT_CASE_STARTUP_TIMEOUT_MILLIS = 30000;
+    public static final int DEFAULT_DYNAMIC_CASES_PER_QUESTION = 5;
     private static final String AUTO_WORKERS = "auto";
     // compared ignoring case because macos and windows filesystems treat Cases.csv as cases.csv
     private static final List<String> RESERVED_REPORT_FILES = List.of(
@@ -49,6 +50,16 @@ public record ExecutionConfig(Path directory, String reportFile, String javaExec
         this(directory, reportFile, javaExecutable, javacExecutable, compileTimeoutMillis,
                 caseTimeoutMillis, maxOutputBytes, workers, caseIsolation, caseStartupTimeoutMillis,
                 true);
+    }
+
+    public ExecutionConfig(Path directory, String reportFile, String javaExecutable,
+                           String javacExecutable, long compileTimeoutMillis,
+                           long caseTimeoutMillis, int maxOutputBytes, int workers,
+                           CaseIsolation caseIsolation, long caseStartupTimeoutMillis,
+                           boolean dynamicEnabled) {
+        this(directory, reportFile, javaExecutable, javacExecutable, compileTimeoutMillis,
+                caseTimeoutMillis, maxOutputBytes, workers, caseIsolation, caseStartupTimeoutMillis,
+                dynamicEnabled, DEFAULT_DYNAMIC_CASES_PER_QUESTION);
     }
 
     public static ExecutionConfig load(Path file, AppConfig app) throws IOException {
@@ -99,7 +110,9 @@ public record ExecutionConfig(Path directory, String reportFile, String javaExec
                 positive(properties, "execution.case.timeout.ms"), (int) outputBytes, workers(properties, limits),
                 CaseIsolation.parse(properties.getProperty("execution.case.isolation")),
                 startupTimeout(properties),
-                PropertyParsers.optionalBoolean(properties, "grading.dynamic.enabled", true));
+                PropertyParsers.optionalBoolean(properties, "grading.dynamic.enabled", true),
+                PropertyParsers.optionalPositiveInt(properties, "grading.dynamic.cases.per.question",
+                        DEFAULT_DYNAMIC_CASES_PER_QUESTION));
     }
 
     public ExecutionConfig withWorkers(int workers) {
@@ -111,7 +124,7 @@ public record ExecutionConfig(Path directory, String reportFile, String javaExec
         }
         return new ExecutionConfig(directory, reportFile, javaExecutable, javacExecutable,
                 compileTimeoutMillis, caseTimeoutMillis, maxOutputBytes, workers, caseIsolation,
-                caseStartupTimeoutMillis, dynamicEnabled);
+                caseStartupTimeoutMillis, dynamicEnabled, dynamicCasesPerQuestion);
     }
 
     private static long startupTimeout(Properties properties) {

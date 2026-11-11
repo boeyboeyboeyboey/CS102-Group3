@@ -66,7 +66,7 @@ public final class GradingPipeline {
                 progressListener == null ? new ConsoleGradingMessages() : progressListener);
         TestCaseProvider fixedProvider = new InstructorTestCaseProvider();
         TestCaseProvider dynamicProvider = execution.dynamicEnabled()
-                ? new DynamicTestCaseProvider() : assessment -> List.of();
+                ? new DynamicTestCaseProvider(execution.dynamicCasesPerQuestion()) : assessment -> List.of();
         TestCaseProvider combinedProvider = new CombinedTestCaseProvider(fixedProvider, dynamicProvider);
         this.cases = combinedProvider.load(app.getAssessment());
     }

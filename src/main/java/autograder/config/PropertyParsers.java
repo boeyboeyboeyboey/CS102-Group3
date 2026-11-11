@@ -101,6 +101,11 @@ final class PropertyParsers {
         }
     }
 
+    static int optionalPositiveInt(Properties properties, String key, int defaultValue) {
+        String value = properties.getProperty(key);
+        return value == null || value.isBlank() ? defaultValue : positiveInt(properties, key);
+    }
+
     static long positiveLong(Properties properties, String key) {
         try {
             long value = Long.parseLong(required(properties, key));

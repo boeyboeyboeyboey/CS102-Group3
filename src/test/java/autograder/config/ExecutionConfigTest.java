@@ -136,6 +136,14 @@ class ExecutionConfigTest {
         assertTrue(load(properties, app).dynamicEnabled());
         properties.setProperty("grading.dynamic.enabled", "yes");
         assertThrows(IllegalArgumentException.class, () -> load(properties, app));
+        properties.remove("grading.dynamic.enabled");
+        assertEquals(5, load(properties, app).dynamicCasesPerQuestion());
+        properties.setProperty("grading.dynamic.cases.per.question", "7");
+        assertEquals(7, load(properties, app).withWorkers(2).dynamicCasesPerQuestion());
+        for (String invalid : new String[] {"0", "-1", "many"}) {
+            properties.setProperty("grading.dynamic.cases.per.question", invalid);
+            assertThrows(IllegalArgumentException.class, () -> load(properties, app), invalid);
+        }
     }
 
     @Test
