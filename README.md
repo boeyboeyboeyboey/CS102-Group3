@@ -1,254 +1,677 @@
-# CS102 Auto Grading System
+# ByteGrade
 
-The CS102 Auto Grading System prepares and grades Java assessment submissions in batches. It validates ZIP structure and student identity, compiles each question independently, runs instructor tests with time limits, calculates marks, and exports the supplied score-sheet format. Reports show case results, submission decisions, and grading diagnostics.
+ByteGrade is a batch grader for Java assessment submissions (CS102 Auto Grading System).
 
-The project includes a command-line workflow and an optional Swing instructor window. Optional reports include an offline HTML dashboard and per-student Markdown feedback. Similarity analysis and score sanity checks provide advisory information; they do not change marks. Dynamic test cases add coverage while keeping each question's configured maximum unchanged.
+- Input: a folder of student ZIP archives and the class score sheet (CSV).
+- It checks each ZIP's structure and student identity, then compiles each question on its own.
+- It runs the instructor tests with time limits and exports marks in the supplied score-sheet
+  format.
+- It runs from the command line or from a Swing window.
+- Reports: CSV results, an offline HTML dashboard and per-student Markdown feedback.
+- Advisory analyses that never change marks: code similarity, starter-code comparison and
+  score sanity checks.
+- Dynamic tests add generated cases to the supplied ones; each question's maximum stays the same.
+- The slide deck is `G1-T3.pptx`, in the root of the submission folder.
 
 ## Requirements
 
-- A full JDK 17 or newer (including `javac`). `javac -version` should report 17 or later. A JRE alone is not enough.
-- If `JAVA_HOME` is set, it must point to that JDK. On Windows, set `JAVA_HOME` and add the JDK's `bin` directory to `PATH` through Environment Variables, then reopen the console.
-- Internet access for the first compile. The included Maven Wrapper downloads Maven 3.9.9, its plugins and the libraries, so a separate Maven installation is not needed. The first compile can take a few minutes.
+- A full JDK 17 or newer, including `javac`. `javac -version` should report 17 or later.
+  - A JRE alone is not enough.
+  - If `JAVA_HOME` is set, it must point to that JDK.
+  - On Windows, set `JAVA_HOME` and add the JDK's `bin` folder to `PATH` in Environment
+    Variables, then reopen the console.
+- Internet access for the first build.
+  - The Maven Wrapper (`mvnw`, `mvnw.cmd`) downloads Maven 3.9.9, its plugins and the libraries.
+  - A separate Maven installation is not needed.
+  - The first build can take a few minutes.
+- The project targets Java 17. Compilation, the automated tests and the sample run were checked
+  on Windows and macOS with Temurin 17. The GUI has been used on macOS only.
 
-The project targets Java 17. The compile scripts, the automated tests and the sample grading run are checked automatically on Windows and macOS with Temurin 17. The GUI has been used on macOS only.
+## Workflow
 
-## Quick start
+Unzip `G1-T3-ByteGrade.zip` and open a terminal in the folder that contains `compile.sh`,
+`config.properties` and `Project/`. The scripts change to their own folder before running, so
+they also work from elsewhere or by double-click on Windows. Relative paths in arguments
+are then resolved from the project folder; use absolute paths for files elsewhere.
 
-Unzip `G1-T3-ByteGrade.zip`; it creates the folder `G1-T3-ByteGrade/`. Run the commands below from inside that folder.
+### 1. Build
 
-| | macOS / Linux | Windows |
-| --- | --- | --- |
-| Unzip | `unzip G1-T3-ByteGrade.zip` | Right-click the ZIP and choose Extract All |
-| Go to the folder | `cd G1-T3-ByteGrade` | Open Command Prompt in the extracted `G1-T3-ByteGrade` folder |
-| Compile | `sh compile.sh` | `compile.bat` |
-| Grade the sample submissions | `sh run.sh config.properties` | `run.bat config.properties` |
-| Open the instructor window | `sh run.sh` | `run.bat` |
-| Command-line help | `sh run.sh --help` | `run.bat --help` |
+macOS / Linux:
 
-The scripts can be started from any directory or by double-clicking (Windows), and always work from the project folder, so relative paths in arguments are resolved from the project folder; use absolute paths for files elsewhere. Compile first: `run` and `demo` stop with a message if `target/auto-grading-system-1.0-SNAPSHOT.jar` is missing. A successful compile prints `Built target/auto-grading-system-1.0-SNAPSHOT.jar`.
+```sh
+sh compile.sh
+```
 
-With arguments, `run` passes them to the command-line application, for example `sh run.sh --workers 4 config.properties`. The optional `--workers <N|auto>` flag grades N submissions at once for that run only, overriding `execution.workers`. N is 1 to 32; `auto` uses the number of logical processors, at most 4. A bad value prints usage and exits 1.
+Windows (Command Prompt):
 
-The compile scripts skip the automated tests. To run them (optional), use `sh ./mvnw verify` on macOS/Linux or `mvnw.cmd verify` on Windows. They use temporary inputs and include expected failures such as malformed archives and timed-out student programs.
+```bat
+compile.bat
+```
+
+- Success ends with `Built target/auto-grading-system-1.0-SNAPSHOT.jar`.
+- The compile scripts skip the automated tests.
+- `run` and `demo` stop with a message if that JAR is missing, so build first.
+
+### 2. Grade the sample class from the command line
+
+macOS / Linux:
+
+```sh
+sh run.sh config.properties
+```
+
+Windows:
+
+```bat
+run.bat config.properties
+```
+
+- The sample input is the six ZIPs in `Project/student-submission`.
+- The terminal shows progress lines, then the new run folder `build/grading/run-<number>` and
+  the elapsed time. In an interactive terminal, typing `q` then Enter cancels the run (exit 130).
+- Exit code 0 means the batch and its reports completed, even if some submissions need review.
+  Read the status counts and `submissions.csv` rather than treating 0 as "all clean".
+- A bad or missing configuration, or an empty input folder, returns a nonzero exit code.
+- `sh run.sh --help` (or `run.bat --help`) prints the command-line usage.
+
+### Choosing the number of workers
+
+```sh
+sh run.sh --workers 4 config.properties
+```
+
+- `--workers <N|auto>` grades N submissions at once for that run only.
+  - It overrides `execution.workers` in the configuration file.
+  - N is 1 to 32. `auto` is the number of logical processors, at most 4.
+  - A value above the machine's logical processor count is capped, with a warning.
+  - A bad value prints the usage and exits with status 1.
+  - The default is 1.
+- Windows: use 1 worker for now.
+  - With 2 or more workers, Java start-up time counts against the 2 second case limit on the
+    Windows laptop we tested, and some passing cases were reported as timed out.
+  - If passing cases show as timed out on any machine, rerun with 1 worker.
+
+### 3. Use the instructor window
+
+macOS / Linux:
+
+```sh
+sh run.sh
+```
+
+Windows:
+
+```bat
+run.bat
+```
+
+- Run with no arguments, the script opens the Swing window. Keep the console open; closing it
+  closes the window. A headless machine prints the command-line alternative and exits with 1.
+- Steps:
+  - The Submissions, Score sheet and Output folder rows start from the configured values.
+    Change any of them with its Choose... button. Each row shows its readiness inline.
+  - To use another configuration, open Advanced and change Config file there.
+    Advanced > Edit config... edits the file in a text editor that keeps comments and layout
+    and refuses a save that would not load. Nothing else in the GUI changes the file.
+  - The Workers dropdown next to Grade offers 1 up to the processor count. It starts at the
+    configured `execution.workers` (capped, with a warning on the status line) and applies to
+    that run only.
+  - Click Grade. It runs a final check, then grades in the background with progress and a
+    run clock.
+  - Stop interrupts grading: test processes are terminated and no scores are written.
+    Closing the window during a run asks for confirmation first.
+  - When the run ends, the scores are shown with one button per output that was written.
+- Results buttons: Dashboard, Scores, Case results, Submission decisions, Similarity,
+  Starter code, Sanity checks, Feedback, Run folder and Export all...
+  - The CSV reports and student feedback open inside the window.
+  - Dashboard opens in the browser; Run folder opens in the file manager.
+  - Export all... saves each CSV report to a folder you choose, plus one Excel workbook with
+    one sheet per report.
+  - Upload `scorereport.csv` itself to eLearn.
+- The GUI uses the same grading service, validation, withholding and report order as the
+  command line. Last-used paths are remembered with Java Preferences.
+- Without an argument the GUI starts from the last configuration it ran, then
+  `config.properties` in the current directory, then the one beside the `target` folder.
+
+### 4. Read the outputs
+
+- See "Outputs" below. Start with the dashboard, then `submissions.csv`.
+
+### 5. Optional: run the automated tests
+
+macOS / Linux:
+
+```sh
+sh ./mvnw verify
+```
+
+Windows:
+
+```bat
+mvnw.cmd verify
+```
+
+- The tests use temporary inputs. They include expected failures such as malformed archives
+  and timed-out student programs.
 
 ## Expected sample result
 
-The default configuration processes the six archives in `Project/student-submission`. The supplied run produces Ping **20.00**, Chee **11.50**, David **10.50**, Fen **9.88**, Jing **0.00**, and Xing **0.50** out of 20 in the score sheet. These totals include dynamic case results. The score sheet rounds half-up to two decimal places, so Fen's exact 9.875 is exported as 9.88; `submissions.csv` (ComputedScore) and `cases.csv` keep the exact values. David and Xing retain name-header review warnings. A completed run with those warnings is expected; check the reports rather than treating every warning as a failure.
+The default configuration grades the six archives in `Project/student-submission`. Scores out
+of 20, as written to the score sheet (rounded half-up to two decimals):
 
-| Student | Q1a | Q1b | Q2a | Q2b | Q3 | Total | Score sheet |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| Ping | 3 | 3 | 5 | 5 | 4 | 20 | 20.00 |
-| Chee | 3 | 3 | 5 | 0.5 | 0 | 11.5 | 11.50 |
-| David | 3 | 3 | 4.5 | 0 | 0 | 10.5 | 10.50 |
-| Fen | 0.375 | 0 | 5 | 4.5 | 0 | 9.875 | 9.88 |
-| Jing | 0 | 0 | 0 | 0 | 0 | 0 | 0.00 |
-| Xing | 0 | 0 | 0.5 | 0 | 0 | 0.5 | 0.50 |
+- Ping 20.00
+- Chee 11.50
+- David 10.50
+- Fen 9.88
+- Jing 0.00
+- Xing 0.50
 
-Question maxima are 3, 3, 5, 5 and 4. Each question's marks are shared equally across its fixed and dynamic cases, so case values such as 0.375 are expected. The score sheet rounds half-up to two decimal places; case and submission reports retain full precision. Results may vary when the assessment, submissions, or configuration changes.
+Marks per question (Q1a, Q1b, Q2a, Q2b, Q3), before rounding:
 
-These totals differ from `Project/IS442-ScoreSheet-graded.csv` for Chee, David, Fen and Xing. That sheet counts only the 20 supplied cases and gives Ping 20, Chee 12, David 10, Fen 10, Jing 0 and Xing 1, while this run also grades the dynamic cases. To reproduce the sheet, add `grading.dynamic.enabled=false` to `config.properties` and run again.
+- Ping: 3, 3, 5, 5, 4 = 20
+- Chee: 3, 3, 5, 0.5, 0 = 11.5
+- David: 3, 3, 4.5, 0, 0 = 10.5
+- Fen: 0.375, 0, 5, 4.5, 0 = 9.875, exported as 9.88
+- Jing: 0, 0, 0, 0, 0 = 0
+- Xing: 0, 0, 0.5, 0, 0 = 0.5
+
+Notes on these numbers:
+
+- Question maxima are 3, 3, 5, 5 and 4. Each question's marks are shared equally across its
+  fixed and dynamic cases, so case values such as 0.375 are expected.
+- `submissions.csv` (ComputedScore) and `cases.csv` keep the exact values.
+- David and Xing keep name-header review warnings. A completed run with those warnings is
+  expected; check the reports rather than treating each warning as a failure.
+- Results may vary if the assessment, the submissions or the configuration change.
+
+### Why this differs from the supplied graded sheet
+
+- `Project/IS442-ScoreSheet-graded.csv` gives Ping 20, Chee 12, David 10, Fen 10, Jing 0 and
+  Xing 1. It counts only the 20 supplied cases.
+- The default run also grades the dynamic cases, so Chee, David, Fen and Xing differ.
+- To reproduce the supplied sheet, add this line to `config.properties` and run again:
+
+```properties
+grading.dynamic.enabled=false
+```
+
+- With that setting the fixed cases carry each question's full maximum.
 
 ## Demo cohort: 100 students
 
-The six supplied submissions are too few to show parallel grading, so `demo` grades a larger cohort: the six real archives plus 94 synthetic students. Each synthetic student takes its Q1, Q2 and Q3 folders from randomly chosen real submissions, with the header name and email rewritten, so every program is real student code and each synthetic question score equals its source student's. A fixed seed makes every generation identical. Nothing under `Project/` or `config.properties` changes; the cohort is written to `build/demo-cohort/` and graded with `demo.properties`, which differs from `config.properties` only in its input, score sheet and output paths (results under `build/demo-run/grading/`).
+The six supplied submissions are too few to show parallel grading. The demo grades the six real
+archives plus 94 synthetic students.
 
-| | macOS / Linux | Windows |
-| --- | --- | --- |
-| Grade the cohort (generated on first use) | `sh demo.sh` | `demo.bat` |
-| Grade with 8 parallel workers | `sh demo.sh 8` | `demo.bat 8` |
-| Rebuild with a different size | `sh demo.sh generate 24` | `demo.bat generate 24` |
+- Each synthetic student takes its Q1, Q2 and Q3 folders from randomly chosen real submissions,
+  with the header name and email rewritten. Every program is real student code, and each
+  synthetic question score equals its source student's.
+- A fixed seed makes every generation identical.
+- Nothing under `Project/` and neither properties file changes.
+- The cohort is written to `build/demo-cohort/`: `submissions/` (the ZIPs), a generated
+  `IS442-ScoreSheet.csv` and `donors.csv`. Generating again deletes and rebuilds that folder.
+- It is graded with `demo.properties`, which differs from `config.properties` only in its input,
+  score sheet and output paths. Results go to `build/demo-run/grading/`.
 
-`generate` takes the number of synthetic students (1-400, default 94) and an optional seed. Measured on a 10-core Mac (4 performance cores): 100 students took 7 min 07 s with 1 worker, 2 min 44 s with 4 and 2 min 30 s with 8, with identical case verdicts, nobody withheld and the six real scores unchanged. A 30-student cohort (`generate 24`) took 74 s with 8 workers. About 117 cases time out by design, because synthetic students that reuse a hanging Q2 submission inherit its infinite loop. Recombined code also produces many similarity findings, which shows the plagiarism report working but makes `dashboard.html` about 7 MB.
+macOS / Linux:
 
-On Windows, use 1 worker for now. A diagnostic on a Windows laptop showed that with 2 or more workers, Java start-up time counts against the 2-second case limit and some passing cases are reported as timed out.
-
-To use the instructor window instead, run `sh run.sh` (or `run.bat`) and set Config file to `demo.properties`. The window remembers previously used submission, score sheet and output folders, so also set them to `build/demo-cohort/submissions`, `build/demo-cohort/IS442-ScoreSheet.csv` and `build/demo-run/grading`.
-
-## Instructor GUI
-
-`sh run.sh` (macOS/Linux) or `run.bat` (Windows) with no arguments opens the desktop window. Keep the console open while the window runs; closing it closes the window. An optional configuration path may be given with `java -cp target/auto-grading-system-1.0-SNAPSHOT.jar autograder.gui.GuiLauncher <config>`. Without one, the GUI uses the last configuration it ran, then `config.properties` in the current directory, then the one beside the `target` folder.
-
-The submissions folder, score sheet and output folder default to the configured values and can be changed with **Choose…**. Each field shows its readiness inline; **Grade** runs a final check, grades in the background with progress, and then shows the scores and buttons for the outputs that were actually written. The CSV reports and student feedback open inside the app; the dashboard opens in the browser and the run folder in the file manager. **Export all…** saves each CSV report to a folder you choose, plus one Excel workbook with one sheet per report; upload `scorereport.csv` itself to eLearn. **Stop** interrupts grading: running test processes are terminated and no scores are written. Closing the window during a run asks for confirmation first. A Workers dropdown next to **Grade** offers 1 to the processor count; it starts at the configured `execution.workers` (capped, with the warning on the status line) and applies to that run only, and `config.properties` is never changed.
-
-The GUI uses the same grading service, validation, withholding and report order as the command line, and changes `config.properties` only when you save from **Advanced > Edit config…**. That editor keeps comments and layout, and refuses a save if the edited text would not load. Last-used paths are remembered with Java Preferences. It needs a desktop session; on a headless machine it prints the command-line alternative and exits with status 1.
-
-## Outputs and reports
-
-The terminal prints the exact new `build/grading/run-*` directory for each run. It contains:
-
-- `scorereport.csv`: scores in the required roster format
-- `cases.csv`: individual test statuses, marks and diagnostic output
-- `submissions.csv`: export/withholding decisions and preparation warnings
-- `similarity.csv`: student pairs whose code for a question reaches a similarity threshold, one row per algorithm (n-gram and/or JPlag) with matching line ranges (advisory only; never changes scores)
-- `starter-analysis.csv` and `sanity-checks.csv`: advisory starter-code comparison and score sanity checks, when enabled and completed
-- `dashboard.html`: self-contained offline dashboard when `grading.html.enabled=true`
-- `feedback/`: per-student Markdown feedback when `grading.feedback.enabled=true`
-
-Each run creates a fresh directory. Supplied input files remain unchanged. Logs append, so retain their timestamps when examining a particular run. An analysis report appears only when the corresponding analysis is enabled and completes. See [Grading behavior and process limits](#grading-behavior-and-process-limits) before using submissions outside the supplied sample.
-
-| File or directory | Purpose |
-| --- | --- |
-| `build/extracted` | Raw extraction workspaces created by runs |
-| `build/working` | Separate corrected working copies |
-| `build/grading/run-*` | Isolated compilation/case workspaces, CSV reports and optional dashboard.html |
-| `build/submission-anomalies.log` | Problems found during preparation |
-| `build/submission-corrections.log` | Corrections made to working copies |
-| `build/demo-cohort`, `build/demo-run` | Demo cohort and its results |
-| `target` | Compiled classes and the executable JAR |
-
-### Offline HTML dashboard
-
-Open the HTML file printed by the command directly in your browser. It contains its own styles and scripts and needs no server or internet connection. Search by name, username or archive, filter by export decision and warnings, sort by name or score, and expand a submission to see question marks, preparation corrections and per-case diagnostics.
-
-Question-score cells form a heatmap: darker blue means a larger share of the configured marks, while the score and recorded case-status counts remain visible. The legend explains the six credit bands. Click a question score to open that submission's details at the matching question group; active search, filters and sorting stay in place. Withheld cells explicitly label their points diagnostic. Missing or mismatched case records, questions whose recorded cases were all not run, and unusable score ranges receive neutral styling with an explanation. All recorded cases remain in the details, including cases for unexpected question IDs.
-
-Summary averages and medians include only exported submissions and identify that denominator. The mean is rounded to four decimal places; individual marks and maxima retain their decimal values. WITHHELD scores are diagnostic totals, not final exported marks. Preparation status is shown separately: a REVIEW_REQUIRED name warning can coexist with an exported score. Rows use matched roster names/usernames and retain reported header values in details. The report covers received submissions, so absent roster rows remain outside the dashboard. Read the score CSV together with `submissions.csv` when examining unchanged template numerators.
-
-The supplied configuration enables the dashboard. To disable it, set `grading.html.enabled=false`. `grading.html.file` defaults to `dashboard.html` and accepts a simple `.html` filename using letters, numbers, dots, underscores or hyphens. It is written inside the new grading run directory. Older configuration files without HTML settings keep generation disabled. Invalid settings fail before grading. If enabled HTML generation fails, the command returns nonzero and prints an error and the completed CSV locations; those CSVs remain usable.
-
-Case diagnostics contain recorded stdout/stderr, subject to the configured capture limit. They do not include structured expected/actual assertion values.
-
-### CSV compatibility
-
-The reusable writer preserves the supplied header order and roster field values:
-
-```text
-OrgDefinedId,Username,Last Name,First Name,Email,Calculated Final Grade Numerator,Calculated Final Grade Denominator,End-of-Line Indicator
+```sh
+sh demo.sh
+sh demo.sh 8
+sh demo.sh generate
+sh demo.sh generate 24
+sh demo.sh generate 24 7
 ```
 
-Only explicitly supplied scores change the numerator field; exported scores are rounded half-up to two decimal places. Per-case diagnostics retain full precision. All other rows/fields remain intact. The writer rejects unknown student IDs, invalid/out-of-range marks, and attempts to overwrite the source template. It handles quoted commas, quotes, and line breaks. Byte-for-byte CSV formatting need not be identical, but the schema and field contents are preserved.
+Windows:
 
-The grading pipeline supplies scores only for eligible students after recording every expected case. Each run writes a fresh report; the original template is never the output path.
+```bat
+demo.bat
+demo.bat 8
+demo.bat generate
+demo.bat generate 24
+demo.bat generate 24 7
+```
 
-## Configuration and grading another assessment
+- `demo` grades the cohort, generating it first if `build/demo-cohort/submissions` is missing.
+- `demo 8` does the same with 8 workers.
+- `demo generate [count] [seed]` rebuilds the cohort without grading it.
+  - count is the number of synthetic students, 1 to 400, default 94.
+  - seed is a whole number, default 102.
+  - More than two arguments, or a count outside 1 to 400, prints a usage line and exits 1.
+- The generator reads `config.properties` from the project folder, so use the scripts.
+- To use the window instead, run `sh run.sh` (or `run.bat`) and set Config file to
+  `demo.properties` under Advanced. The window remembers earlier folders, so also set
+  Submissions to `build/demo-cohort/submissions`, Score sheet to
+  `build/demo-cohort/IS442-ScoreSheet.csv` and Output folder to `build/demo-run/grading`.
 
-`config.properties` controls paths, assessment questions, extraction limits, test cases, and reports. Relative paths resolve against the properties file. `execution.java` and `execution.javac` accept `JDK`, a command on `PATH`, or an executable path. Compilation defaults to 15 seconds per question; each case defaults to 2 seconds, with stdout and stderr captured up to 65,536 bytes per stream.
+Timings and expected behaviour:
 
-`execution.case.isolation` may be `part` (default) or `case`. Part isolation reuses a Java process across one question's cases while refreshing student classes and fixtures and restoring system properties. Each case still has its own output files and timeout. A failed shared process is replaced; `execution.case.startup.timeout.ms` (default 30 seconds) limits process startup. `execution.workers` accepts 1 to 32 or `auto` (default 1); counts above the logical processor count are capped with a warning. High worker counts can make slow correct submissions reach the case timeout.
+- Measured on a 10-core Mac (4 performance cores), 100 students:
+  - 1 worker: 7 min 07 s
+  - 4 workers: 2 min 44 s
+  - 8 workers: 2 min 30 s
+- Case verdicts were identical at every worker count, nobody was withheld and the six real
+  scores were unchanged.
+- A 30-student cohort (`generate 24`) took 74 s with 8 workers.
+- About 117 cases time out by design: a synthetic student that reuses a hanging Q2 submission
+  inherits its infinite loop.
+- Recombined code produces many similarity findings. That shows the plagiarism report working,
+  and it makes `dashboard.html` about 7 MB.
+- On Windows, use 1 worker (see "Choosing the number of workers").
 
-Plagiarism analysis is configured with `plagiarism.enabled`, `plagiarism.algorithms` (`ngram`, `jplag`, or both), and the algorithm-specific threshold settings. The n-gram detector compares normalized token sequences; JPlag compares Java syntax tokens. Both can exclude the configured starter directory. Findings are advisory and never affect marks.
+## Outputs
 
-`grading.sanity.*` settings control optional checks for assessment-wide patterns such as unusually low scores or widespread timeouts. These checks do not change marks or export decisions. `grading.feedback.enabled`, `grading.feedback.directory`, and `grading.feedback.max.diagnostic.lines` control per-student Markdown feedback.
+The terminal prints the exact new `build/grading/run-*` folder for each run. Each run creates a
+fresh folder; supplied inputs are never changed.
 
-`assessment.question.ids` defines each part's source files, tester, cases, weights, support classes, and fixtures. The supplied assessment has five question parts and 20 fixed cases. The dynamic test provider adds five seeded property checks per part, distributing each question's existing maximum across its fixed and dynamic cases. The optional `grading.dynamic.enabled` key (default `true`) turns these checks off when `false`, so the fixed cases carry each question's full maximum. A different tester needs a matching adapter; configuration alone does not turn arbitrary Java testers into runnable cases.
+- `scorereport.csv`: scores in the required roster format. This is the file to upload.
+- `cases.csv`: one row per case with status, marks, duration and captured stdout/stderr.
+- `submissions.csv`: EXPORTED or WITHHELD for each submission, the reason, preparation warnings
+  and the exact computed score.
+- `similarity.csv`: student pairs whose code for a question reaches a similarity threshold.
+  - One row per algorithm (n-gram and/or JPlag) with the matching line ranges.
+  - Advisory only.
+- `starter-analysis.csv`: how each answer file differs from the starter code (advisory).
+- `starter-comparison/index.html`: method-level starter comparison, when starter analysis runs.
+- `sanity-checks.csv`: score sanity checks (advisory). Header-only means nothing was flagged.
+- `dashboard.html`: self-contained offline dashboard, when `grading.html.enabled=true`.
+- `feedback/`: one Markdown file per student, when `grading.feedback.enabled=true`.
 
-To grade other submissions, copy `config.properties`, change the input directory, score sheet path and output paths in the copy, and pass it as the argument: `sh run.sh my.properties` or `run.bat my.properties`. `demo.properties` is an example of such a copy.
+An analysis file appears only when that analysis is enabled and completes.
 
-| File or directory | Purpose |
-| --- | --- |
-| `config.properties` | Paths, matching rules, extraction limits, required sources, test metadata, and CSV column mappings |
-| `demo.properties` | Same settings pointed at the demo cohort |
-| `pom.xml`, `mvnw`, `mvnw.cmd`, `.mvn/` | Java target, build and JAR settings, and the Maven Wrapper |
-| `Project/student-submission` | Six supplied ZIP submissions |
-| `Project/Tester-Files` | Instructor Java testers and text fixtures |
-| `Project/RenameToYourUsername` | Starter sources and supplied support classes |
-| `Project/IS442-ScoreSheet.csv` | Original class list and required report format |
-| `src/main/java/autograder` | Application code and extension contracts |
-| `src/test/java/autograder` | Automated regression tests with temporary synthetic inputs |
+Other folders under `build/`:
 
-## Grading behavior and process limits
+- `build/extracted`: raw extraction workspaces
+- `build/working`: corrected working copies, one per student
+- `build/submission-anomalies.log`: problems found during preparation (logs append)
+- `build/submission-corrections.log`: corrections made to working copies
+- `build/demo-cohort`, `build/demo-run`: the demo cohort and its results
+- `target`: compiled classes and the executable JAR
+
+### Reading the dashboard
+
+Open `dashboard.html` directly in a browser. It needs no server or internet connection.
+
+- It contains student names and usernames, absolute file paths on the grading machine, and
+  captured program output. Handle and share it with care.
+- Search by name, username or archive; filter by export decision and warnings; sort by name or
+  score; expand a submission for question marks, preparation corrections and per-case output.
+- Question-score cells form a heatmap. Darker blue is a larger share of the configured marks.
+  The legend explains the six credit bands.
+- Click a question score to open that submission's details at the matching question group.
+  Search, filters and sorting stay in place.
+- Summary averages and medians include only exported submissions and name that count. The mean
+  is rounded to four decimals.
+- WITHHELD scores are diagnostic totals, not exported marks, and are labelled as such.
+- A REVIEW_REQUIRED name warning can coexist with an exported score.
+- Cells with missing or mismatched case records, or only NOT_RUN cases, are shown in neutral
+  styling with an explanation. All recorded cases remain in the details.
+- The dashboard covers received submissions only. Roster rows without a submission are absent.
+- Case output is the recorded stdout/stderr, up to the capture limit. Expected and actual
+  assertion values are not recorded.
+- Settings: `grading.html.enabled` and `grading.html.file`.
+  - The file name defaults to `dashboard.html` and must be a simple `.html` name of letters,
+    digits, dots, underscores or hyphens.
+  - If generation fails, the command returns nonzero and prints the completed CSV locations;
+    those CSVs remain usable.
+
+### Score sheet format
+
+- The writer keeps the supplied header and every roster field except the numerator.
+
+  Columns, in order:
+  - OrgDefinedId
+  - Username
+  - Last Name
+  - First Name
+  - Email
+  - Calculated Final Grade Numerator
+  - Calculated Final Grade Denominator
+  - End-of-Line Indicator
+
+- Only the numerator of an exported student changes. It is rounded half-up to two decimals.
+  Per-case diagnostics keep full precision.
+- Withheld students and roster rows without a submission keep their original numerator.
+  Check `submissions.csv` before treating an unchanged value as a grade from this run.
+- The writer rejects unknown student IDs, invalid or out-of-range marks, and an output path equal
+  to the source sheet. It handles quoted commas, quotes and line breaks.
+- Byte-for-byte formatting may differ from the source; schema and field contents are preserved.
+
+## Configuration
+
+`config.properties` controls paths, the assessment, extraction limits, test cases and reports.
+Relative paths resolve against the properties file. To grade other submissions, copy the file,
+change the paths in the copy and pass it as the argument (`sh run.sh my.properties`).
+`demo.properties` is an example of such a copy.
+
+Keys an instructor is likely to change:
+
+- Paths
+  - `input.directory`: folder of student ZIPs
+  - `score.sheet.path`: class score sheet CSV
+  - `grading.directory`: where run folders are created
+  - `grading.report.file`: score file name, default `scorereport.csv`
+  - `extraction.directory`, `working.directory`, `anomaly.log`, `correction.log`
+- Execution
+  - `execution.java`, `execution.javac`: `JDK`, a command on `PATH`, or an executable path
+  - `execution.compile.timeout.ms`: default 15000 per question
+  - `execution.case.timeout.ms`: default 2000 per case
+  - `execution.output.max.bytes`: captured stdout and stderr cap per stream, default 65536
+  - `execution.workers`: 1 to 32 or `auto`, default 1 (commented out in the supplied file)
+  - `execution.case.isolation`: `part` (default) or `case`
+    - `part` reuses one Java process across a question's cases, refreshing student classes and
+      fixtures. Each case keeps its own output files and timeout. A failed process is replaced.
+    - `case` starts a new Java process for every case.
+  - `execution.case.startup.timeout.ms`: process start-up limit, default 30000
+- Marks
+  - `grading.dynamic.enabled`: default `true`; `false` grades the supplied cases only
+- Reports
+  - `grading.html.enabled`, `grading.html.file`
+  - `grading.feedback.enabled`, `grading.feedback.directory`,
+    `grading.feedback.max.diagnostic.lines`
+  - `dashboard.mode`: terminal progress display, `auto`, `ansi` or `plain`
+- Advisory analyses (none of them changes marks or export decisions)
+  - `plagiarism.enabled`, `plagiarism.algorithms` (`ngram`, `jplag` or both), `plagiarism.threshold`
+    and `plagiarism.ngram.size`, `plagiarism.min.ngrams` (n-gram), `plagiarism.jplag.threshold`
+    and `plagiarism.jplag.min.tokens` (JPlag), `plagiarism.starter.directory`
+  - `grading.boilerplate.enabled`, `grading.boilerplate.starter.directory` and
+    `grading.boilerplate.similarity.threshold` (starter-code comparison)
+  - `grading.sanity.enabled` and the `grading.sanity.*` thresholds, commented out in the
+    supplied file, with their defaults shown there
+- Randomized mode: the `randomized.*` keys at the end of the file (see below)
+- Assessment: `assessment.question.ids` and the `assessment.question.<id>.*` keys define each
+  part's folder, source file, tester, case count, weights, support classes and fixtures.
+  See "Limits" before changing them.
+
+Invalid settings fail before grading starts.
+
+## Behaviour rules
 
 The command-line run does the following:
 
-1. Load the explicitly supplied properties file and validate its settings
-2. Read and validate the provided score sheet as the class roster
-3. Extract each ZIP into a fresh raw workspace, rejecting unsafe paths, corrupted data, and excessive expansion
-4. Identify the student using archive names, wrapper folders, and source headers against the roster
-5. Check configured question folders, source filenames, and required headers
-6. Prepare a separate working copy under the matched username and fill missing identity headers only when ownership is unambiguous
-7. Report problems and corrections, including duplicate submissions requiring review
-8. Compile each independently marked part in its own class directory
-9. Run instructor cases with configured process isolation, time limits, and bounded captured output
-10. Export scores, per-case diagnostics, and reasons for withheld scores into a new grading run directory
+1. Load and validate the supplied properties file.
+2. Read and validate the score sheet as the class roster.
+3. Extract each ZIP into a fresh raw workspace, rejecting unsafe paths, corrupted data and
+   excessive expansion.
+4. Identify the student from the archive name, wrapper folders and source headers against the
+   roster.
+5. Check the configured question folders, source file names and required headers.
+6. Prepare a separate working copy under the matched username, filling missing identity headers
+   only when ownership is unambiguous.
+7. Report problems and corrections, including duplicate submissions.
+8. Compile each independently marked question in its own class folder.
+9. Run the instructor and dynamic cases with the configured isolation, time limits and bounded
+   captured output.
+10. Export scores, per-case diagnostics and the reasons for any withheld scores into a new run
+    folder.
 
-Original ZIPs, instructor testers, starter files, and the source score sheet are preserved. Conflicting ownership is reported instead of guessed. A missing source file is not manufactured from starter code.
+Original ZIPs, instructor testers, starter files and the source score sheet are never modified.
+Conflicting ownership is reported, not guessed. A missing source file is not replaced by starter
+code. The batch continues after an individual failure.
 
-`READY` means preparation is complete for the next stage, not that the student passed. `REVIEW_REQUIRED` means an instructor must inspect a problem; name warnings and recoverable question problems do not discard valid independent questions. `FAILED` means preparation failed for that archive. The batch continues after an individual failure.
+Preparation status:
 
-The process exits successfully when the grading batch and reports complete, even if individual submissions need review. Invalid startup configuration and an empty input batch return a nonzero exit code. Read the final status counts and logs rather than interpreting exit code zero as a clean grade report.
+- READY: preparation is complete. It does not mean the student passed.
+- REVIEW_REQUIRED: an instructor should inspect a problem. Name warnings and recoverable
+  question problems do not discard valid independent questions.
+- FAILED: preparation failed for that archive.
 
-Each question compiles only its selected source, required companions, supplied support classes, and adapter. Student `.class` files are ignored. A missing answer/companion or syntax error gives that part zero marks without blocking other parts. Each case has a fresh working directory and fixture copies. A pass earns configured points; a mismatch, runtime error, timeout, or compile failure earns zero. A pass–loop–pass sequence retains two marks. Missing/invalid result files and `System.exit(0)` without a result are runtime errors. Printed `Passed` messages cannot award marks.
+Marking:
 
-Unresolved identities, duplicate submissions, and unusable preparations are withheld. Name corroboration warnings remain visible but do not withhold a uniquely matched student's usable work. Infrastructure errors withhold the affected student's export instead of silently presenting a partial score as final. The exception is part isolation's shared case host: a case whose host fails twice is recorded as a `RUNTIME_ERROR` worth zero, and the student is still exported. Every submission has a record for each configured case, including NOT_RUN records when blocked.
+- Each question compiles only its selected source, required companions, the supplied support
+  classes and the adapter. Student `.class` files are ignored.
+- A missing answer or companion file, or a syntax error, gives that question zero without
+  blocking the others.
+- Each case has a fresh working folder and fixture copies.
+- A pass earns the configured points. A mismatch, runtime error, timeout or compile failure
+  earns zero. A pass-loop-pass sequence keeps two marks.
+- A missing or invalid result file, or `System.exit(0)` without a result, is a runtime error.
+  Printed "Passed" messages cannot award marks.
 
-Folder and file names must match the expected upper and lower case. A question folder or source file with the wrong case is flagged for review. That part is still graded on Windows and macOS, whose file systems normally ignore case, but scores zero on Linux. A submission in which no required question folder matches exactly is withheld.
+Names and folders:
 
-The configured score filename defaults to `scorereport.csv`. `cases.csv` contains case status, points, duration and bounded stdout/stderr. `submissions.csv` identifies EXPORTED/WITHHELD rows, reasons and preparation warnings. Withheld and absent students retain their original template numerators; consult `submissions.csv` before treating those unchanged values as grades from this run.
+- A required question folder or source file with the wrong letter case is corrected when it is
+  unique.
+  - The working copy uses the expected name on every operating system, so the part is graded
+    and exported everywhere, including Linux.
+  - The submission is flagged REVIEW_REQUIRED and the correction is logged.
+  - If several variants could match (ambiguous), nothing is repaired.
+  - A submission in which no required question folder is found, exactly or as a unique
+    wrong-case variant, has no usable working copy and is withheld.
+- A mistyped wrapper folder name (username or student ID) is only a warning when other evidence,
+  such as the archive name or source headers, names exactly one student.
+  - A wrapper that names a different real student is a conflict, and the submission is withheld.
+  - A mistyped wrapper with no other matching evidence is withheld.
 
-Child processes and deadlines are reliability controls, not an OS security sandbox. This application supports course submissions in a controlled grading environment, not deliberately hostile code: student programs still have the operating-system user's permissions and can attempt filesystem/network/process access or tamper with the result protocol. Descendant cleanup is best effort and depends on OS permissions. Use an externally isolated account/container/VM for untrusted submissions; this application does not provision one.
+Withholding:
 
-## Optional randomized question mode
+- A submission is withheld, with its reason in `submissions.csv`, when:
+  - its identity cannot be resolved;
+  - it is a duplicate of another student's submission;
+  - its preparation is unusable;
+  - a grading infrastructure error occurs.
+- Name warnings alone do not withhold a uniquely matched student.
+- Withheld students keep their original numerator in the score sheet.
+- Every submission has a record for every configured case; blocked cases are NOT_RUN.
+- With the default `part` isolation, a grader host (the shared Java process for a question):
+  - that cannot start on both attempts is a grader fault: it is an infrastructure error and
+    the student is withheld;
+  - that dies during a case is retried once on a fresh host, then the case is recorded as
+    RUNTIME_ERROR worth zero, and the student is still exported.
 
-The original assessment pipeline remains the default. The optional randomized mode can generate reusable student resources, grade one extracted submission, or grade one question across a folder of ZIPs. The commands go through the same `run` script; `<...>` marks a path you supply.
+Security:
+
+- Child processes and deadlines are reliability controls, not an operating-system sandbox.
+- Student programs run with the current user's permissions and can attempt file, network or
+  process access, or tamper with the result protocol. Descendant cleanup is best effort.
+- Use an externally isolated account, container or VM for untrusted submissions. ByteGrade does
+  not provision one.
+
+## Randomized question mode
+
+The ZIP batch workflow above is the default. A separate mode generates student resources and
+grades one extracted submission, or one question across a folder of ZIPs, with seeded random
+inputs. `<...>` marks a value you supply.
 
 ```sh
-sh run.sh --randomized-resources Q1 config.properties
-sh run.sh --randomized-grade Q1 <extracted-submission-folder> config.properties 482910374651
+sh run.sh --randomized-resources Q1a config.properties
+sh run.sh --randomized-grade Q1a <extracted-submission-folder> config.properties 482910374651
 sh run.sh --randomized-grade-batch Q1a <folder-of-zips> config.properties 482910374651
 ```
 
-On Windows, use `run.bat` with the same arguments.
+- On Windows, use `run.bat` with the same arguments.
+- Registered question IDs: Q1, Q2, Q1a, Q1b, Q2a, Q2b and Q3. `--help` lists them.
+- The final seed argument is optional and must be a whole number. Without it the app picks one
+  and records it in the result so a run can be replayed.
+- The `randomized.*` keys in `config.properties` set the resources and results folders, the
+  java and javac commands, runs per case, timeout and output limits.
+- Run these commands from the project folder (see "Limits").
 
-The current lab-test question set (Q1a, Q1b, Q2a, Q2b, Q3) is also available through this mode; for example, substitute `Q1a` in either command. Omit the final seed argument to let the app choose one; the result records it for replay. The `randomized.*` settings at the end of `config.properties` set the resources and results directories, the java/javac commands, runs per case, timeout and output limits. The original ZIP batch grader remains a separate workflow.
+## Limits
 
-## Where the Java code lives
+- Reusing the grader for a different assessment needs new adapters or registered Java classes.
+  Configuration alone does not turn arbitrary testers into runnable cases, because three things
+  are compiled in:
+  - the dispatch from question to adapter
+  - the SHA-256 fingerprints of the five supplied tester files (an edited tester is rejected)
+  - the case counts
+- The randomized graders for Q2a and Q2b resolve their fixtures as
+  `Project/Tester-Files/...` relative to the working directory. Run them from the project root.
+- The Q2 fixture files are small (`personstester.txt` has 11 lines, `studentstester.txt` 8), so
+  Q2 coverage depends mostly on the dynamic checks.
+- No operating-system sandbox; see "Security" above.
+- The GUI has been used on macOS only.
+- On Windows, use 1 worker.
+- High worker counts on any machine can push slow but correct submissions past the case timeout.
 
-All paths in this table are beneath `src/main/java/autograder/`.
+## Folder directory by feature
 
-| File | Plain-language job |
-| --- | --- |
-| `App.java` | Starts the application and prints progress/results |
-| `config/AppConfig.java` / `ExecutionConfig.java` | Read preparation/grading settings and reject invalid combinations |
-| `config/HtmlReportConfig.java` | Validate optional HTML enablement and filename |
-| `report/html/OfflineHtmlReportGenerator.java` | Render the completed results and export decisions as one offline HTML file |
-| `grading/GradingPipeline.java` | Coordinates compilation, cases, score aggregation and reports |
-| `grading/InstructorTestCaseProvider.java` | Maps the supplied instructor cases to individual adapters |
-| `execution/StudentCompiler.java` | Compiles selected student sources and instructor adapter with supplied support classes |
-| `execution/CaseExecutor.java` | Runs one case and reads its explicit result file |
-| `execution/ProcessRunner.java` | Enforces deadlines and bounds captured stdout/stderr |
-| `submission/SubmissionProcessor.java` | Runs preparation for the whole batch and spots duplicate students |
-| `submission/SafeZipExtractor.java` | Opens ZIPs with path, size, and corruption checks |
-| `submission/SubmissionValidator.java` | Finds the question folders and rejects ambiguous folder layouts |
-| `submission/IdentityResolver.java` | Checks required source names/headers, finds the roster match, and prepares/applies missing-header repairs |
-| `submission/WorkingCopyPreparer.java` | Builds separate correctly named copies and records folder corrections |
-| `submission/CorrectionLog.java` | Saves a history of corrections |
-| `util/AnomalyLog.java` | Saves problems and prints warnings |
-| `plagiarism/PlagiarismDetectorFactory.java` / `CombinedPlagiarismDetector.java` | Build the configured algorithms and run them together; one failing algorithm does not discard the others |
-| `plagiarism/NGramPlagiarismDetector.java` | Our algorithm: compares each pair of students per question using normalized 5-token sequences and Jaccard similarity, excluding starter code |
-| `plagiarism/JPlagPlagiarismDetector.java` | Runs the JPlag library (greedy string tiling over Java syntax tokens) per question, with the starter files as base code |
-| `plagiarism/JavaTokenizer.java` / `NGramBuilder.java` / `SimilarityCalculator.java` / `QuestionFiles.java` | Normalize source tokens, build n-grams, compute Jaccard similarity and locate each question's files |
-| `config/PlagiarismConfig.java` | Reads and validates the `plagiarism.*` settings |
-| `roster/ScoreSheetRepository.java` | Reads the class list without discarding the CSV's original fields |
-| `csv/CsvCodec.java` | Reads/writes CSV quoting, commas, and line breaks correctly |
-| `report/CsvScoreReportWriter.java` | Fills supplied scores into a new score sheet without overwriting the original |
-| `gui/` | The Swing instructor window |
-| `demo/` | Generator for the demo cohort |
-| `ui/ConsoleProgressListener.java` | Displays simple progress messages |
-| `api/` | Interfaces used by the grading and reporting components |
-| `model/` | Common data containers: students, submissions, corrections, assessment settings, test results, grades, and findings |
+Paths in this section are under `src/main/java/autograder/` unless they begin with `src/`,
+`Project/`, `.mvn/` or are root files. A trailing `/` is a folder.
 
-The model classes store information shared between application components. For example, `SubmissionResult` holds preparation results for one ZIP, and `StudentGrade` holds that submission's test results. Adapter source resources live under `src/main/resources/autograder/adapters` and are packaged inside the JAR.
+- Grading core and pipeline
+  - `App.java`: command-line entry point, argument parsing and exit codes
+  - `GradingService.java`: one grading session; shared by the command line and the GUI
+  - `RunOutcome.java`, `RunListener.java`, `ConsoleRunListener.java`: run result and progress hooks
+  - `grading/GradingPipeline.java`: compile, run cases, aggregate scores, hand off to reports
+  - `grading/InstructorTestCaseProvider.java`: maps the five supplied testers to their adapters
+  - `grading/CombinedTestCaseProvider.java`: merges supplied and dynamic cases and splits marks
+  - `grading/GradingDiagnosticsWriter.java`: writes `cases.csv` and `submissions.csv`
+  - `grading/GradingRun.java`: the finished run
+  - `report/CsvScoreReportWriter.java`: fills scores into a new copy of the score sheet
+  - `report/ReportFiles.java`: fixed report file names
+  - `roster/ScoreSheetRepository.java`: reads the class list and keeps the original fields
+  - `csv/CsvCodec.java`: CSV quoting and line breaks
+  - `model/`: data carried between components (students, submissions, cases, grades, findings)
+  - `api/`: interfaces that reports, analyses and case providers implement
+  - `src/main/resources/autograder/adapters/Q1aAdapter.java` and the Q1b, Q2a, Q2b and Q3
+    adapters: one per supplied tester, compiled with the student's code
+- Submission preparation and identity
+  - `submission/SubmissionProcessor.java`: runs preparation for the whole batch
+  - `submission/SafeZipExtractor.java`: ZIP extraction with path, size and checksum checks
+  - `submission/SubmissionValidator.java`: finds question folders and rejects ambiguous layouts
+  - `submission/IdentityEvidenceCollector.java`: reads names and headers from the sources
+  - `submission/RosterIdentityMatcher.java`: matches evidence to one roster student
+  - `submission/IdentityResolver.java`: combines the evidence and plans header repairs
+  - `submission/CaseVariants.java`, `submission/ExactEntries.java`: unique wrong-case repair
+  - `submission/WorkingCopyPreparer.java`: builds the corrected working copy
+  - `submission/HeaderCorrectionPlanner.java`, `submission/HeaderCorrectionApplier.java`
+  - `submission/CorrectionLog.java`, `util/AnomalyLog.java`: the two logs under `build/`
+- Execution and isolation
+  - `execution/StudentCompiler.java`: compiles one question's sources with the adapter
+  - `execution/ProcessRunner.java`: deadlines and bounded captured output
+  - `execution/CaseExecutor.java`: one Java process per case (`case` isolation)
+  - `execution/PartCaseRunner.java`, `execution/CaseHost.java`, `execution/CaseHostProcess.java`:
+    one shared Java process per question (`part` isolation), with retry and start-up checks
+  - `execution/CaseResultReader.java`: reads the explicit per-case result file
+  - `execution/FixtureDirectory.java`, `execution/DirectoryCleaner.java`
+  - `config/ExecutionConfig.java`, `config/CaseIsolation.java`
+- Parallel grading
+  - `grading/SubmissionScheduler.java`: runs submissions on a bounded worker pool
+  - `config/WorkerLimits.java`: logical processor count, `auto`, and the cap with a warning
+  - `WorkersOption.java`: parses `--workers`
+  - `gui/WorkerChoice.java`: the GUI dropdown values
+- Swing GUI (`gui/`)
+  - `gui/GuiLauncher.java`: entry point; `gui/MainWindow.java`: the window
+  - `gui/RunBar.java`, `gui/GradingRunWorker.java`: Grade, Stop, Workers and the background run
+  - `gui/ResultsPanel.java`, `gui/RunArtifacts.java`, `gui/OutputViewer.java`: result buttons
+  - `gui/ConfigEditor.java`, `gui/ConfigFileStore.java`: Edit config...
+  - `gui/ReadinessChecker.java`, `gui/ReadinessMonitor.java`: inline field checks
+  - `gui/ResultsExport.java`, `report/XlsxWorkbookWriter.java`: Export all...
+- Terminal dashboard
+  - `ui/TerminalDashboard.java`: progress lines, with ANSI colour when supported
+  - `ui/DashboardSettings.java`: reads `dashboard.mode`
+  - `ui/TerminalCancellation.java`: `q` then Enter cancels
+  - `ui/ConsoleProgressListener.java`, `DashboardRunListener.java`
+- HTML dashboard
+  - `report/html/OfflineHtmlReportGenerator.java`: writes the single self-contained file
+  - `report/html/`: the other classes there render the table, details, summary and analyses
+  - `src/main/resources/autograder/html/dashboard.css`, `dashboard.js`: embedded styles and script
+  - `config/HtmlReportConfig.java`
+- Markdown feedback
+  - `report/feedback/MarkdownFeedbackGenerator.java`: one file per student
+  - `report/feedback/FeedbackFileWriter.java`, `report/feedback/MarkdownDiagnosticFormatter.java`
+  - `config/FeedbackConfig.java`
+- Plagiarism detection
+  - `plagiarism/PlagiarismDetectorFactory.java`, `plagiarism/CombinedPlagiarismDetector.java`:
+    build the configured algorithms; one failing algorithm does not discard the others
+  - `plagiarism/NGramPlagiarismDetector.java`: normalized token n-grams and Jaccard similarity
+  - `plagiarism/JPlagPlagiarismDetector.java`: runs the JPlag library over Java syntax tokens
+  - `plagiarism/JavaTokenizer.java`, `plagiarism/NGramBuilder.java`,
+    `plagiarism/SimilarityCalculator.java`, `plagiarism/QuestionFiles.java`
+  - `config/PlagiarismConfig.java`
+- Starter-code comparison
+  - `analysis/boilerplate/StarterCodeDetector.java`: flags answers that match the starter
+  - `analysis/boilerplate/MethodComparison.java`: method-level differences
+  - `analysis/boilerplate/StarterComparisonReport.java`: `starter-comparison/index.html`
+  - `StarterAnalysis.java`: runs the analysis and writes `starter-analysis.csv`
+  - `config/BoilerplateConfig.java`
+  - `src/main/resources/autograder/boilerplate/`: report page template and script
+- Dynamic and randomized grading
+  - `grading/DynamicTestCaseProvider.java`: five seeded property checks per question
+  - `src/main/resources/autograder/adapters/DynamicRunner.java`: runs them without stored answers
+  - `RandomizedCommands.java`: the `--randomized-*` commands
+  - `autotester/question/`: randomized question definitions and `QuestionRegistry.java`
+  - `autotester/generator/`: random input generators
+  - `autotester/execution/`: resource generation and single or batch randomized grading
+  - `src/main/resources/autograder/autotester/`: student runner and lab-test support classes
+- Score sanity checks
+  - `SanityAnalysis.java`: runs the checks and writes `sanity-checks.csv`
+  - `analysis/sanity/SanityChecker.java`: the rules; `analysis/sanity/SanityCsvWriter.java`
+  - `config/SanityConfig.java`
+- Demo cohort generator
+  - `demo/DemoCohortGenerator.java`: builds `build/demo-cohort`
+  - `demo/DonorArchive.java`, `demo/HeaderRewriter.java`, `demo/SyntheticArchiveWriter.java`,
+    `demo/SyntheticRoster.java`
+- Configuration
+  - `config.properties`, `demo.properties`: root-level settings files
+  - `config/AppConfig.java`, `config/AppConfigLoader.java`, `config/AppConfigGroups.java`
+  - `config/AssessmentConfigLoader.java`: the `assessment.*` keys
+  - `config/RunSettings.java`: all settings for one run
+  - `config/PropertyParsers.java`, `config/ConfigPathPolicy.java`,
+    `config/RuntimePathOverrides.java`
+- Tests
+  - `src/test/java/autograder/`: JUnit 5 tests mirroring the main packages, using temporary
+    synthetic inputs
+- Scripts and build
+  - `compile.sh`, `compile.bat`: build the JAR without tests
+  - `run.sh`, `run.bat`: window with no arguments, command line otherwise
+  - `demo.sh`, `demo.bat`: generate and grade the demo cohort
+  - `pom.xml`, `mvnw`, `mvnw.cmd`, `.mvn/`: build settings and the Maven Wrapper
+- Supplied inputs (`Project/`, never modified)
+  - `Project/student-submission/`: the six student ZIPs
+  - `Project/Tester-Files/`: instructor testers and text fixtures
+  - `Project/RenameToYourUsername/`: starter sources and supplied support classes
+  - `Project/IS442-ScoreSheet.csv`: class list and required report format
+  - `Project/IS442-ScoreSheet-graded.csv`: supplied reference marks
+  - `Project/groundtruth.txt`: per-question reference marks; its Xing components sum to 15 but it
+    states a total of 1
+  - `Project/IS442-ExamSample.pdf`: the sample assessment
 
-## Libraries and licences
+## Third-party dependencies and licences
 
-The only application libraries are JPlag 4.3.0 (GPL-3.0, the newest release built for Java 17) with its Java language module, and `slf4j-nop` at run time. JUnit Jupiter is used for tests only. The Maven Wrapper files carry an Apache License 2.0 header. Maven downloads the libraries and bundles the run-time ones into the JAR, so nothing needs to be installed manually and the JAR runs on its own. The GUI uses Swing from the JDK.
+Maven downloads these and bundles the runtime ones into the JAR, so nothing is installed by
+hand and the JAR runs on its own. The GUI uses Swing from the JDK.
 
-## Common setup problems
+Runtime, bundled in the JAR:
 
-| Symptom | What to check |
-| --- | --- |
-| `java` or `javac` is not found | Install a JDK 17 or newer, check `JAVA_HOME`/`PATH`, and reopen the console; a JRE alone does not supply `javac` |
-| `Build failed. Check that javac -version and JAVA_HOME point to a JDK 17 or newer.` | The Maven Wrapper must run on a full JDK 17 or newer; check `javac -version` and `JAVA_HOME` |
-| The build cannot download Maven, a plugin or a dependency | Check internet/proxy access and run the compile script again once access is restored |
-| `target/auto-grading-system-1.0-SNAPSHOT.jar not found. Run sh compile.sh first.` (or `compile.bat`) | Compile successfully before using `run` or `demo` |
-| The shell or console cannot find `compile.sh`, `compile.bat` or `mvnw` | Run the command from inside the unzipped `G1-T3-ByteGrade` folder, where `compile.sh` is located |
-| Missing configuration or input resources | Retain the supplied `Project` folder and check configured paths; paths inside the properties file resolve relative to that file |
-| Passing cases reported as timed out when using several workers | Use 1 worker, especially on Windows |
+- `de.jplag:jplag`, `de.jplag:java`, `de.jplag:language-api` 4.3.0 (GPL-3.0)
+  - 4.3.0 is the newest JPlag release built for Java 17.
+- `org.slf4j:slf4j-nop`, `org.slf4j:slf4j-api` 2.0.7 (MIT)
+- `com.fasterxml.jackson.core:jackson-databind`, `jackson-core`, `jackson-annotations` 2.14.2
+  (Apache-2.0)
+- `org.apache.commons:commons-math3` 3.6.1 (Apache-2.0)
+- `org.kohsuke.metainf-services:metainf-services` 1.9 (MIT)
+
+Test only, not in the JAR:
+
+- JUnit 5.11.4 (EPL-2.0)
+
+Build tool:
+
+- Maven Wrapper (Apache-2.0)
+
+## Troubleshooting
+
+- `java` or `javac` is not found
+  - Install a JDK 17 or newer, check `JAVA_HOME` and `PATH`, and reopen the console.
+  - A JRE alone does not supply `javac`.
+- `Build failed. Check that javac -version and JAVA_HOME point to a JDK 17 or newer.`
+  - The Maven Wrapper must run on a full JDK 17 or newer.
+- The build cannot download Maven, a plugin or a dependency
+  - Check internet or proxy access, then run the compile script again.
+- `target/auto-grading-system-1.0-SNAPSHOT.jar not found. Run sh compile.sh first.`
+  - Build successfully before using `run` or `demo` (`compile.bat` on Windows).
+- The shell or console cannot find `compile.sh`, `compile.bat` or `mvnw`
+  - Run the command from inside the unzipped folder that contains `compile.sh`.
+- Missing configuration or input files
+  - Keep the supplied `Project/` folder and check the configured paths.
+  - Paths inside a properties file resolve relative to that file.
+- Passing cases reported as timed out when using several workers
+  - Use 1 worker, especially on Windows.
+- The window does not open
+  - It needs a desktop session. On a headless machine use the command line instead.
 
 ## AI use declaration
 
 The team wrote the code by hand. We used AI for high-level guidance on bonus feature ideas, project structure, and how to divide responsibilities between classes. We also used it to help with complex debugging, but only after attempting to diagnose and fix issues ourselves.
-
-## Presentation slides
-
-The slide deck is `G1-T3.pptx` in the root of the submission folder.
