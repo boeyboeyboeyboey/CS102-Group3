@@ -46,6 +46,8 @@ The default configuration processes the six archives in `Project/student-submiss
 
 Question maxima are 3, 3, 5, 5 and 4. Each question's marks are shared equally across its fixed and dynamic cases, so case values such as 0.375 are expected. The score sheet rounds half-up to two decimal places; case and submission reports retain full precision. Results may vary when the assessment, submissions, or configuration changes.
 
+These totals differ from `Project/IS442-ScoreSheet-graded.csv` for Chee, David, Fen and Xing. That sheet counts only the 20 supplied cases and gives Ping 20, Chee 12, David 10, Fen 10, Jing 0 and Xing 1, while this run also grades the dynamic cases. To reproduce the sheet, add `grading.dynamic.enabled=false` to `config.properties` and run again.
+
 ## Demo cohort: 100 students
 
 The six supplied submissions are too few to show parallel grading, so `demo` grades a larger cohort: the six real archives plus 94 synthetic students. Each synthetic student takes its Q1, Q2 and Q3 folders from randomly chosen real submissions, with the header name and email rewritten, so every program is real student code and each synthetic question score equals its source student's. A fixed seed makes every generation identical. Nothing under `Project/` or `config.properties` changes; the cohort is written to `build/demo-cohort/` and graded with `demo.properties`, which differs from `config.properties` only in its input, score sheet and output paths (results under `build/demo-run/grading/`).
@@ -128,7 +130,7 @@ Plagiarism analysis is configured with `plagiarism.enabled`, `plagiarism.algorit
 
 `grading.sanity.*` settings control optional checks for assessment-wide patterns such as unusually low scores or widespread timeouts. These checks do not change marks or export decisions. `grading.feedback.enabled`, `grading.feedback.directory`, and `grading.feedback.max.diagnostic.lines` control per-student Markdown feedback.
 
-`assessment.question.ids` defines each part's source files, tester, cases, weights, support classes, and fixtures. The supplied assessment has five question parts and 20 fixed cases. The dynamic test provider adds five seeded property checks per part, distributing each question's existing maximum across its fixed and dynamic cases. A different tester needs a matching adapter; configuration alone does not turn arbitrary Java testers into runnable cases.
+`assessment.question.ids` defines each part's source files, tester, cases, weights, support classes, and fixtures. The supplied assessment has five question parts and 20 fixed cases. The dynamic test provider adds five seeded property checks per part, distributing each question's existing maximum across its fixed and dynamic cases. The optional `grading.dynamic.enabled` key (default `true`) turns these checks off when `false`, so the fixed cases carry each question's full maximum. A different tester needs a matching adapter; configuration alone does not turn arbitrary Java testers into runnable cases.
 
 To grade other submissions, copy `config.properties`, change the input directory, score sheet path and output paths in the copy, and pass it as the argument: `sh run.sh my.properties` or `run.bat my.properties`. `demo.properties` is an example of such a copy.
 
@@ -167,7 +169,9 @@ The process exits successfully when the grading batch and reports complete, even
 
 Each question compiles only its selected source, required companions, supplied support classes, and adapter. Student `.class` files are ignored. A missing answer/companion or syntax error gives that part zero marks without blocking other parts. Each case has a fresh working directory and fixture copies. A pass earns configured points; a mismatch, runtime error, timeout, or compile failure earns zero. A pass–loop–pass sequence retains two marks. Missing/invalid result files and `System.exit(0)` without a result are runtime errors. Printed `Passed` messages cannot award marks.
 
-Unresolved identities, duplicate submissions, and unusable preparations are withheld. Name corroboration warnings remain visible but do not withhold a uniquely matched student's usable work. Infrastructure errors withhold the affected student's export instead of silently presenting a partial score as final. Every submission has a record for each configured case, including NOT_RUN records when blocked.
+Unresolved identities, duplicate submissions, and unusable preparations are withheld. Name corroboration warnings remain visible but do not withhold a uniquely matched student's usable work. Infrastructure errors withhold the affected student's export instead of silently presenting a partial score as final. The exception is part isolation's shared case host: a case whose host fails twice is recorded as a `RUNTIME_ERROR` worth zero, and the student is still exported. Every submission has a record for each configured case, including NOT_RUN records when blocked.
+
+Folder and file names must match the expected upper and lower case. A question folder or source file with the wrong case is flagged for review. That part is still graded on Windows and macOS, whose file systems normally ignore case, but scores zero on Linux. A submission in which no required question folder matches exactly is withheld.
 
 The configured score filename defaults to `scorereport.csv`. `cases.csv` contains case status, points, duration and bounded stdout/stderr. `submissions.csv` identifies EXPORTED/WITHHELD rows, reasons and preparation warnings. Withheld and absent students retain their original template numerators; consult `submissions.csv` before treating those unchanged values as grades from this run.
 
