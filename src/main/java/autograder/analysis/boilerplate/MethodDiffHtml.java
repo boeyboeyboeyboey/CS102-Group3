@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.List;
 
+/** Writes the HTML for one method difference, with a line-by-line starter and student view, and escapes text for HTML. */
 final class MethodDiffHtml {
     private static final long MAX_LINE_CELLS = 250_000;
 

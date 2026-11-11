@@ -8,6 +8,7 @@ import autograder.model.StudentGrade;
 import autograder.model.SubmissionResult;
 import autograder.model.SubmissionStatus;
 import autograder.report.ReportFiles;
+import autograder.ui.ConsoleGradingMessages;
 import autograder.ui.ConsoleProgressListener;
 
 import java.util.ArrayList;
@@ -17,10 +18,16 @@ import java.util.Locale;
 /** Prints run progress and results to the console. */
 final class ConsoleRunListener implements RunListener {
     private final ConsoleProgressListener intake = new ConsoleProgressListener();
+    private final ConsoleGradingMessages grading = new ConsoleGradingMessages();
 
     @Override
     public void onProgress(String stage, String item, int completed, int total) {
         intake.onProgress(stage, item, completed, total);
+    }
+
+    @Override
+    public void onSubmissionStarted(String item, int index, int total) {
+        grading.onSubmissionStarted(item, index, total);
     }
 
     @Override

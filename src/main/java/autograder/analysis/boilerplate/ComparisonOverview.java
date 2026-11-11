@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.List;
 
+/** Builds the overview table of the starter comparison report, one row of method status counts per submission file. */
 final class ComparisonOverview {
     private ComparisonOverview() {
     }

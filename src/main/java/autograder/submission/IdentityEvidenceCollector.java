@@ -16,6 +16,7 @@ import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/** Collects identity evidence from the archive name, the wrapper folder and the header comments of each question source file. */
 final class IdentityEvidenceCollector {
     private final AppConfig config;
 

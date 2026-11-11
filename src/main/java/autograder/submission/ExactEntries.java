@@ -36,12 +36,24 @@ final class ExactEntries {
             return null;
         }
         List<String> names = new ArrayList<>();
+        List<String> otherKindNames = new ArrayList<>();
         try (DirectoryStream<Path> entries = Files.newDirectoryStream(parent)) {
             for (Path entry : entries) {
                 if (wantDirectory ? Files.isDirectory(entry) : Files.isRegularFile(entry)) {
                     names.add(entry.getFileName().toString());
+                } else {
+                    otherKindNames.add(entry.getFileName().toString());
                 }
             }
+        }
+        return chooseName(names, otherKindNames, expectedName);
+    }
+
+    /** As {@link #chooseName(List, String)}, but no variant when the expected name belongs to another kind of entry. */
+    static String chooseName(List<String> names, List<String> otherKindNames, String expectedName) {
+        // renaming a variant onto a name another kind of entry holds would collide when the tree is copied
+        if (!names.contains(expectedName) && otherKindNames.contains(expectedName)) {
+            return null;
         }
         return chooseName(names, expectedName);
     }

@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+/** Matches the strong identity evidence found in a submission against the score sheet roster. */
 final class RosterIdentityMatcher {
     private static final Set<String> WRAPPER_SOURCES = Set.of("wrapper username", "wrapper student id");
 
@@ -29,10 +30,9 @@ final class RosterIdentityMatcher {
         for (IdentityEvidence.StrongEvidence item : evidence) {
             List<StudentRecord> matches = findMatches(item, roster);
             if (matches.isEmpty()) {
-                anomalies.add(item.source() + " does not match a score sheet student"
-                        + (WRAPPER_SOURCES.contains(item.source()) ? ": " + item.value() : ""));
+                anomalies.add(unmatchedAnomaly(item));
                 // a mistyped wrapper folder is only a warning when other evidence names one student
-                if (WRAPPER_SOURCES.contains(item.source())) {
+                if (isWrapper(item)) {
                     unmatchedWrapper = true;
                 } else {
                     unresolvedEvidence = true;
@@ -43,7 +43,7 @@ final class RosterIdentityMatcher {
             } else {
                 StudentRecord student = matches.get(0);
                 matchedStudents.put(student.getId(), student);
-                if (!WRAPPER_SOURCES.contains(item.source())) {
+                if (!isWrapper(item)) {
                     otherEvidenceStudents.add(student.getId());
                 }
             }
@@ -51,6 +51,11 @@ final class RosterIdentityMatcher {
         if (unmatchedWrapper && otherEvidenceStudents.isEmpty()) {
             unresolvedEvidence = true;
         }
+        return decide(matchedStudents, anomalies, unresolvedEvidence);
+    }
+
+    private Result decide(Map<String, StudentRecord> matchedStudents, List<String> anomalies,
+                          boolean unresolvedEvidence) {
         if (matchedStudents.size() > 1) {
             anomalies.add("conflicting strong identity evidence points to different score sheet students: "
                     + conflictingUsernames(matchedStudents.values()));
@@ -64,6 +69,19 @@ final class RosterIdentityMatcher {
             return new Result(null, anomalies);
         }
         return new Result(matchedStudents.values().iterator().next(), anomalies);
+    }
+
+    private static boolean isWrapper(IdentityEvidence.StrongEvidence evidence) {
+        return WRAPPER_SOURCES.contains(evidence.source());
+    }
+
+    // the wrapper folder name comes from the student's archive, so control characters are stripped before echoing it
+    private static String unmatchedAnomaly(IdentityEvidence.StrongEvidence evidence) {
+        String text = evidence.source() + " does not match a score sheet student";
+        if (!isWrapper(evidence)) {
+            return text;
+        }
+        return text + ": " + evidence.value().replaceAll("\\p{Cntrl}", " ").strip();
     }
 
     private String conflictingUsernames(Collection<StudentRecord> students) {

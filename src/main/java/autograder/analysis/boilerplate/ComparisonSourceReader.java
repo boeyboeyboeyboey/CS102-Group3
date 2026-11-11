@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 
+/** Reads a source file for comparison, rejecting paths outside the folder, oversized files and sources that cannot be tokenised. */
 final class ComparisonSourceReader {
     private ComparisonSourceReader() {
     }

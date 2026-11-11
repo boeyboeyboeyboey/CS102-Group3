@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 
+/** Compares the methods of a starter file and a student file by signature and classifies each as modified, unchanged, added or removed. */
 final class MethodComparison {
     private static final long MAX_DIFF_CELLS = 1_000_000;
 

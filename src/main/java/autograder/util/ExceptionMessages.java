@@ -17,7 +17,20 @@ public final class ExceptionMessages {
 
     /** An exception that names the file and says whether it is missing or could not be read. */
     public static IOException unreadableFile(Path file, IOException cause) {
-        String prefix = cause instanceof NoSuchFileException ? "file not found: " : "cannot read file: ";
+        String prefix = findCause(cause, NoSuchFileException.class) != null
+                ? "file not found: " : "cannot read file: ";
         return new IOException(prefix + file, cause);
+    }
+
+    /** The first throwable of the given type in the cause chain, starting with the throwable itself, or null. */
+    public static <T extends Throwable> T findCause(Throwable throwable, Class<T> type) {
+        Throwable cause = throwable;
+        while (cause != null) {
+            if (type.isInstance(cause)) {
+                return type.cast(cause);
+            }
+            cause = cause.getCause() == cause ? null : cause.getCause();
+        }
+        return null;
     }
 }

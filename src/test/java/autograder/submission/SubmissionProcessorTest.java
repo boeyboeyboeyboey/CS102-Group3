@@ -207,6 +207,28 @@ class SubmissionProcessorTest {
     }
 
     @Test
+    void damagedEntryDataIsNotReportedAsAnInvalidZipFile() throws Exception {
+        Path submissions = Files.createDirectories(temporaryDirectory.resolve("submissions"));
+        Path archive = submissions.resolve("damaged-entry.zip");
+        createArchive(archive, mapOf("payload.txt", "PAYLOAD ".repeat(50)));
+        byte[] bytes = Files.readAllBytes(archive);
+        int nameLength = (bytes[26] & 0xff) | ((bytes[27] & 0xff) << 8);
+        int extraLength = (bytes[28] & 0xff) | ((bytes[29] & 0xff) << 8);
+        // the first deflate block header becomes the reserved block type, which cannot be inflated
+        bytes[30 + nameLength + extraLength] = 0x07;
+        Files.write(archive, bytes);
+
+        SubmissionResult result = new SubmissionProcessor(createConfig(temporaryDirectory))
+                .processBatch().get(0);
+
+        assertEquals(SubmissionStatus.FAILED, result.getStatus());
+        assertTrue(result.getAnomalies().get(0).startsWith(
+                "archive extraction failed: could not read ZIP file damaged-entry.zip: "),
+                result.getAnomalies().toString());
+        assertFalse(result.getAnomalies().get(0).contains("not a valid ZIP file"));
+    }
+
+    @Test
     void unsafeEntryAndSizeLimitMessagesKeepTheirWording() throws Exception {
         Path submissions = Files.createDirectories(temporaryDirectory.resolve("submissions"));
         createArchive(submissions.resolve("unsafe.zip"), mapOf("../escape.java", "x"));
@@ -285,6 +307,28 @@ class SubmissionProcessorTest {
         assertEquals("q1a.java", ExactEntries.chooseName(List.of("q1a.java", "other.java"), "Q1a.java"));
         assertNull(ExactEntries.chooseName(List.of("q1a.java", "Q1A.java"), "Q1a.java"));
         assertNull(ExactEntries.chooseName(List.of("other.java"), "Q1a.java"));
+    }
+
+    @Test
+    void variantIsSkippedWhenTheCanonicalNameBelongsToAnotherKindOfEntry() {
+        assertNull(ExactEntries.chooseName(List.of("q1"), List.of("Q1"), "Q1"));
+        assertEquals("q1", ExactEntries.chooseName(List.of("q1"), List.of("other"), "Q1"));
+        assertEquals("Q1", ExactEntries.chooseName(List.of("Q1", "q1"), List.of("Q1"), "Q1"));
+    }
+
+    @Test
+    void wrapperValueEchoedInAnAnomalyHasControlCharactersRemoved() throws Exception {
+        RosterIdentityMatcher matcher = new RosterIdentityMatcher(createConfig(temporaryDirectory));
+        List<StudentRecord> roster = List.of(
+                new StudentRecord("001", "#boey.tan.2026", "Boey", "Tan", "boey.tan.2026@school.edu"));
+        var wrapper = new IdentityEvidence.StrongEvidence(
+                IdentityEvidence.EvidenceType.USERNAME, "bo\u001b[31mey\n.tan", "wrapper username");
+
+        RosterIdentityMatcher.Result result = matcher.match(List.of(wrapper), roster);
+
+        assertTrue(result.anomalies().contains(
+                "wrapper username does not match a score sheet student: bo [31mey .tan"),
+                result.anomalies().toString());
     }
 
     @Test

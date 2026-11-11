@@ -124,11 +124,24 @@ public final class GradingService {
     }
 
     private static ProgressListener gradingAdapter(RunListener listener) {
-        return (stage, item, completed, total) -> {
-            if (ProgressStages.GRADING.equals(stage)) {
-                listener.gradingProgress(item, completed, total);
-            } else if (ProgressStages.REPORTING.equals(stage)) {
-                listener.reportingProgress(item, completed, total);
+        return new ProgressListener() {
+            @Override
+            public void onProgress(String stage, String item, int completed, int total) {
+                if (ProgressStages.GRADING.equals(stage)) {
+                    listener.gradingProgress(item, completed, total);
+                } else if (ProgressStages.REPORTING.equals(stage)) {
+                    listener.reportingProgress(item, completed, total);
+                }
+            }
+
+            @Override
+            public void onSubmissionStarted(String item, int index, int total) {
+                listener.onSubmissionStarted(item, index, total);
+            }
+
+            @Override
+            public void onWarning(String message) {
+                System.err.println(message);
             }
         };
     }
@@ -174,6 +187,11 @@ public final class GradingService {
         @Override
         public void onProgress(String stage, String item, int completed, int total) {
             guard(() -> delegate.onProgress(stage, item, completed, total));
+        }
+
+        @Override
+        public void onSubmissionStarted(String item, int index, int total) {
+            guard(() -> delegate.onSubmissionStarted(item, index, total));
         }
 
         @Override

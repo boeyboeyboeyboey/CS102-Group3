@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+/** Builds the working copy that is graded, applying case, header and wrapper layout corrections without touching the extracted files. */
 final class WorkingCopyPreparer {
     private final AppConfig config;
     private final IdentityResolver identityResolver;

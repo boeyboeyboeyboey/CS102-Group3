@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
+/** Selects the student root inside an extracted archive and checks its required question directories and their case. */
 final class SubmissionValidator {
     private final AppConfig config;
     private final CaseVariants caseVariants;

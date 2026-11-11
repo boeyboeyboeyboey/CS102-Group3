@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+/** Splits Java source into code tokens, ignoring comments and whitespace, and measures the edit distance between two token lists. */
 final class JavaSourceTokens {
     // multi-character operators, checked in this order after the first character is consumed
     private static final List<String> OPERATORS = List.of(">>>=", "<<=", ">>=", ">>>", "...", "::", "->",

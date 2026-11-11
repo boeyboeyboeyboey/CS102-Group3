@@ -25,6 +25,7 @@ import autograder.model.TestCaseResult;
 import autograder.model.TestStatus;
 import autograder.report.ReportFiles;
 import autograder.roster.ScoreSheetRepository;
+import autograder.ui.ConsoleGradingMessages;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -34,6 +35,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 
 /** Grades every submission in the input directory and exports the score reports. */
 public final class GradingPipeline {
@@ -55,14 +57,14 @@ public final class GradingPipeline {
         this(app, execution, plagiarismDetector, null);
     }
 
-    // a null listener keeps the console-only behaviour of the other constructors
+    // a null listener falls back to console messages, the behaviour of the other constructors
     public GradingPipeline(AppConfig app, ExecutionConfig execution,
                            PlagiarismDetector plagiarismDetector,
                            ProgressListener progressListener) throws IOException {
         this.app = app;
         this.execution = execution;
         this.plagiarismDetector = plagiarismDetector;
-        this.progressListener = progressListener;
+        this.progressListener = progressListener == null ? new ConsoleGradingMessages() : progressListener;
         TestCaseProvider fixedProvider = new InstructorTestCaseProvider();
         TestCaseProvider dynamicProvider = execution.dynamicEnabled()
                 ? new DynamicTestCaseProvider() : assessment -> List.of();
@@ -149,16 +151,28 @@ public final class GradingPipeline {
         notifyProgress(ProgressStages.GRADING, item, finished.addAndGet(step), total);
     }
 
+    private void notifyProgress(String stage, String item, int completed, int total) {
+        notifyListener(listener -> listener.onProgress(stage, item, completed, total));
+    }
+
     // a failing listener must not stop grading and is disabled for the rest of the run
-    private synchronized void notifyProgress(String stage, String item, int completed, int total) {
-        if (progressListener == null || !progressEnabled) {
+    private synchronized void notifyListener(Consumer<ProgressListener> notification) {
+        if (!progressEnabled) {
             return;
         }
         try {
-            progressListener.onProgress(stage, item, completed, total);
+            notification.accept(progressListener);
         } catch (RuntimeException exception) {
-            System.err.println("progress update failed: " + exception.getMessage());
+            warn("progress update failed: " + exception.getMessage());
             progressEnabled = false;
+        }
+    }
+
+    private void warn(String message) {
+        try {
+            progressListener.onWarning(message);
+        } catch (RuntimeException exception) {
+            // the listener is the thing that failed, so there is nowhere else to report this
         }
     }
 
@@ -167,7 +181,7 @@ public final class GradingPipeline {
         try {
             return plagiarismDetector.compare(submissions, app.getAssessment());
         } catch (IOException | RuntimeException exception) {
-            System.err.println("similarity check skipped: " + exception.getMessage());
+            warn("similarity check skipped: " + exception.getMessage());
             return List.of();
         }
     }
@@ -189,8 +203,8 @@ public final class GradingPipeline {
             throws IOException, InterruptedException {
         String blocker = blocker(submission, identities);
         List<TestCaseResult> results = new ArrayList<>();
-        System.out.println("Grading " + index + "/" + total + ": "
-                + submission.getArchivePath().getFileName());
+        notifyListener(listener -> listener.onSubmissionStarted(
+                submission.getArchivePath().getFileName().toString(), index, total));
         if (blocker != null) {
             withheld.put(submission, blocker);
             for (TestCaseDefinition test : cases) {

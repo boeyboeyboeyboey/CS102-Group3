@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+/** Plans the header corrections that make each source file name its resolved roster student, and reports headers that cannot be corrected. */
 final class HeaderCorrectionPlanner {
     private final AppConfig config;
 

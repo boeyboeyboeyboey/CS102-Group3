@@ -25,6 +25,11 @@ final class DashboardRunListener implements RunListener {
     }
 
     @Override
+    public void onSubmissionStarted(String item, int index, int total) {
+        console.onSubmissionStarted(item, index, total);
+    }
+
+    @Override
     public void preparing(String assessmentName) {
         console.preparing(assessmentName);
     }

@@ -18,6 +18,7 @@ import javax.tools.JavaFileObject;
 import javax.tools.SimpleJavaFileObject;
 import javax.tools.ToolProvider;
 
+/** Parses Java source with the JDK compiler and lists its methods with their signatures, source text and code tokens. */
 final class JavaMethods {
     private static final List<String> PARSE_OPTIONS = List.of("-proc:none", "--source", "17");
 

@@ -57,7 +57,7 @@ public final class SubmissionProcessor {
     }
 
     public List<SubmissionResult> processBatch(ScoreSheet scoreSheet) throws IOException {
-        validateAssessmentScore(scoreSheet);
+        new AssessmentScoreCheck(config).validate(scoreSheet);
         List<Path> archives = findArchives();
         if (archives.isEmpty()) {
             return List.of();
@@ -100,17 +100,24 @@ public final class SubmissionProcessor {
         List<String> anomalies = new ArrayList<>();
         List<SubmissionCorrection> corrections = new ArrayList<>();
         StudentIdentity identity = fallbackIdentity(archive);
-        Path studentRoot = null;
-        Path workingRoot = null;
-        boolean extracted = false;
 
         try {
             zipExtractor.extract(archive, extractionPath);
-            extracted = true;
         } catch (IOException | RuntimeException exception) {
             addAnomaly(archive, anomalies, "archive extraction failed: " + message(exception));
             return extractionFailed(archive, extractionPath, roster, anomalies, corrections, identity);
         }
+        return prepareExtracted(archive, extractionPath, workingRun, roster, anomalies, corrections, identity);
+    }
+
+    private SubmissionResult prepareExtracted(Path archive, Path extractionPath, Path workingRun,
+                                              List<StudentRecord> roster, List<String> anomalies,
+                                              List<SubmissionCorrection> corrections,
+                                              StudentIdentity fallback) {
+        StudentIdentity identity = fallback;
+        Path studentRoot = null;
+        Path workingRoot = null;
+        boolean extracted = true;
 
         try {
             SubmissionValidator.RootSelection selection = validator.selectStudentRoot(extractionPath);
@@ -118,9 +125,7 @@ public final class SubmissionProcessor {
             addAnomalies(archive, anomalies, selection.getAnomalies());
             List<String> questionDirectories = new ArrayList<>();
             if (studentRoot != null) {
-                questionDirectories = validator.findQuestionDirectories(studentRoot);
-                addAnomalies(archive, anomalies, validator.findMissingQuestionDirectories(studentRoot));
-                addAnomalies(archive, anomalies, validator.findWrongCaseQuestionDirectories(studentRoot));
+                questionDirectories = checkQuestionDirectories(archive, studentRoot, anomalies);
             }
 
             IdentityResolver.Resolution resolution = identityResolver.resolve(archive,
@@ -137,17 +142,29 @@ public final class SubmissionProcessor {
                 recordCorrections(archive, corrections, anomalies);
             }
 
-            SubmissionStatus status = SubmissionStatus.REVIEW_REQUIRED;
-            if (anomalies.isEmpty() && workingRoot != null) {
-                status = SubmissionStatus.READY;
-            }
             return new SubmissionResult(archive, extractionPath, studentRoot, workingRoot,
-                    identity, questionDirectories, anomalies, corrections, status, extracted);
+                    identity, questionDirectories, anomalies, corrections,
+                    status(anomalies, workingRoot), extracted);
         } catch (IOException | RuntimeException exception) {
             addAnomaly(archive, anomalies, "submission preparation failed: " + message(exception));
             return new SubmissionResult(archive, extractionPath, studentRoot, workingRoot,
                     identity, List.of(), anomalies, corrections, SubmissionStatus.FAILED, extracted);
         }
+    }
+
+    private List<String> checkQuestionDirectories(Path archive, Path studentRoot,
+                                                  List<String> anomalies) throws IOException {
+        List<String> questionDirectories = validator.findQuestionDirectories(studentRoot);
+        addAnomalies(archive, anomalies, validator.findMissingQuestionDirectories(studentRoot));
+        addAnomalies(archive, anomalies, validator.findWrongCaseQuestionDirectories(studentRoot));
+        return questionDirectories;
+    }
+
+    private static SubmissionStatus status(List<String> anomalies, Path workingRoot) {
+        if (anomalies.isEmpty() && workingRoot != null) {
+            return SubmissionStatus.READY;
+        }
+        return SubmissionStatus.REVIEW_REQUIRED;
     }
 
     private SubmissionResult extractionFailed(Path archive, Path extractionPath, List<StudentRecord> roster,
@@ -193,36 +210,6 @@ public final class SubmissionProcessor {
         }
         return new StudentIdentity("archive-derived fallback: " + name, "", "",
                 List.of(), List.of(), List.of(), null, "archive-derived fallback", List.of());
-    }
-
-    private void validateAssessmentScore(ScoreSheet scoreSheet) throws IOException {
-        int denominatorIndex = -1;
-        String denominatorColumn = scoreSheet.getColumns().get("denominator");
-        for (int index = 0; index < scoreSheet.getHeaders().size(); index++) {
-            if (scoreSheet.getHeaders().get(index).equals(denominatorColumn)) {
-                denominatorIndex = index;
-                break;
-            }
-        }
-        if (denominatorIndex < 0) {
-            throw new IOException("score sheet denominator column is unavailable");
-        }
-        for (int rowIndex = 0; rowIndex < scoreSheet.getRows().size(); rowIndex++) {
-            List<String> row = scoreSheet.getRows().get(rowIndex);
-            if (row.size() <= denominatorIndex) {
-                throw new IOException("score sheet row " + (rowIndex + 1)
-                        + " has too few columns for the denominator: " + row);
-            }
-            double denominator;
-            try {
-                denominator = Double.parseDouble(row.get(denominatorIndex).trim());
-            } catch (NumberFormatException exception) {
-                throw new IOException("score sheet row has an invalid denominator", exception);
-            }
-            if (Double.compare(denominator, config.getAssessment().getMaxScore()) != 0) {
-                throw new IOException("score sheet denominator does not match configured assessment max score");
-            }
-        }
     }
 
     private List<Path> findArchives() throws IOException {

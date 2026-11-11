@@ -6,7 +6,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-// locates the answer and companion files for one question inside one submission or starter folder
+/** Locates the answer and companion files for one question inside one submission or starter folder. */
 final class QuestionFiles {
     private QuestionFiles() {
     }

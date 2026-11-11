@@ -32,7 +32,15 @@ public final class StudentCompiler {
         for (String companion : question.getCompanionSourceFiles()) {
             sources.add(copyStudentSource(studentQuestionDirectory, companion, sourceDirectory));
         }
+        copySupportFiles(question, classesDirectory);
+        sources.addAll(copyInstructorSources(question, sourceDirectory));
 
+        List<String> command = javacCommand(javacExecutable, classesDirectory, sourceDirectory, sources);
+        return ProcessRunner.run(command, workspace, timeoutMillis, maxOutputBytes);
+    }
+
+    private static void copySupportFiles(QuestionDefinition question, Path classesDirectory)
+            throws IOException {
         for (Path supportFile : question.getSupportFiles()) {
             if (!Files.isRegularFile(supportFile) || !supportFile.getFileName().toString().endsWith(".class")) {
                 throw new IOException("configured support class is missing or not a .class file: " + supportFile);
@@ -40,7 +48,11 @@ public final class StudentCompiler {
             Files.copy(supportFile, classesDirectory.resolve(supportFile.getFileName()),
                     StandardCopyOption.REPLACE_EXISTING);
         }
+    }
 
+    private static List<Path> copyInstructorSources(QuestionDefinition question, Path sourceDirectory)
+            throws IOException {
+        List<Path> sources = new ArrayList<>();
         String adapterName = question.getId() + "Adapter.java";
         String resourceName = ADAPTER_RESOURCE + adapterName;
         Path adapterPath = sourceDirectory.resolve(adapterName);
@@ -55,7 +67,11 @@ public final class StudentCompiler {
         if (copyResource(ADAPTER_RESOURCE + dynamicRunnerName, dynamicRunnerPath, false)) {
             sources.add(dynamicRunnerPath);
         }
+        return sources;
+    }
 
+    private static List<String> javacCommand(String javacExecutable, Path classesDirectory,
+                                             Path sourceDirectory, List<Path> sources) {
         List<String> command = new ArrayList<>();
         command.add(javacExecutable);
         command.add("-proc:none");
@@ -70,7 +86,7 @@ public final class StudentCompiler {
         for (Path source : sources) {
             command.add(source.toString());
         }
-        return ProcessRunner.run(command, workspace, timeoutMillis, maxOutputBytes);
+        return command;
     }
 
     private static boolean copyResource(String resourceName, Path target, boolean required)

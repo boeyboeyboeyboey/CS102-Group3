@@ -127,37 +127,13 @@ final class AppConfigLoader {
 
     private AppConfig createConfig() {
         // groups are built in the order the properties were originally read, so the first invalid one is reported
-        DirectoryPrefixes prefixes = new DirectoryPrefixes(
-                PropertyParsers.pathPrefix(properties, "run.directory.prefix"),
-                PropertyParsers.pathPrefix(properties, "working.run.directory.prefix"),
-                PropertyParsers.pathPrefix(properties, "working.submission.directory.prefix"));
-        FileNamePatterns filePatterns = new FileNamePatterns(
-                PropertyParsers.compile(properties, "archive.file.regex", false),
-                javaSourcePattern,
-                questionDirectoryPattern,
-                PropertyParsers.compile(properties, "metadata.directory.regex", false));
-        IdentityPatterns identityPatterns = new IdentityPatterns(
-                PropertyParsers.compile(properties, "identity.name.regex", true),
-                PropertyParsers.compile(properties, "identity.email.regex", true),
-                PropertyParsers.compile(properties, "identity.username.regex", true));
-        IdentityLabels identityLabels = new IdentityLabels(
-                PropertyParsers.required(properties, "identity.name.label"),
-                PropertyParsers.required(properties, "identity.email.label"),
-                PropertyParsers.required(properties, "identity.username.label"));
-        ArchiveIdentityPatterns archiveIdentityPatterns = new ArchiveIdentityPatterns(
-                PropertyParsers.compile(properties, "identity.archive.username.regex", true),
-                PropertyParsers.compile(properties, "identity.wrapper.username.regex", false),
-                PropertyParsers.compile(properties, "identity.wrapper.student.id.regex", false),
-                PropertyParsers.compile(properties, "identity.wrapper.placeholder.regex", false));
-        RosterSettings roster = new RosterSettings(
-                PropertyParsers.required(properties, "identity.roster.prefix"),
-                PropertyParsers.required(properties, "identity.roster.last-name.placeholder"),
-                PropertyParsers.positiveInt(properties, "identity.header.max.lines"));
-        ArchiveLimits limits = new ArchiveLimits(
-                PropertyParsers.positiveInt(properties, "io.buffer.bytes"),
-                PropertyParsers.positiveInt(properties, "limits.archive.entries"),
-                PropertyParsers.positiveLong(properties, "limits.entry.bytes"),
-                PropertyParsers.positiveLong(properties, "limits.archive.bytes"));
+        DirectoryPrefixes prefixes = directoryPrefixes();
+        FileNamePatterns filePatterns = fileNamePatterns();
+        IdentityPatterns identityPatterns = identityPatterns();
+        IdentityLabels identityLabels = identityLabels();
+        ArchiveIdentityPatterns archiveIdentityPatterns = archiveIdentityPatterns();
+        RosterSettings roster = rosterSettings();
+        ArchiveLimits limits = archiveLimits();
         return new AppConfig(
                 new RunDirectories(inputDirectory, extractionDirectory, workingDirectory),
                 prefixes,
@@ -171,6 +147,58 @@ final class AppConfigLoader {
                 limits,
                 new ScoreSheetSettings(scoreSheetPath, scoreSheetColumns),
                 assessment);
+    }
+
+    private DirectoryPrefixes directoryPrefixes() {
+        return new DirectoryPrefixes(
+                PropertyParsers.pathPrefix(properties, "run.directory.prefix"),
+                PropertyParsers.pathPrefix(properties, "working.run.directory.prefix"),
+                PropertyParsers.pathPrefix(properties, "working.submission.directory.prefix"));
+    }
+
+    private FileNamePatterns fileNamePatterns() {
+        return new FileNamePatterns(
+                PropertyParsers.compile(properties, "archive.file.regex", false),
+                javaSourcePattern,
+                questionDirectoryPattern,
+                PropertyParsers.compile(properties, "metadata.directory.regex", false));
+    }
+
+    private IdentityPatterns identityPatterns() {
+        return new IdentityPatterns(
+                PropertyParsers.compile(properties, "identity.name.regex", true),
+                PropertyParsers.compile(properties, "identity.email.regex", true),
+                PropertyParsers.compile(properties, "identity.username.regex", true));
+    }
+
+    private IdentityLabels identityLabels() {
+        return new IdentityLabels(
+                PropertyParsers.required(properties, "identity.name.label"),
+                PropertyParsers.required(properties, "identity.email.label"),
+                PropertyParsers.required(properties, "identity.username.label"));
+    }
+
+    private ArchiveIdentityPatterns archiveIdentityPatterns() {
+        return new ArchiveIdentityPatterns(
+                PropertyParsers.compile(properties, "identity.archive.username.regex", true),
+                PropertyParsers.compile(properties, "identity.wrapper.username.regex", false),
+                PropertyParsers.compile(properties, "identity.wrapper.student.id.regex", false),
+                PropertyParsers.compile(properties, "identity.wrapper.placeholder.regex", false));
+    }
+
+    private RosterSettings rosterSettings() {
+        return new RosterSettings(
+                PropertyParsers.required(properties, "identity.roster.prefix"),
+                PropertyParsers.required(properties, "identity.roster.last-name.placeholder"),
+                PropertyParsers.positiveInt(properties, "identity.header.max.lines"));
+    }
+
+    private ArchiveLimits archiveLimits() {
+        return new ArchiveLimits(
+                PropertyParsers.positiveInt(properties, "io.buffer.bytes"),
+                PropertyParsers.positiveInt(properties, "limits.archive.entries"),
+                PropertyParsers.positiveLong(properties, "limits.entry.bytes"),
+                PropertyParsers.positiveLong(properties, "limits.archive.bytes"));
     }
 
     private Map<String, String> loadScoreSheetColumns() {

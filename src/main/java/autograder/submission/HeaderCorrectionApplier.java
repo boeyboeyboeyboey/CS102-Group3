@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/** Applies planned header corrections to the source files of a working copy. */
 final class HeaderCorrectionApplier {
     private final AppConfig config;
 

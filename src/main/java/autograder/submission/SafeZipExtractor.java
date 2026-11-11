@@ -1,6 +1,7 @@
 package autograder.submission;
 
 import autograder.config.AppConfig;
+import autograder.util.ExceptionMessages;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -48,41 +49,48 @@ public final class SafeZipExtractor {
     }
 
     private void extractEntries(Path archivePath, Path outputRoot) throws IOException {
+        try (ZipFile zipFile = openArchive(archivePath)) {
+            extractZipEntries(zipFile, outputRoot);
+        } catch (ZipException exception) {
+            throw new IOException("could not read ZIP file " + archivePath.getFileName() + ": "
+                    + ExceptionMessages.describe(exception), exception);
+        }
+    }
+
+    private static ZipFile openArchive(Path archivePath) throws IOException {
         try {
-            extractZipEntries(archivePath, outputRoot);
+            return new ZipFile(archivePath.toFile());
         } catch (ZipException exception) {
             throw new IOException("not a valid ZIP file: " + archivePath.getFileName(), exception);
         }
     }
 
-    private void extractZipEntries(Path archivePath, Path outputRoot) throws IOException {
-        try (ZipFile zipFile = new ZipFile(archivePath.toFile())) {
-            Enumeration<? extends ZipEntry> entries = zipFile.entries();
-            long entryCount = 0;
-            long totalBytes = 0;
-            byte[] buffer = new byte[config.getIoBufferBytes()];
+    private void extractZipEntries(ZipFile zipFile, Path outputRoot) throws IOException {
+        Enumeration<? extends ZipEntry> entries = zipFile.entries();
+        long entryCount = 0;
+        long totalBytes = 0;
+        byte[] buffer = new byte[config.getIoBufferBytes()];
 
-            while (entries.hasMoreElements()) {
-                ZipEntry entry = entries.nextElement();
-                entryCount++;
-                if (entryCount > config.getMaxArchiveEntries()) {
-                    throw new IOException("archive entry count exceeds configured limit");
-                }
+        while (entries.hasMoreElements()) {
+            ZipEntry entry = entries.nextElement();
+            entryCount++;
+            if (entryCount > config.getMaxArchiveEntries()) {
+                throw new IOException("archive entry count exceeds configured limit");
+            }
 
-                Path outputPath = resolveEntry(outputRoot, entry.getName());
-                long declaredSize = entry.getSize();
-                if (declaredSize > config.getMaxEntryBytes()) {
-                    throw new IOException("archive entry exceeds configured size limit: " + entry.getName());
-                }
-                if (declaredSize >= 0 && declaredSize > config.getMaxArchiveBytes() - totalBytes) {
-                    throw new IOException("archive exceeds configured uncompressed size limit");
-                }
+            Path outputPath = resolveEntry(outputRoot, entry.getName());
+            long declaredSize = entry.getSize();
+            if (declaredSize > config.getMaxEntryBytes()) {
+                throw new IOException("archive entry exceeds configured size limit: " + entry.getName());
+            }
+            if (declaredSize >= 0 && declaredSize > config.getMaxArchiveBytes() - totalBytes) {
+                throw new IOException("archive exceeds configured uncompressed size limit");
+            }
 
-                if (entry.isDirectory()) {
-                    Files.createDirectories(outputPath);
-                } else {
-                    totalBytes += copyEntry(zipFile, entry, outputPath, buffer, totalBytes);
-                }
+            if (entry.isDirectory()) {
+                Files.createDirectories(outputPath);
+            } else {
+                totalBytes += copyEntry(zipFile, entry, outputPath, buffer, totalBytes);
             }
         }
     }

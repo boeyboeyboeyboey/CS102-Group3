@@ -3,6 +3,7 @@ package autograder.submission;
 import java.nio.file.Path;
 import java.util.List;
 
+/** Immutable result of identity evidence collection: anomalies, strong evidence, parsed source headers and the names, email ids and usernames found. */
 final class IdentityEvidence {
     private final List<String> anomalies;
     private final List<StrongEvidence> strongEvidence;
