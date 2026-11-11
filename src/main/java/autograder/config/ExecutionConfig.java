@@ -10,11 +10,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-/** Settings for compiling and running student code: executables, timeouts, output limit and workers. */
+/**
+ * Settings for compiling and running student code: executables, timeouts, output limit and workers,
+ * plus whether generated dynamic cases join the supplied fixed cases.
+ */
 public record ExecutionConfig(Path directory, String reportFile, String javaExecutable,
                               String javacExecutable, long compileTimeoutMillis,
                               long caseTimeoutMillis, int maxOutputBytes, int workers,
-                              CaseIsolation caseIsolation, long caseStartupTimeoutMillis) {
+                              CaseIsolation caseIsolation, long caseStartupTimeoutMillis,
+                              boolean dynamicEnabled) {
     public static final int MAX_WORKERS = 32;
     public static final long DEFAULT_CASE_STARTUP_TIMEOUT_MILLIS = 30000;
     private static final String AUTO_WORKERS = "auto";
@@ -36,6 +40,15 @@ public record ExecutionConfig(Path directory, String reportFile, String javaExec
         this(directory, reportFile, javaExecutable, javacExecutable, compileTimeoutMillis,
                 caseTimeoutMillis, maxOutputBytes, workers, CaseIsolation.PART,
                 DEFAULT_CASE_STARTUP_TIMEOUT_MILLIS);
+    }
+
+    public ExecutionConfig(Path directory, String reportFile, String javaExecutable,
+                           String javacExecutable, long compileTimeoutMillis,
+                           long caseTimeoutMillis, int maxOutputBytes, int workers,
+                           CaseIsolation caseIsolation, long caseStartupTimeoutMillis) {
+        this(directory, reportFile, javaExecutable, javacExecutable, compileTimeoutMillis,
+                caseTimeoutMillis, maxOutputBytes, workers, caseIsolation, caseStartupTimeoutMillis,
+                true);
     }
 
     public static ExecutionConfig load(Path file, AppConfig app) throws IOException {
@@ -85,7 +98,8 @@ public record ExecutionConfig(Path directory, String reportFile, String javaExec
                 positive(properties, "execution.compile.timeout.ms"),
                 positive(properties, "execution.case.timeout.ms"), (int) outputBytes, workers(properties, limits),
                 CaseIsolation.parse(properties.getProperty("execution.case.isolation")),
-                startupTimeout(properties));
+                startupTimeout(properties),
+                PropertyParsers.optionalBoolean(properties, "grading.dynamic.enabled", true));
     }
 
     public ExecutionConfig withWorkers(int workers) {
@@ -97,7 +111,7 @@ public record ExecutionConfig(Path directory, String reportFile, String javaExec
         }
         return new ExecutionConfig(directory, reportFile, javaExecutable, javacExecutable,
                 compileTimeoutMillis, caseTimeoutMillis, maxOutputBytes, workers, caseIsolation,
-                caseStartupTimeoutMillis);
+                caseStartupTimeoutMillis, dynamicEnabled);
     }
 
     private static long startupTimeout(Properties properties) {

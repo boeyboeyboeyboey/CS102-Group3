@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Properties;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -95,6 +96,21 @@ class ExecutionConfigTest {
             assertEquals(2, load(properties, app, new WorkerLimits(() -> 2)).workers(), value);
             assertEquals(4, load(properties, app, new WorkerLimits(() -> 16)).workers(), value);
         }
+    }
+
+    @Test
+    void dynamicCasesDefaultToEnabledAndParseFalseButRejectOtherValues() throws Exception {
+        AppConfig app = AppConfig.load(Path.of("config.properties"));
+        Properties properties = settings();
+        assertTrue(load(properties, app).dynamicEnabled());
+        properties.setProperty("grading.dynamic.enabled", "false");
+        ExecutionConfig disabled = load(properties, app);
+        assertFalse(disabled.dynamicEnabled());
+        assertFalse(disabled.withWorkers(2).dynamicEnabled());
+        properties.setProperty("grading.dynamic.enabled", "TRUE");
+        assertTrue(load(properties, app).dynamicEnabled());
+        properties.setProperty("grading.dynamic.enabled", "yes");
+        assertThrows(IllegalArgumentException.class, () -> load(properties, app));
     }
 
     @Test

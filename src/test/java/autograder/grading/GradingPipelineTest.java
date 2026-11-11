@@ -204,6 +204,27 @@ class GradingPipelineTest {
     }
 
     @Test
+    void disabledDynamicCasesLeaveOnlyFixedCasesCarryingEachQuestionMaximum() throws Exception {
+        AppConfig app = AppConfig.load(PROJECT_ROOT.resolve("config.properties"));
+        SubmissionResult looping = submission("fixed-only", student("#01400001", "fixed-only"), true,
+                LOOPING_Q1A);
+        ExecutionConfig enabled = execution();
+        ExecutionConfig disabled = new ExecutionConfig(enabled.directory(), enabled.reportFile(),
+                enabled.javaExecutable(), enabled.javacExecutable(), enabled.compileTimeoutMillis(),
+                enabled.caseTimeoutMillis(), enabled.maxOutputBytes(), enabled.workers(),
+                enabled.caseIsolation(), enabled.caseStartupTimeoutMillis(), false);
+
+        GradingRun run = new GradingPipeline(app, disabled).grade(List.of(looping));
+
+        var grade = run.batch().getGrades().get(0);
+        assertEquals(20, grade.getTestResults().size());
+        assertTrue(statuses(run, "fixed-only").keySet().stream().noneMatch(id -> id.contains("dynamic")));
+        assertEquals(2.0, fixedQuestionScore(grade, "Q1a"));
+        assertEquals(3.0, questionMaximum(grade, "Q1a"));
+        assertEquals(20.0, totalMaximum(grade));
+    }
+
+    @Test
     void withholdsDuplicateAndUnresolvedIdentitiesAndRecordsMissingSourceAndRuntimeErrors() throws Exception {
         AppConfig app = AppConfig.load(PROJECT_ROOT.resolve("config.properties"));
         SubmissionResult duplicateA = submission("duplicate-a", student("#01400005", "duplicate-a"), true, null);

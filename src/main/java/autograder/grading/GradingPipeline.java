@@ -62,7 +62,8 @@ public final class GradingPipeline {
         this.plagiarismDetector = plagiarismDetector;
         this.progressListener = progressListener;
         TestCaseProvider fixedProvider = new InstructorTestCaseProvider();
-        TestCaseProvider dynamicProvider = new DynamicTestCaseProvider();
+        TestCaseProvider dynamicProvider = execution.dynamicEnabled()
+                ? new DynamicTestCaseProvider() : assessment -> List.of();
         TestCaseProvider combinedProvider = new CombinedTestCaseProvider(fixedProvider, dynamicProvider);
         this.cases = combinedProvider.load(app.getAssessment());
     }
