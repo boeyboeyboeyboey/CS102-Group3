@@ -14,7 +14,6 @@ import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
 import java.awt.Font;
 import java.text.NumberFormat;
 import java.util.List;
@@ -25,12 +24,13 @@ final class ResultsPanel extends JPanel {
     private static final int TABLE_HEIGHT = 200;
     private static final int TABLE_WIDTH = 520;
     private static final int MAX_SCORE_DIGITS = 2;
+    private static final int BUTTON_COLUMNS = 5;
 
     private final JTextArea headline = new JTextArea();
     private final JTextArea problems = new JTextArea();
     private final JTable table = new JTable();
     private final JScrollPane tableScroll = new JScrollPane(table);
-    private final JPanel buttons = new JPanel(new FlowLayout(FlowLayout.LEFT, GAP, 0));
+    private final JPanel buttons = new JPanel(new ResponsiveButtonLayout(GAP, BUTTON_COLUMNS));
     private OutputViewer viewer;
 
     ResultsPanel() {
