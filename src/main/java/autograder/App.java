@@ -62,6 +62,13 @@ public final class App {
     }
 
     private static int runWithWorkersFlag(String[] args) {
+        if (args.length < 3) {
+            System.err.println(WorkersOption.FLAG + (args.length == 1
+                    ? " needs a value and a configuration file"
+                    : " " + args[1] + " needs a configuration file after it"));
+            printUsage();
+            return 1;
+        }
         if (args.length != 3) {
             printUsage();
             return 1;
@@ -100,7 +107,11 @@ public final class App {
                 System.out.println("Run time: " + ElapsedTime.describe(
                         TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - started)));
             }
-            return report(outcome);
+            int exitCode = report(outcome);
+            if (outcome.run() != null) {
+                System.out.println("Run folder: " + outcome.run().directory());
+            }
+            return exitCode;
         } catch (Exception exception) {
             if (exception instanceof InterruptedException
                     || exception instanceof CancellationException

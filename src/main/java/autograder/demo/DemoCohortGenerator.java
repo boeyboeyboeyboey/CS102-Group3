@@ -51,8 +51,8 @@ public final class DemoCohortGenerator {
             seed = 0;
         }
         if (args.length > 2 || count < 1 || count > SyntheticRoster.MAX_COUNT) {
-            System.err.println("usage: DemoCohortGenerator [count 1-" + SyntheticRoster.MAX_COUNT
-                    + "] [seed]");
+            System.err.println("usage: sh demo.sh generate [count 1-" + SyntheticRoster.MAX_COUNT
+                    + "] [seed] (Windows: demo.bat generate [count] [seed])");
             System.exit(1);
             return;
         }

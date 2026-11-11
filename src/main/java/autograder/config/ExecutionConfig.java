@@ -130,11 +130,17 @@ public record ExecutionConfig(Path directory, String reportFile, String javaExec
         if (value.trim().equalsIgnoreCase(AUTO_WORKERS)) {
             return limits.autoWorkers();
         }
-        long workers = positive(properties, "execution.workers");
-        if (workers > MAX_WORKERS) {
-            throw new IllegalArgumentException("execution.workers must be at most " + MAX_WORKERS);
+        String trimmed = value.trim();
+        try {
+            int workers = Integer.parseInt(trimmed);
+            if (workers >= 1 && workers <= MAX_WORKERS) {
+                return workers;
+            }
+        } catch (NumberFormatException exception) {
+            // reported below with the same message
         }
-        return (int) workers;
+        throw new IllegalArgumentException("execution.workers must be a whole number from 1 to "
+                + MAX_WORKERS + " or auto: " + trimmed);
     }
 
     private static boolean isReservedReportFile(String report) {
@@ -162,14 +168,16 @@ public record ExecutionConfig(Path directory, String reportFile, String javaExec
     }
 
     private static long positive(Properties properties, String key) {
+        String text = PropertyParsers.required(properties, key);
         try {
-            long value = Long.parseLong(PropertyParsers.required(properties, key));
+            long value = Long.parseLong(text);
             if (value > 0) {
                 return value;
             }
         } catch (NumberFormatException exception) {
-            throw new IllegalArgumentException("invalid positive integer: " + key, exception);
+            throw new IllegalArgumentException("invalid positive integer: " + key + " = " + text,
+                    exception);
         }
-        throw new IllegalArgumentException("configuration must be positive: " + key);
+        throw new IllegalArgumentException("configuration must be positive: " + key + " = " + text);
     }
 }

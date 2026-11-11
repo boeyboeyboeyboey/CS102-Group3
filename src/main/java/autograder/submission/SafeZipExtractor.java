@@ -12,6 +12,7 @@ import java.util.zip.CRC32;
 import java.util.Enumeration;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 
 /** Unpacks a student archive while enforcing entry, size and path limits and removing partial output on failure. */
@@ -47,6 +48,14 @@ public final class SafeZipExtractor {
     }
 
     private void extractEntries(Path archivePath, Path outputRoot) throws IOException {
+        try {
+            extractZipEntries(archivePath, outputRoot);
+        } catch (ZipException exception) {
+            throw new IOException("not a valid ZIP file: " + archivePath.getFileName(), exception);
+        }
+    }
+
+    private void extractZipEntries(Path archivePath, Path outputRoot) throws IOException {
         try (ZipFile zipFile = new ZipFile(archivePath.toFile())) {
             Enumeration<? extends ZipEntry> entries = zipFile.entries();
             long entryCount = 0;

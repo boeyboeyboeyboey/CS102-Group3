@@ -88,6 +88,31 @@ class ExecutionConfigTest {
     }
 
     @Test
+    void workerRangeMessageNamesTheRangeAutoAndTheBadValue() throws Exception {
+        AppConfig app = AppConfig.load(Path.of("config.properties"));
+        Properties properties = settings();
+        for (String value : new String[] {"0", "33", "abc"}) {
+            properties.setProperty("execution.workers", value);
+            IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                    () -> load(properties, app), value);
+            assertEquals("execution.workers must be a whole number from 1 to 32 or auto: " + value,
+                    exception.getMessage());
+        }
+    }
+
+    @Test
+    void badNumberMessageIncludesTheValue() throws Exception {
+        AppConfig app = AppConfig.load(Path.of("config.properties"));
+        Properties properties = settings();
+        properties.setProperty("execution.case.timeout.ms", "abc");
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> load(properties, app));
+
+        assertEquals("invalid positive integer: execution.case.timeout.ms = abc", exception.getMessage());
+    }
+
+    @Test
     void resolvesAutoWorkersCaseInsensitivelyThroughLimits() throws Exception {
         AppConfig app = AppConfig.load(Path.of("config.properties"));
         Properties properties = settings();

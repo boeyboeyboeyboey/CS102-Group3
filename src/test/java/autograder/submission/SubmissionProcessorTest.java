@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Properties;
@@ -167,6 +168,57 @@ class SubmissionProcessorTest {
     }
 
     @Test
+    void identityConflictNamesTheStudentsInvolved() throws Exception {
+        RosterIdentityMatcher matcher = new RosterIdentityMatcher(createConfig(temporaryDirectory));
+        List<StudentRecord> roster = List.of(
+                new StudentRecord("001", "#boey.tan.2026", "Boey", "Tan", "boey.tan.2026@school.edu"),
+                new StudentRecord("002", "#sera.lim.2026", "Sera", "Lim", "sera.lim.2026@school.edu"));
+        var archiveBoey = new IdentityEvidence.StrongEvidence(
+                IdentityEvidence.EvidenceType.USERNAME, "boey.tan.2026", "archive");
+        var wrapperSera = new IdentityEvidence.StrongEvidence(
+                IdentityEvidence.EvidenceType.USERNAME, "sera.lim.2026", "wrapper username");
+
+        RosterIdentityMatcher.Result result = matcher.match(List.of(archiveBoey, wrapperSera), roster);
+
+        assertNull(result.studentRecord());
+        assertTrue(result.anomalies().contains("conflicting strong identity evidence points to "
+                + "different score sheet students: #boey.tan.2026, #sera.lim.2026"));
+    }
+
+    @Test
+    void corruptArchiveSaysItIsNotAValidZipAndAddsNoFollowOnSourceLines() throws Exception {
+        Path submissions = Files.createDirectories(temporaryDirectory.resolve("submissions"));
+        Files.writeString(submissions.resolve("broken.zip"), "not a zip archive");
+        createArchive(submissions.resolve("cut.zip"), validSubmission("boey"));
+        byte[] whole = Files.readAllBytes(submissions.resolve("cut.zip"));
+        Files.write(submissions.resolve("cut.zip"), Arrays.copyOf(whole, whole.length / 2));
+        AppConfig config = createConfig(temporaryDirectory);
+
+        List<SubmissionResult> results = new SubmissionProcessor(config).processBatch();
+
+        for (String name : List.of("broken.zip", "cut.zip")) {
+            SubmissionResult result = resultNamed(results, name);
+            assertEquals(SubmissionStatus.FAILED, result.getStatus());
+            assertTrue(result.getAnomalies().contains(
+                    "archive extraction failed: not a valid ZIP file: " + name), result.getAnomalies().toString());
+            assertTrue(result.getAnomalies().stream().noneMatch(value ->
+                    value.contains("student root is unresolved") || value.contains("END header")));
+        }
+    }
+
+    @Test
+    void unsafeEntryAndSizeLimitMessagesKeepTheirWording() throws Exception {
+        Path submissions = Files.createDirectories(temporaryDirectory.resolve("submissions"));
+        createArchive(submissions.resolve("unsafe.zip"), mapOf("../escape.java", "x"));
+
+        SubmissionResult result = new SubmissionProcessor(createConfig(temporaryDirectory))
+                .processBatch().get(0);
+
+        assertTrue(result.getAnomalies().stream().anyMatch(value ->
+                value.startsWith("archive extraction failed: archive contains a parent traversal path")));
+    }
+
+    @Test
     void duplicateSubmissionsAreAllMarkedForReviewAndWrongCaseSourceIsCorrected() throws Exception {
         Path submissions = Files.createDirectories(temporaryDirectory.resolve("submissions"));
         createArchive(submissions.resolve("boey.tan.2026.zip"), validSubmission("boey"));
@@ -249,7 +301,8 @@ class SubmissionProcessorTest {
         assertEquals("boey.tan.2026", result.getIdentity().getStudentRecord().getUsername()
                 .replaceFirst("^#", ""));
         assertTrue(result.getWorkingRoot() != null);
-        assertTrue(result.getAnomalies().contains("wrapper username does not match a score sheet student"));
+        assertTrue(result.getAnomalies().contains(
+                "wrapper username does not match a score sheet student: bpey.tan.2026"));
         assertTrue(result.getCorrections().stream().anyMatch(value -> value.getType().equals("layout")));
     }
 
@@ -287,7 +340,8 @@ class SubmissionProcessorTest {
 
         RosterIdentityMatcher.Result forgiven = matcher.match(List.of(archiveBoey, wrapperTypo), roster);
         assertEquals("001", forgiven.studentRecord().getId());
-        assertEquals(List.of("wrapper username does not match a score sheet student"), forgiven.anomalies());
+        assertEquals(List.of("wrapper username does not match a score sheet student: bpey.tan.2026"),
+                forgiven.anomalies());
 
         assertEquals("001", matcher.match(List.of(archiveBoey, wrapperTypo, wrapperIdTypo), roster)
                 .studentRecord().getId());

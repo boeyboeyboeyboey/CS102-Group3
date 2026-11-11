@@ -4,6 +4,7 @@ import autograder.config.AppConfig;
 import autograder.model.StudentRecord;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -28,7 +29,8 @@ final class RosterIdentityMatcher {
         for (IdentityEvidence.StrongEvidence item : evidence) {
             List<StudentRecord> matches = findMatches(item, roster);
             if (matches.isEmpty()) {
-                anomalies.add(item.source() + " does not match a score sheet student");
+                anomalies.add(item.source() + " does not match a score sheet student"
+                        + (WRAPPER_SOURCES.contains(item.source()) ? ": " + item.value() : ""));
                 // a mistyped wrapper folder is only a warning when other evidence names one student
                 if (WRAPPER_SOURCES.contains(item.source())) {
                     unmatchedWrapper = true;
@@ -50,7 +52,8 @@ final class RosterIdentityMatcher {
             unresolvedEvidence = true;
         }
         if (matchedStudents.size() > 1) {
-            anomalies.add("conflicting strong identity evidence points to different score sheet students");
+            anomalies.add("conflicting strong identity evidence points to different score sheet students: "
+                    + conflictingUsernames(matchedStudents.values()));
             unresolvedEvidence = true;
         }
         if (matchedStudents.isEmpty()) {
@@ -61,6 +64,14 @@ final class RosterIdentityMatcher {
             return new Result(null, anomalies);
         }
         return new Result(matchedStudents.values().iterator().next(), anomalies);
+    }
+
+    private String conflictingUsernames(Collection<StudentRecord> students) {
+        List<String> usernames = new ArrayList<>();
+        for (StudentRecord student : students) {
+            usernames.add(student.getUsername());
+        }
+        return String.join(", ", usernames);
     }
 
     private List<StudentRecord> findMatches(IdentityEvidence.StrongEvidence evidence,

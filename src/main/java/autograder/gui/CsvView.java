@@ -1,5 +1,7 @@
 package autograder.gui;
 
+import autograder.report.ReportFiles;
+
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -11,6 +13,7 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableRowSorter;
 import java.awt.BorderLayout;
 import java.awt.FontMetrics;
+import java.nio.file.Path;
 
 /** A CSV report as a sortable table, with the selected row's full text underneath. */
 final class CsvView extends JPanel {
@@ -22,9 +25,13 @@ final class CsvView extends JPanel {
     private static final int TABLE_HEIGHT = 400;
 
     CsvView(CsvTableModel model) {
+        this(model, EMPTY);
+    }
+
+    CsvView(CsvTableModel model, String emptyMessage) {
         super(new BorderLayout());
         if (model.getRowCount() == 0) {
-            add(new JLabel(EMPTY, SwingConstants.CENTER), BorderLayout.CENTER);
+            add(new JLabel(emptyMessage, SwingConstants.CENTER), BorderLayout.CENTER);
             return;
         }
         JTable table = new JTable(model);
@@ -41,6 +48,18 @@ final class CsvView extends JPanel {
         split.setResizeWeight(1);
         add(split, BorderLayout.CENTER);
         table.setRowSelectionInterval(0, 0);
+    }
+
+    /** The text for an empty report, specific to the reports where an empty table is good news. */
+    static String emptyMessage(Path report) {
+        String name = report.getFileName() == null ? "" : report.getFileName().toString();
+        if (name.equals(ReportFiles.SIMILARITY)) {
+            return "No pairs reached the similarity threshold.";
+        }
+        if (name.equals(ReportFiles.SANITY_CHECKS)) {
+            return "No sanity checks were flagged.";
+        }
+        return EMPTY;
     }
 
     private static void configure(JTable table, CsvTableModel model) {

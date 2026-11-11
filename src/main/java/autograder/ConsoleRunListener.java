@@ -38,10 +38,12 @@ final class ConsoleRunListener implements RunListener {
     @Override
     public void graded(GradingRun run, RunSettings settings) {
         for (StudentGrade grade : run.batch().getGrades()) {
-            String reason = run.withheld().get(grade.getSubmission());
-            System.out.println(grade.getSubmission().getIdentity().getLabel() + " | "
-                    + (reason == null ? "Score: " + grade.getTotalScore()
-                    : "WITHHELD: " + reason));
+            SubmissionResult submission = grade.getSubmission();
+            String reason = run.withheld().get(submission);
+            System.out.println(reviewFlag(submission) + studentName(submission) + " | "
+                    + submission.getArchivePath().getFileName() + " | " + submission.getStatus() + " | "
+                    + (reason == null ? "Score: " + grade.getTotalScore() : "WITHHELD: " + reason)
+                    + " | issues=" + submission.getAnomalies().size());
         }
         System.out.println("Score report: " + run.directory().resolve(settings.execution().reportFile()));
         System.out.println("Per-case diagnostics: " + run.directory().resolve(ReportFiles.CASES));
@@ -64,21 +66,28 @@ final class ConsoleRunListener implements RunListener {
             } else {
                 failed++;
             }
-            String identityLabel = result.getIdentity().getLabel();
-            if (result.getIdentity().getStudentRecord() != null) {
-                identityLabel = result.getIdentity().getStudentRecord().getUsername();
-            }
-            System.out.println(result.getArchivePath().getFileName() + " | "
-                    + identityLabel + " | " + result.getStatus()
+            System.out.println(reviewFlag(result) + result.getArchivePath().getFileName() + " | "
+                    + studentName(result) + " | " + result.getStatus()
                     + " | issues=" + result.getAnomalies().size()
                     + " | corrections=" + result.getCorrections().size());
-            if (result.getWorkingRoot() != null) {
-                System.out.println("  Working copy: " + result.getWorkingRoot());
-            }
         }
         System.out.println("Ready: " + ready + "; needs review: " + reviewRequired
                 + "; failed: " + failed);
         System.out.println("READY means ready for the next stage, not a passing grade");
+    }
+
+    private static String reviewFlag(SubmissionResult result) {
+        return result.getStatus() == SubmissionStatus.REVIEW_REQUIRED ? "[REVIEW] " : "";
+    }
+
+    private static String studentName(SubmissionResult result) {
+        if (result.getIdentity().getStudentRecord() != null) {
+            return result.getIdentity().getStudentRecord().getUsername();
+        }
+        // the label's bracketed evidence list is long; the CSVs and logs carry it
+        String label = result.getIdentity().getLabel();
+        int bracket = label.indexOf(" [");
+        return (bracket < 0 ? label : label.substring(0, bracket)) + " (unresolved)";
     }
 
     private static void printSimilarity(GradingRun run, PlagiarismConfig plagiarism) {

@@ -46,6 +46,27 @@ class ScoreSheetRepositoryTest {
     }
 
     @Test
+    void missingScoreSheetSaysFileNotFoundWithThePath() {
+        Path missing = temporaryDirectory.resolve("absent.csv");
+
+        IOException exception = assertThrows(IOException.class,
+                () -> new ScoreSheetRepository(missing, columns()).load());
+
+        assertEquals("file not found: " + missing, exception.getMessage());
+    }
+
+    @Test
+    void unreadableScoreSheetSaysCannotReadFileWithThePath() throws Exception {
+        Path invalid = temporaryDirectory.resolve("latin1.csv");
+        Files.write(invalid, new byte[] {(byte) 0xC3, (byte) 0x28});
+
+        IOException exception = assertThrows(IOException.class,
+                () -> new ScoreSheetRepository(invalid, columns()).load());
+
+        assertEquals("cannot read file: " + invalid, exception.getMessage());
+    }
+
+    @Test
     void parsesAndWritesEscapedCommasQuotesNewlinesAndTrailingEmptyFields() throws Exception {
         String source = "one,\"last, first\",\"said \"\"hello\"\"\",\"line 1\r\nline 2\",\r\n"
                 + "two,,,value,,";

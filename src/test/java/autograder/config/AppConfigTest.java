@@ -97,7 +97,7 @@ class AppConfigTest {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
                 () -> AppConfig.load(writeConfig(properties)));
 
-        assertEquals("configuration value must be an integer: limits.entry.bytes", exception.getMessage());
+        assertEquals("configuration value must be an integer: limits.entry.bytes = large", exception.getMessage());
     }
 
     private Properties defaultProperties() throws Exception {

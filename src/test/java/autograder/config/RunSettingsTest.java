@@ -40,6 +40,25 @@ class RunSettingsTest {
     }
 
     @Test
+    void missingConfigFileSaysFileNotFoundWithThePath() {
+        Path missing = temporaryDirectory.resolve("absent.properties");
+
+        java.io.IOException exception = assertThrows(java.io.IOException.class,
+                () -> RunSettings.load(missing, RuntimePathOverrides.none()));
+
+        assertEquals("file not found: " + missing.toAbsolutePath().normalize(), exception.getMessage());
+    }
+
+    @Test
+    void directoryGivenAsConfigFileSaysCannotReadFile() {
+        java.io.IOException exception = assertThrows(java.io.IOException.class,
+                () -> RunSettings.load(temporaryDirectory, RuntimePathOverrides.none()));
+
+        assertEquals("cannot read file: " + temporaryDirectory.toAbsolutePath().normalize(),
+                exception.getMessage());
+    }
+
+    @Test
     void overridesReplaceOnlyTheThreePaths() throws Exception {
         Path config = writeConfig();
         Path submissions = temporaryDirectory.resolve("other/../subs");

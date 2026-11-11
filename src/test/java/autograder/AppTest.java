@@ -84,6 +84,26 @@ class AppTest {
     }
 
     @Test
+    void workersFlagWithoutConfigPathExplainsWhatIsMissingBeforeTheUsage() throws Exception {
+        ByteArrayOutputStream errors = new ByteArrayOutputStream();
+        PrintStream original = System.err;
+        PrintStream originalOut = System.out;
+        try (PrintStream capture = new PrintStream(errors, true, StandardCharsets.UTF_8);
+             PrintStream sink = new PrintStream(new ByteArrayOutputStream(), true, StandardCharsets.UTF_8)) {
+            System.setErr(capture);
+            System.setOut(sink);
+            assertEquals(1, App.run(new String[] {"--workers", "2"}));
+            assertEquals(1, App.run(new String[] {"--workers"}));
+        } finally {
+            System.setErr(original);
+            System.setOut(originalOut);
+        }
+        String error = errors.toString(StandardCharsets.UTF_8);
+        assertTrue(error.contains("--workers 2 needs a configuration file after it"), error);
+        assertTrue(error.contains("--workers needs a value and a configuration file"), error);
+    }
+
+    @Test
     void workersFlagWithValidValueStillFailsCleanlyOnMissingConfig() {
         String config = temporaryDirectory.resolve("missing.properties").toString();
         assertEquals(1, App.run(new String[] {"--workers", "2", config}));

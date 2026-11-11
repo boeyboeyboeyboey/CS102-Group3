@@ -3,6 +3,7 @@ package autograder.roster;
 import autograder.csv.CsvCodec;
 import autograder.model.ScoreSheet;
 import autograder.model.StudentRecord;
+import autograder.util.ExceptionMessages;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -32,8 +33,14 @@ public final class ScoreSheetRepository {
     }
 
     public ScoreSheet load() throws IOException {
-        Path sourcePath = path.toRealPath();
-        String text = Files.readString(sourcePath, StandardCharsets.UTF_8);
+        Path sourcePath;
+        String text;
+        try {
+            sourcePath = path.toRealPath();
+            text = Files.readString(sourcePath, StandardCharsets.UTF_8);
+        } catch (IOException exception) {
+            throw ExceptionMessages.unreadableFile(path, exception);
+        }
         boolean byteOrderMark = !text.isEmpty() && text.charAt(0) == '\uFEFF';
         if (byteOrderMark) {
             text = text.substring(1);

@@ -91,12 +91,13 @@ final class PropertyParsers {
         try {
             int value = Integer.parseInt(required(properties, key));
             if (value <= 0) {
-                throw new IllegalArgumentException("configuration value must be positive: " + key);
+                throw new IllegalArgumentException("configuration value must be positive: " + key
+                        + " = " + value);
             }
             return value;
         } catch (NumberFormatException exception) {
-            throw new IllegalArgumentException("configuration value must be an integer: " + key,
-                    exception);
+            throw new IllegalArgumentException("configuration value must be an integer: " + key
+                    + " = " + properties.getProperty(key).trim(), exception);
         }
     }
 
@@ -104,12 +105,13 @@ final class PropertyParsers {
         try {
             long value = Long.parseLong(required(properties, key));
             if (value <= 0) {
-                throw new IllegalArgumentException("configuration value must be positive: " + key);
+                throw new IllegalArgumentException("configuration value must be positive: " + key
+                        + " = " + value);
             }
             return value;
         } catch (NumberFormatException exception) {
-            throw new IllegalArgumentException("configuration value must be an integer: " + key,
-                    exception);
+            throw new IllegalArgumentException("configuration value must be an integer: " + key
+                    + " = " + properties.getProperty(key).trim(), exception);
         }
     }
 
@@ -117,12 +119,13 @@ final class PropertyParsers {
         try {
             double value = Double.parseDouble(required(properties, key));
             if (!Double.isFinite(value) || value <= 0) {
-                throw new IllegalArgumentException("configuration value must be positive: " + key);
+                throw new IllegalArgumentException("configuration value must be positive: " + key
+                        + " = " + properties.getProperty(key).trim());
             }
             return value;
         } catch (NumberFormatException exception) {
-            throw new IllegalArgumentException("configuration value must be numeric: " + key,
-                    exception);
+            throw new IllegalArgumentException("configuration value must be numeric: " + key
+                    + " = " + properties.getProperty(key).trim(), exception);
         }
     }
 }

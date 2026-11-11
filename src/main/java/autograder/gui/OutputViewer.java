@@ -23,7 +23,8 @@ final class OutputViewer extends JDialog {
         try {
             content = artifact.view() == Artifact.View.FEEDBACK
                     ? new FeedbackView(artifact.path())
-                    : new CsvView(CsvTableModel.load(artifact.path()));
+                    : new CsvView(CsvTableModel.load(artifact.path()),
+                    CsvView.emptyMessage(artifact.path()));
         } catch (IOException | RuntimeException exception) {
             ArtifactOpener.open(getOwner(), artifact.path());
             return;

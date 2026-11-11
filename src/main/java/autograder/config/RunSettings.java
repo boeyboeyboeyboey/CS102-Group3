@@ -1,5 +1,7 @@
 package autograder.config;
 
+import autograder.util.ExceptionMessages;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -63,6 +65,8 @@ public record RunSettings(Path configFile, AppConfig app,
         Properties loaded = new Properties();
         try (InputStream input = Files.newInputStream(file)) {
             loaded.load(input);
+        } catch (IOException exception) {
+            throw ExceptionMessages.unreadableFile(file, exception);
         }
         Properties copy = new Properties();
         copy.putAll(loaded);

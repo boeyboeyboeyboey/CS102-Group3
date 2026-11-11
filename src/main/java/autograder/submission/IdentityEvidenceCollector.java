@@ -86,12 +86,10 @@ final class IdentityEvidenceCollector {
                                         Set<String> names, Set<String> emailIds,
                                         Set<String> usernames, List<String> anomalies)
             throws IOException {
+        if (studentRoot == null) {
+            return;
+        }
         for (QuestionDefinition question : assessment.getQuestions()) {
-            if (studentRoot == null) {
-                anomalies.add("required source cannot be checked because the student root is unresolved: "
-                        + question.getId());
-                continue;
-            }
             String directoryName = ExactEntries.resolveDirectory(studentRoot, question.getFolder());
             Path questionDirectory = studentRoot.resolve(
                     directoryName == null ? question.getFolder() : directoryName).normalize();
