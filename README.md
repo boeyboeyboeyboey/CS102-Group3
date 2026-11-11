@@ -13,6 +13,18 @@ ByteGrade is a batch grader for Java assessment submissions (CS102 Auto Grading 
 - Dynamic tests add generated cases to the supplied ones; each question's maximum stays the same.
 - The slide deck is `G1-T3.pptx`, in the root of the submission folder.
 
+## Quick start
+
+Open a terminal in the folder that contains `compile.sh`, `config.properties` and `Project/`.
+The first build needs internet access (see "Requirements").
+
+- macOS / Linux: `sh compile.sh`, then `sh run.sh config.properties`.
+- Windows (Command Prompt): `compile.bat`, then `run.bat config.properties`. In PowerShell, put
+  `.\` before each script name.
+- The sample scores, in the order Ping, Chee, David, Fen, Jing, Xing, are 20.00, 11.50, 10.50,
+  9.88, 0.00 and 0.50. See "Expected sample result".
+- Results are written to the `Run folder:` the run prints. See "Outputs".
+
 ## Requirements
 
 - A full JDK 17 or newer, including `javac`. `javac -version` should report 17 or later.
@@ -81,6 +93,8 @@ run.bat config.properties
   submission that needs a look; the detail is in the CSVs. The last lines are `Run time:` and
   `Run folder:` with the new `build/grading/run-<number>`. In an interactive terminal, typing
   `q` then Enter cancels the run (exit 130).
+- The console prints each student's unrounded total (for example `9.875`). `scorereport.csv`
+  rounds it half-up to two decimals (`9.88`).
 - Exit code 0 means the batch and its reports completed, even if some submissions need review.
   Read the status counts and `submissions.csv` rather than treating 0 as "all clean".
 - A bad or missing configuration, or an empty input folder, returns a nonzero exit code.
