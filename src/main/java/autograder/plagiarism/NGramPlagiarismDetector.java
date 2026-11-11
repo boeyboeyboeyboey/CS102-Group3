@@ -59,7 +59,8 @@ public final class NGramPlagiarismDetector implements PlagiarismDetector {
             for (int first = 0; first < owners.size(); first++) {
                 for (int second = first + 1; second < owners.size(); second++) {
                     SimilarityFinding finding = comparePair(question, owners.get(first),
-                            fingerprints.get(first), owners.get(second), fingerprints.get(second));
+                            fingerprints.get(first), owners.get(second), fingerprints.get(second),
+                            starter != null);
                     if (finding != null) {
                         findings.add(finding);
                     }
@@ -72,7 +73,8 @@ public final class NGramPlagiarismDetector implements PlagiarismDetector {
 
     private SimilarityFinding comparePair(QuestionDefinition question,
                                           SubmissionResult firstSubmission, Map<String, LineRange> first,
-                                          SubmissionResult secondSubmission, Map<String, LineRange> second) {
+                                          SubmissionResult secondSubmission, Map<String, LineRange> second,
+                                          boolean starterExcluded) {
         double similarity = calculator.jaccard(first.keySet(), second.keySet());
         if (similarity < config.threshold()) {
             return null;
@@ -80,9 +82,10 @@ public final class NGramPlagiarismDetector implements PlagiarismDetector {
         int shared = calculator.sharedCount(first.keySet(), second.keySet());
         List<String> evidence = new ArrayList<>();
         evidence.add(String.format(Locale.ROOT,
-                "%s (%s): %.1f%% similar; %d shared %d-token sequences out of %d distinct, starter code excluded",
+                "%s (%s): %.1f%% similar; %d shared %d-token sequences out of %d distinct, %s",
                 question.getId(), ALGORITHM_NAME, similarity * DetectorConstants.PERCENT, shared, config.ngramSize(),
-                first.size() + second.size() - shared));
+                first.size() + second.size() - shared,
+                starterExcluded ? "starter code excluded" : "no starter file found"));
         for (LineRange[] block : matchingBlocks(first, second)) {
             String line = "first " + block[0].describe() + " matches second " + block[1].describe();
             if (!evidence.contains(line)) {

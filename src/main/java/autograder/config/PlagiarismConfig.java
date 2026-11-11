@@ -62,7 +62,7 @@ public record PlagiarismConfig(boolean enabled, List<String> algorithms, int ngr
         }
         Path starterDirectory = AppConfig.canonicalize(
                 baseDirectory.resolve(PropertyParsers.required(properties, "plagiarism.starter.directory")));
-        if (!Files.isDirectory(starterDirectory)) {
+        if (Boolean.parseBoolean(enabled) && !Files.isDirectory(starterDirectory)) {
             throw new IllegalArgumentException("plagiarism.starter.directory is not a directory: "
                     + starterDirectory);
         }

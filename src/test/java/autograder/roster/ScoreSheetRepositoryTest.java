@@ -110,6 +110,22 @@ class ScoreSheetRepositoryTest {
     }
 
     @Test
+    void ignoresBlankLinesAfterRowsButKeepsQuotedEmptyFields() throws Exception {
+        assertEquals(List.of(List.of("a", "b"), List.of("c", "d")),
+                CsvCodec.parse("a,b\r\nc,d\r\n\r\n\n"));
+        assertEquals(List.of(List.of("a", "b"), List.of("c", "d")),
+                CsvCodec.parse("a,b\nc,d\n\n"));
+        assertEquals(List.of(List.of("a"), List.of(""), List.of("b")),
+                CsvCodec.parse("a\n\"\"\nb\n"));
+        assertEquals(List.of(List.of("a"), List.of(""), List.of("b")), CsvCodec.parse("a\n\nb\n"));
+        assertEquals(List.of(List.of("a", ""), List.of("", "b")), CsvCodec.parse("a,\n,b\n"));
+
+        Path csv = writeCsv(HEADER + "\r\n"
+                + "id-1,user.one,Last,First,first@example.edu,,20,#\r\n\r\n");
+        assertEquals(1, new ScoreSheetRepository(csv, columns()).load().getStudents().size());
+    }
+
+    @Test
     void rejectsMalformedCsvQuotes() throws Exception {
         assertThrows(IOException.class, () -> CsvCodec.parse("one,not\"valid\n"));
         assertThrows(IOException.class, () -> CsvCodec.parse("\"unterminated"));

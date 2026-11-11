@@ -8,7 +8,11 @@ import java.util.List;
 final class MethodComparison {
     private static final long MAX_DIFF_CELLS = 1_000_000;
 
-    record Difference(String signature, String status, String explanation,
+    enum Status {
+        MODIFIED, UNCHANGED, ADDED, REMOVED
+    }
+
+    record Difference(String signature, Status status, String explanation,
                       JavaMethods.Method starter, JavaMethods.Method answer) {
     }
 
@@ -25,22 +29,22 @@ final class MethodComparison {
         for (String key : keys) {
             var first = before.get(key);
             var second = after.get(key);
-            String status;
+            Status status;
             String explanation;
             if (first == null) {
-                status = "ADDED";
+                status = Status.ADDED;
                 explanation = "Method signature occurs only "
                         + "in the student file";
             } else if (second == null) {
-                status = "REMOVED";
+                status = Status.REMOVED;
                 explanation = "Starter method signature is absent "
                         + "from the student file";
             } else if (first.tokens().equals(second.tokens())) {
-                status = "UNCHANGED";
+                status = Status.UNCHANGED;
                 explanation = "Method code tokens are unchanged; "
                         + "comments and formatting are ignored";
             } else {
-                status = "MODIFIED";
+                status = Status.MODIFIED;
                 explanation = edits(first.tokens(), second.tokens())
                         + (first.bodyTokens().equals(second.bodyTokens())
                         ? "; method body tokens are unchanged; "

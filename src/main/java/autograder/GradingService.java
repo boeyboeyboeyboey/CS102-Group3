@@ -8,10 +8,12 @@ import autograder.config.AppConfig;
 import autograder.config.RunSettings;
 import autograder.grading.GradingPipeline;
 import autograder.grading.GradingRun;
+import autograder.model.ScoreSheet;
 import autograder.model.SubmissionResult;
 import autograder.plagiarism.PlagiarismDetectorFactory;
 import autograder.report.feedback.MarkdownFeedbackGenerator;
 import autograder.report.html.OfflineHtmlReportGenerator;
+import autograder.roster.ScoreSheetRepository;
 import autograder.submission.SubmissionProcessor;
 import autograder.util.ExceptionMessages;
 
@@ -46,9 +48,11 @@ public final class GradingService {
             return interrupted(RunOutcome.Stage.PREPARATION, new InterruptedException("grading stopped"));
         }
         List<SubmissionResult> results;
+        ScoreSheet scoreSheet;
         try {
             listener.preparing(app.getAssessment().getName());
-            results = new SubmissionProcessor(app, listener).processBatch();
+            scoreSheet = new ScoreSheetRepository(app.getScoreSheetPath(), app.getScoreSheetColumns()).load();
+            results = new SubmissionProcessor(app, listener).processBatch(scoreSheet);
         } catch (Exception exception) {
             return failed(RunOutcome.Stage.PREPARATION, exception, List.of(), null);
         }
@@ -62,14 +66,14 @@ public final class GradingService {
         if (Thread.currentThread().isInterrupted()) {
             return interrupted(RunOutcome.Stage.GRADING, new InterruptedException("grading stopped"));
         }
-        return gradeAndReport(settings, listener, pipeline, results);
+        return gradeAndReport(settings, listener, pipeline, results, scoreSheet);
     }
 
     private RunOutcome gradeAndReport(RunSettings settings, RunListener listener, GradingPipeline pipeline,
-                                      List<SubmissionResult> results) {
+                                      List<SubmissionResult> results, ScoreSheet scoreSheet) {
         GradingRun run;
         try {
-            run = pipeline.grade(results);
+            run = pipeline.grade(results, scoreSheet);
         } catch (Exception exception) {
             return failed(RunOutcome.Stage.GRADING, exception, results, null);
         }

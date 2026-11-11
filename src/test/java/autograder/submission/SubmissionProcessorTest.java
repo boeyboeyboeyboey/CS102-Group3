@@ -1,8 +1,10 @@
 package autograder.submission;
 
 import autograder.config.AppConfig;
+import autograder.model.ScoreSheet;
 import autograder.model.SubmissionResult;
 import autograder.model.SubmissionStatus;
+import autograder.roster.ScoreSheetRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -70,6 +72,20 @@ class SubmissionProcessorTest {
         assertFalse(Files.exists(config.getExtractionDirectory().resolve("escape.txt")));
         assertTrue(Files.readString(config.getAnomalyLog()).contains("broken.zip"));
         assertTrue(Files.readString(config.getAnomalyLog()).contains("traversal"));
+    }
+
+    @Test
+    void suppliedScoreSheetIsUsedWithoutReadingTheRosterAgain() throws Exception {
+        Path submissions = Files.createDirectories(temporaryDirectory.resolve("submissions"));
+        createArchive(submissions.resolve("boey.tan.2026.zip"), validSubmission("boey"));
+        AppConfig config = createConfig(temporaryDirectory);
+        ScoreSheet sheet = new ScoreSheetRepository(config.getScoreSheetPath(),
+                config.getScoreSheetColumns()).load();
+        Files.delete(config.getScoreSheetPath());
+
+        List<SubmissionResult> results = new SubmissionProcessor(config).processBatch(sheet);
+
+        assertEquals(SubmissionStatus.READY, resultNamed(results, "boey.tan.2026.zip").getStatus());
     }
 
     @Test

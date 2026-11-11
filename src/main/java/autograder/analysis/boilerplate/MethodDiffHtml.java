@@ -19,8 +19,8 @@ final class MethodDiffHtml {
     static void write(Writer output, MethodComparison.Difference difference)
             throws IOException {
         output.write("<details class=method data-status=\""
-                + difference.status()
-                + "\"><summary><strong>" + difference.status() + "</strong> "
+                + difference.status().name()
+                + "\"><summary><strong>" + difference.status().name() + "</strong> "
                 + escape(difference.signature()) + "</summary><p>"
                 + escape(difference.explanation()) + "</p>");
         JavaMethods.Method first = difference.starter();

@@ -52,8 +52,11 @@ public final class SubmissionProcessor {
     }
 
     public List<SubmissionResult> processBatch() throws IOException {
-        ScoreSheet scoreSheet = new ScoreSheetRepository(
-                config.getScoreSheetPath(), config.getScoreSheetColumns()).load();
+        return processBatch(new ScoreSheetRepository(
+                config.getScoreSheetPath(), config.getScoreSheetColumns()).load());
+    }
+
+    public List<SubmissionResult> processBatch(ScoreSheet scoreSheet) throws IOException {
         validateAssessmentScore(scoreSheet);
         List<Path> archives = findArchives();
         if (archives.isEmpty()) {

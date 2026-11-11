@@ -15,6 +15,7 @@ import java.nio.file.Path;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class NGramPlagiarismDetectorTest {
@@ -103,6 +104,20 @@ class NGramPlagiarismDetectorTest {
         assertTrue(finding.getEvidence().get(0).contains("starter code excluded"));
         assertTrue(finding.getEvidence().get(1).matches("first Q1a\\.java lines \\d+-\\d+ matches second Q1a\\.java lines \\d+-\\d+"),
                 finding.getEvidence().get(1));
+    }
+
+    @Test
+    void evidenceSaysWhenNoStarterFileWasFound() throws Exception {
+        Path emptyStarter = Files.createDirectories(temporaryDirectory.resolve("no-starter"));
+
+        List<SimilarityFinding> findings = detector(emptyStarter, 0.8)
+                .compare(List.of(submission("original", ORIGINAL), submission("copy", RENAMED_COPY)),
+                        assessment());
+
+        assertEquals(1, findings.size());
+        String summary = findings.get(0).getEvidence().get(0);
+        assertTrue(summary.endsWith("no starter file found"), summary);
+        assertFalse(summary.contains("starter code excluded"), summary);
     }
 
     @Test

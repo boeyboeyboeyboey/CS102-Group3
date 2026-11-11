@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -26,6 +27,19 @@ class PlagiarismConfigTest {
         assertEquals(0.8, config.threshold());
         assertEquals(20, config.minimumNgrams());
         assertEquals(temporaryDirectory.resolve("starter").toRealPath(), config.starterDirectory());
+    }
+
+    @Test
+    void disabledPlagiarismDoesNotNeedTheStarterDirectoryToExist() throws Exception {
+        PlagiarismConfig config = PlagiarismConfig.load(write("false", "5", "0.8", "20", "missing"));
+
+        assertFalse(config.enabled());
+        assertEquals(temporaryDirectory.toRealPath().resolve("missing"), config.starterDirectory());
+
+        Path withoutKey = temporaryDirectory.resolve("no-starter.properties");
+        Files.writeString(withoutKey, Files.readString(write("false", "5", "0.8", "20", "x"))
+                .replaceAll("(?m)^plagiarism\\.starter\\.directory=.*\\R?", ""));
+        assertMessage("plagiarism.starter.directory", withoutKey);
     }
 
     @Test

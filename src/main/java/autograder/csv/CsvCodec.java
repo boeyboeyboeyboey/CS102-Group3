@@ -17,6 +17,9 @@ public final class CsvCodec {
 
         int position = 0;
         while (position < text.length()) {
+            if (onlyLineBreaksRemain(text, position)) {
+                break;
+            }
             List<String> row = new ArrayList<>();
             boolean rowComplete = false;
             while (!rowComplete) {
@@ -126,6 +129,15 @@ public final class CsvCodec {
             }
         }
         text.append('"');
+    }
+
+    private static boolean onlyLineBreaksRemain(String text, int position) {
+        for (int index = position; index < text.length(); index++) {
+            if (!isLineBreak(text.charAt(index))) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private static boolean isLineBreak(char value) {

@@ -11,7 +11,6 @@ import autograder.model.SubmissionResult;
 import autograder.model.TestCaseResult;
 import autograder.report.CsvScoreReportWriter;
 import autograder.report.ReportFiles;
-import autograder.roster.ScoreSheetRepository;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -31,7 +30,7 @@ final class GradingDiagnosticsWriter {
         this.execution = execution;
     }
 
-    void write(GradingRun run) throws IOException {
+    void write(GradingRun run, ScoreSheet sheet) throws IOException {
         List<List<String>> caseRows = new ArrayList<>();
         caseRows.add(List.of("Archive", "Username", "Case", "Status", "Score", "Maximum",
                 "DurationMillis", "Stdout", "Stderr"));
@@ -63,8 +62,6 @@ final class GradingDiagnosticsWriter {
         Files.writeString(run.directory().resolve(ReportFiles.SUBMISSIONS), CsvCodec.write(submissionRows));
         Files.writeString(run.directory().resolve(ReportFiles.SIMILARITY),
                 CsvCodec.write(similarityRows(run)));
-        ScoreSheet sheet = new ScoreSheetRepository(app.getScoreSheetPath(),
-                app.getScoreSheetColumns()).load();
         new CsvScoreReportWriter().write(sheet, scores, run.directory().resolve(execution.reportFile()));
     }
 

@@ -12,8 +12,10 @@ final class ComparisonOverview {
                     List<MethodComparison.Difference> differences, String state) {
         rows.append("<tr><th scope=row>").append(MethodDiffHtml.escape(label))
                 .append("</th><td>").append(MethodDiffHtml.escape(state)).append("</td>");
-        for (String status : List.of("MODIFIED", "UNCHANGED", "ADDED", "REMOVED")) {
-            long count = differences.stream().filter(item -> item.status().equals(status)).count();
+        for (MethodComparison.Status status : List.of(MethodComparison.Status.MODIFIED,
+                MethodComparison.Status.UNCHANGED, MethodComparison.Status.ADDED,
+                MethodComparison.Status.REMOVED)) {
+            long count = differences.stream().filter(item -> item.status() == status).count();
             rows.append("<td>").append(count).append("</td>");
         }
         rows.append("<td><a class=why href=\"#").append(id)

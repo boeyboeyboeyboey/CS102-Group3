@@ -14,6 +14,7 @@ import autograder.execution.ProcessRunner;
 import autograder.execution.StudentCompiler;
 import autograder.model.BatchResult;
 import autograder.model.QuestionDefinition;
+import autograder.model.ScoreSheet;
 import autograder.model.SimilarityFinding;
 import autograder.model.StudentGrade;
 import autograder.model.StudentRecord;
@@ -23,6 +24,7 @@ import autograder.model.TestCaseDefinition;
 import autograder.model.TestCaseResult;
 import autograder.model.TestStatus;
 import autograder.report.ReportFiles;
+import autograder.roster.ScoreSheetRepository;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -91,6 +93,12 @@ public final class GradingPipeline {
     }
 
     public GradingRun grade(List<SubmissionResult> submissions) throws IOException, InterruptedException {
+        return grade(submissions, new ScoreSheetRepository(app.getScoreSheetPath(),
+                app.getScoreSheetColumns()).load());
+    }
+
+    public GradingRun grade(List<SubmissionResult> submissions, ScoreSheet scoreSheet)
+            throws IOException, InterruptedException {
         checkCancelled();
         Files.createDirectories(execution.directory());
         Path run = Files.createTempDirectory(execution.directory(), "run-");
@@ -122,7 +130,7 @@ public final class GradingPipeline {
         checkCancelled();
         notifyProgress(ProgressStages.REPORTING, "Writing score and diagnostic CSV files", 0, 2);
         checkCancelled();
-        new GradingDiagnosticsWriter(app, execution).write(result);
+        new GradingDiagnosticsWriter(app, execution).write(result, scoreSheet);
         notifyProgress(ProgressStages.REPORTING, "Score and diagnostic CSV files ready", 1, 2);
         return result;
     }
