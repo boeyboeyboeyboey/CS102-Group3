@@ -10,7 +10,9 @@ ByteGrade is a batch grader for Java assessment submissions (CS102 Auto Grading 
 - Reports: CSV results, an offline HTML dashboard and per-student Markdown feedback.
 - Advisory analyses that never change marks: code similarity, starter-code comparison and
   score sanity checks.
-- Dynamic tests add generated cases to the supplied ones; each question's maximum stays the same.
+- Dynamic tests are on by default. They add generated cases to the supplied ones, which changes
+  four of the six sample scores; each question's maximum stays the same. To turn them off, see
+  "Why this differs from the supplied graded sheet".
 - The slide deck is `G1-T3.pptx`, in the root of the submission folder.
 
 ## Quick start
@@ -23,6 +25,9 @@ The first build needs internet access (see "Requirements").
   `.\` before each script name.
 - The sample scores, in the order Ping, Chee, David, Fen, Jing, Xing, are 20.00, 11.50, 10.50,
   9.88, 0.00 and 0.50. See "Expected sample result".
+- These scores include the dynamic tests. With them off (`grading.dynamic.enabled=false`), the
+  scores match the supplied sheet: 20, 12, 10, 10, 0 and 1. See "Why this differs from the
+  supplied graded sheet".
 - Results are written to the `Run folder:` the run prints. See "Outputs".
 
 ## Requirements
@@ -233,10 +238,18 @@ Notes on these numbers:
 - The default run also grades the dynamic cases, so Chee, David, Fen and Xing differ.
 - To reproduce the supplied sheet, leave `config.properties` alone and run a copy with dynamic
   tests off. Keep the copy in the same folder, because relative paths resolve against the
-  properties file. On Windows, use `copy` instead of `cp`.
+  properties file.
+
+macOS / Linux:
 
 ```sh
 cp config.properties fixed-only.properties
+```
+
+Windows (Command Prompt):
+
+```bat
+copy config.properties fixed-only.properties
 ```
 
 - Add this line to the copy, then run `sh run.sh fixed-only.properties` (Windows Command Prompt:
@@ -246,7 +259,8 @@ cp config.properties fixed-only.properties
 grading.dynamic.enabled=false
 ```
 
-- With that setting the fixed cases carry each question's full maximum.
+- With that setting the fixed cases carry each question's full maximum, and the scores are
+  Ping 20, Chee 12, David 10, Fen 10, Jing 0 and Xing 1.
 
 ## Demo cohort: 100 students
 
