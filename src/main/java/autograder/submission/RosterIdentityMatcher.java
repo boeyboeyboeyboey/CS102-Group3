@@ -81,7 +81,7 @@ final class RosterIdentityMatcher {
         if (!isWrapper(evidence)) {
             return text;
         }
-        return text + ": " + evidence.value().replaceAll("\\p{Cntrl}", " ").strip();
+        return text + ": " + evidence.value().replaceAll("[\\p{Cc}\\p{Cf}\\u2028\\u2029]", " ").strip();
     }
 
     private String conflictingUsernames(Collection<StudentRecord> students) {

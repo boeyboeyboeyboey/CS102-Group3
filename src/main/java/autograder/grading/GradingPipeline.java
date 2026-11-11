@@ -35,7 +35,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Consumer;
 
 /** Grades every submission in the input directory and exports the score reports. */
 public final class GradingPipeline {
@@ -45,8 +44,7 @@ public final class GradingPipeline {
     private final ExecutionConfig execution;
     private final List<TestCaseDefinition> cases;
     private final PlagiarismDetector plagiarismDetector;
-    private final ProgressListener progressListener;
-    private boolean progressEnabled = true;
+    private final ProgressNotifier notifier;
 
     public GradingPipeline(AppConfig app, ExecutionConfig execution) throws IOException {
         this(app, execution, (submissions, assessment) -> List.of());
@@ -64,7 +62,8 @@ public final class GradingPipeline {
         this.app = app;
         this.execution = execution;
         this.plagiarismDetector = plagiarismDetector;
-        this.progressListener = progressListener == null ? new ConsoleGradingMessages() : progressListener;
+        this.notifier = new ProgressNotifier(
+                progressListener == null ? new ConsoleGradingMessages() : progressListener);
         TestCaseProvider fixedProvider = new InstructorTestCaseProvider();
         TestCaseProvider dynamicProvider = execution.dynamicEnabled()
                 ? new DynamicTestCaseProvider() : assessment -> List.of();
@@ -112,12 +111,12 @@ public final class GradingPipeline {
         List<GradedSubmission> graded = new SubmissionScheduler(execution.workers()).run(total, index -> {
             SubmissionResult submission = submissions.get(index);
             String item = submission.getArchivePath().getFileName().toString();
-            notifyCount(item, finished, 0, total);
+            notifier.gradingCount(item, finished, 0, total);
             checkCancelled();
             Map<SubmissionResult, String> local = new LinkedHashMap<>();
             StudentGrade grade = gradeSubmission(submission, identities, run, index + 1, total, local);
             checkCancelled();
-            notifyCount(item, finished, 1, total);
+            notifier.gradingCount(item, finished, 1, total);
             checkCancelled();
             return new GradedSubmission(grade, local);
         });
@@ -130,10 +129,10 @@ public final class GradingPipeline {
                 compareSimilarity(submissions));
         GradingRun result = new GradingRun(batch, run, withheld);
         checkCancelled();
-        notifyProgress(ProgressStages.REPORTING, "Writing score and diagnostic CSV files", 0, 2);
+        notifier.progress(ProgressStages.REPORTING, "Writing score and diagnostic CSV files", 0, 2);
         checkCancelled();
         new GradingDiagnosticsWriter(app, execution).write(result, scoreSheet);
-        notifyProgress(ProgressStages.REPORTING, "Score and diagnostic CSV files ready", 1, 2);
+        notifier.progress(ProgressStages.REPORTING, "Score and diagnostic CSV files ready", 1, 2);
         return result;
     }
 
@@ -146,42 +145,12 @@ public final class GradingPipeline {
     private record GradedSubmission(StudentGrade grade, Map<SubmissionResult, String> withheld) {
     }
 
-    // the count is read under the listener lock so parallel events never go backwards
-    private synchronized void notifyCount(String item, AtomicInteger finished, int step, int total) {
-        notifyProgress(ProgressStages.GRADING, item, finished.addAndGet(step), total);
-    }
-
-    private void notifyProgress(String stage, String item, int completed, int total) {
-        notifyListener(listener -> listener.onProgress(stage, item, completed, total));
-    }
-
-    // a failing listener must not stop grading and is disabled for the rest of the run
-    private synchronized void notifyListener(Consumer<ProgressListener> notification) {
-        if (!progressEnabled) {
-            return;
-        }
-        try {
-            notification.accept(progressListener);
-        } catch (RuntimeException exception) {
-            warn("progress update failed: " + exception.getMessage());
-            progressEnabled = false;
-        }
-    }
-
-    private void warn(String message) {
-        try {
-            progressListener.onWarning(message);
-        } catch (RuntimeException exception) {
-            // the listener is the thing that failed, so there is nowhere else to report this
-        }
-    }
-
     // similarity is advisory, so a detector failure must not block score export
     private List<SimilarityFinding> compareSimilarity(List<SubmissionResult> submissions) {
         try {
             return plagiarismDetector.compare(submissions, app.getAssessment());
         } catch (IOException | RuntimeException exception) {
-            warn("similarity check skipped: " + exception.getMessage());
+            notifier.warn("similarity check skipped: " + exception.getMessage());
             return List.of();
         }
     }
@@ -203,8 +172,7 @@ public final class GradingPipeline {
             throws IOException, InterruptedException {
         String blocker = blocker(submission, identities);
         List<TestCaseResult> results = new ArrayList<>();
-        notifyListener(listener -> listener.onSubmissionStarted(
-                submission.getArchivePath().getFileName().toString(), index, total));
+        notifier.submissionStarted(submission.getArchivePath().getFileName().toString(), index, total);
         if (blocker != null) {
             withheld.put(submission, blocker);
             for (TestCaseDefinition test : cases) {

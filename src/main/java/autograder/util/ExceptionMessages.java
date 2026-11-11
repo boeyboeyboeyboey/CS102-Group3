@@ -3,9 +3,13 @@ package autograder.util;
 import java.io.IOException;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 
 /** Turns an exception into text for people, falling back to the class name when it carries no message. */
 public final class ExceptionMessages {
+    private static final int MAX_CAUSE_DEPTH = 20;
+
     private ExceptionMessages() {
     }
 
@@ -24,13 +28,20 @@ public final class ExceptionMessages {
 
     /** The first throwable of the given type in the cause chain, starting with the throwable itself, or null. */
     public static <T extends Throwable> T findCause(Throwable throwable, Class<T> type) {
-        Throwable cause = throwable;
-        while (cause != null) {
+        for (Throwable cause : causeChain(throwable)) {
             if (type.isInstance(cause)) {
                 return type.cast(cause);
             }
-            cause = cause.getCause() == cause ? null : cause.getCause();
         }
         return null;
+    }
+
+    /** The throwable and its causes, outermost first, stopping after a fixed depth so a cycle cannot loop forever. */
+    public static List<Throwable> causeChain(Throwable throwable) {
+        List<Throwable> chain = new ArrayList<>();
+        for (Throwable cause = throwable; cause != null && chain.size() < MAX_CAUSE_DEPTH; cause = cause.getCause()) {
+            chain.add(cause);
+        }
+        return chain;
     }
 }

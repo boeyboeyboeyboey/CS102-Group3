@@ -322,12 +322,12 @@ class SubmissionProcessorTest {
         List<StudentRecord> roster = List.of(
                 new StudentRecord("001", "#boey.tan.2026", "Boey", "Tan", "boey.tan.2026@school.edu"));
         var wrapper = new IdentityEvidence.StrongEvidence(
-                IdentityEvidence.EvidenceType.USERNAME, "bo\u001b[31mey\n.tan", "wrapper username");
+                IdentityEvidence.EvidenceType.USERNAME, "bo\u001b[31mey\n.tan\u202e\u2028x", "wrapper username");
 
         RosterIdentityMatcher.Result result = matcher.match(List.of(wrapper), roster);
 
         assertTrue(result.anomalies().contains(
-                "wrapper username does not match a score sheet student: bo [31mey .tan"),
+                "wrapper username does not match a score sheet student: bo [31mey .tan  x"),
                 result.anomalies().toString());
     }
 

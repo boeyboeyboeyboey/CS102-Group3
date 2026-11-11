@@ -2,6 +2,7 @@ package autograder.gui;
 
 import autograder.RunOutcome;
 import autograder.util.ElapsedTime;
+import autograder.util.ExceptionMessages;
 
 import java.nio.channels.ClosedByInterruptException;
 import java.nio.file.AccessDeniedException;
@@ -101,12 +102,12 @@ public final class OutcomeText {
         if (failure == null) {
             return "unknown error";
         }
-        for (Throwable cause = failure; cause != null; cause = cause.getCause()) {
+        for (Throwable cause : ExceptionMessages.causeChain(failure)) {
             if (cause instanceof ClosedByInterruptException) {
                 return "the run was stopped";
             }
         }
-        for (Throwable cause = failure; cause != null; cause = cause.getCause()) {
+        for (Throwable cause : ExceptionMessages.causeChain(failure)) {
             if (cause instanceof NoSuchFileException missing) {
                 return withPath("The file or folder was not found", missing.getFile());
             }
