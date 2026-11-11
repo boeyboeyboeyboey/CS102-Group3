@@ -18,15 +18,17 @@ ByteGrade is a batch grader for Java assessment submissions (CS102 Auto Grading 
 - A full JDK 17 or newer, including `javac`. `javac -version` should report 17 or later.
   - A JRE alone is not enough.
   - If `JAVA_HOME` is set, it must point to that JDK.
-  - On Windows, set `JAVA_HOME` and add the JDK's `bin` folder to `PATH` in Environment
-    Variables, then reopen the console.
+  - `JAVA_HOME` is not required. On a Windows 11 PC with it unset, `compile.bat`, `mvnw.cmd`
+    and `run.bat` worked because `java` and `javac` were on `PATH`.
+  - On Windows, add the JDK's `bin` folder to `PATH` in Environment Variables, then reopen the
+    console.
 - Internet access for the first build.
   - The Maven Wrapper (`mvnw`, `mvnw.cmd`) downloads Maven 3.9.9, its plugins and the libraries.
   - A separate Maven installation is not needed.
   - The first build can take a few minutes.
 - The project targets Java 17, and newer JDKs work. Compilation, the automated tests and the
   sample run were checked on Windows and macOS with Temurin 17, and the project was also run on
-  JDK 25. The GUI has been used on macOS only.
+  JDK 25. The GUI works on macOS and on Windows 11 (JDK 25).
 
 ## Workflow
 
@@ -49,8 +51,14 @@ Windows (Command Prompt):
 compile.bat
 ```
 
+In PowerShell, put `.\` before each script name, for example `.\compile.bat`, `.\run.bat`,
+`.\demo.bat` and `.\mvnw.cmd`. Without it, PowerShell reports the script as not recognized.
+Every Windows command in this README is written for Command Prompt.
+
 - Success ends with `Built target/auto-grading-system-1.0-SNAPSHOT.jar`.
 - The build may print `[WARNING]` lines about overlapping resources. They are harmless.
+- On JDK 25, Maven itself also prints restricted-method and `sun.misc.Unsafe` warnings. The
+  build still succeeded on Windows 11 with JDK 25.
 - The compile scripts skip the automated tests.
 - `run` and `demo` stop with a message if that JAR is missing, so build first.
 
@@ -62,7 +70,7 @@ macOS / Linux:
 sh run.sh config.properties
 ```
 
-Windows:
+Windows (Command Prompt):
 
 ```bat
 run.bat config.properties
@@ -93,9 +101,11 @@ On Windows, use `run.bat` with the same arguments.
   - N is 1 to 32. `auto` is the number of logical processors, at most 4.
   - A value above the machine's logical processor count is capped, with a warning.
   - A bad value prints the usage and exits with status 1.
-- On Windows, we recommend 1 worker. With 2 or more, Java start-up time counts against the
-  2 second case limit on the Windows laptop we tested, and some passing cases were reported as
-  timed out. If passing cases show as timed out on any machine, rerun with 1 worker.
+- On one Windows laptop we tested earlier, Java start-up time counted against the 2 second case
+  limit with 2 or more workers, and some passing cases were reported as timed out. On a
+  Windows 11 PC with 20 logical processors, 2 and 4 workers gave the same scores and case
+  statuses as 1 worker, with no new timeouts. If passing cases show as timed out on any
+  machine, rerun with 1 worker.
 
 ### 3. Use the instructor window
 
@@ -105,7 +115,7 @@ macOS / Linux:
 sh run.sh
 ```
 
-Windows:
+Windows (Command Prompt):
 
 ```bat
 run.bat
@@ -138,6 +148,10 @@ run.bat
   - Upload `scorereport.csv` itself to eLearn.
 - The GUI uses the same grading service, validation, withholding and report order as the
   command line. Last-used paths are remembered with Java Preferences.
+- The remembered config file, submissions, score sheet and output folder are kept per user
+  account, not per copy of the project. After unzipping a fresh copy, choose these again (the
+  Config file is under Advanced). Otherwise Grade can read and write the folders of an
+  earlier copy.
 - Without an argument the GUI starts from the last configuration it ran, then
   `config.properties` in the current directory, then the one beside the `target` folder.
 
@@ -155,13 +169,16 @@ macOS / Linux:
 sh ./mvnw verify
 ```
 
-Windows:
+Windows (Command Prompt):
 
 ```bat
 mvnw.cmd verify
 ```
 
-- This takes about a minute once the dependencies are downloaded.
+- This takes about a minute once the dependencies are downloaded. On a Windows 11 PC it took
+  3 to 4 minutes, so allow time.
+- On JDK 25, the output also warns that the surefire parameters `timeout` and `timeoutUnit` are
+  unknown. The tests still passed.
 - The tests use temporary inputs. They include expected failures such as malformed archives
   and timed-out student programs.
 
@@ -208,7 +225,8 @@ Notes on these numbers:
 cp config.properties fixed-only.properties
 ```
 
-- Add this line to the copy, then run `sh run.sh fixed-only.properties`:
+- Add this line to the copy, then run `sh run.sh fixed-only.properties` (Windows Command Prompt:
+  `run.bat fixed-only.properties`; PowerShell: `.\run.bat fixed-only.properties`):
 
 ```properties
 grading.dynamic.enabled=false
@@ -241,7 +259,7 @@ sh demo.sh generate 24
 sh demo.sh generate 24 7
 ```
 
-Windows:
+Windows (Command Prompt):
 
 ```bat
 demo.bat
@@ -272,6 +290,8 @@ Timings and expected behaviour:
   - 1 worker: 7 min 07 s
   - 4 workers: 2 min 44 s
   - 8 workers: 2 min 30 s
+- On a Windows 11 PC with 20 logical processors and JDK 25, `demo.bat 1` took 17 min 10 s, so
+  allow time.
 - Case verdicts were identical at every worker count, nobody was withheld and the six real
   scores were unchanged.
 - A 30-student cohort (`generate 24`) took 74 s with 8 workers.
@@ -279,7 +299,8 @@ Timings and expected behaviour:
   inherits its infinite loop.
 - Recombined code produces many similarity findings. That shows the plagiarism report working,
   and it makes `dashboard.html` about 7 MB.
-- On Windows, use 1 worker (see "Choosing the number of workers").
+- On Windows, the worker count that works depends on the machine (see "Choosing the number of
+  workers").
 
 ## Outputs
 
@@ -531,8 +552,8 @@ sh run.sh --randomized-grade-batch Q1a <folder-of-zips> config.properties 482910
 - The Q2 fixture files are small (`personstester.txt` has 11 lines, `studentstester.txt` 8), so
   Q2 coverage depends mostly on the dynamic checks.
 - No operating-system sandbox; see "Security" above.
-- The GUI has been used on macOS only.
-- On Windows, use 1 worker (see "Choosing the number of workers").
+- On Windows, the worker count that works depends on the machine (see "Choosing the number of
+  workers").
 - High worker counts on any machine can push slow but correct submissions past the case timeout.
 
 ## Folder directory by feature
