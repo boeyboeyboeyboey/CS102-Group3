@@ -24,8 +24,9 @@ ByteGrade is a batch grader for Java assessment submissions (CS102 Auto Grading 
   - The Maven Wrapper (`mvnw`, `mvnw.cmd`) downloads Maven 3.9.9, its plugins and the libraries.
   - A separate Maven installation is not needed.
   - The first build can take a few minutes.
-- The project targets Java 17. Compilation, the automated tests and the sample run were checked
-  on Windows and macOS with Temurin 17. The GUI has been used on macOS only.
+- The project targets Java 17, and newer JDKs work. Compilation, the automated tests and the
+  sample run were checked on Windows and macOS with Temurin 17, and the project was also run on
+  JDK 25. The GUI has been used on macOS only.
 
 ## Workflow
 
@@ -49,6 +50,7 @@ compile.bat
 ```
 
 - Success ends with `Built target/auto-grading-system-1.0-SNAPSHOT.jar`.
+- The build may print `[WARNING]` lines about overlapping resources. They are harmless.
 - The compile scripts skip the automated tests.
 - `run` and `demo` stop with a message if that JAR is missing, so build first.
 
@@ -67,8 +69,10 @@ run.bat config.properties
 ```
 
 - The sample input is the six ZIPs in `Project/student-submission`.
-- The terminal shows progress lines, then the new run folder `build/grading/run-<number>` and
-  the elapsed time. In an interactive terminal, typing `q` then Enter cancels the run (exit 130).
+- The terminal shows progress, then one short line per student. A `[REVIEW]` flag marks a
+  submission that needs a look; the detail is in the CSVs. The last lines are `Run time:` and
+  `Run folder:` with the new `build/grading/run-<number>`. In an interactive terminal, typing
+  `q` then Enter cancels the run (exit 130).
 - Exit code 0 means the batch and its reports completed, even if some submissions need review.
   Read the status counts and `submissions.csv` rather than treating 0 as "all clean".
 - A bad or missing configuration, or an empty input folder, returns a nonzero exit code.
@@ -77,19 +81,21 @@ run.bat config.properties
 ### Choosing the number of workers
 
 ```sh
+sh run.sh --workers 1 config.properties
 sh run.sh --workers 4 config.properties
 ```
 
+On Windows, use `run.bat` with the same arguments.
+
 - `--workers <N|auto>` grades N submissions at once for that run only.
-  - It overrides `execution.workers` in the configuration file.
+  - It overrides `execution.workers` in the configuration file. With no flag,
+    `execution.workers` applies, and its default is 1.
   - N is 1 to 32. `auto` is the number of logical processors, at most 4.
   - A value above the machine's logical processor count is capped, with a warning.
   - A bad value prints the usage and exits with status 1.
-  - The default is 1.
-- Windows: use 1 worker for now.
-  - With 2 or more workers, Java start-up time counts against the 2 second case limit on the
-    Windows laptop we tested, and some passing cases were reported as timed out.
-  - If passing cases show as timed out on any machine, rerun with 1 worker.
+- On Windows, we recommend 1 worker. With 2 or more, Java start-up time counts against the
+  2 second case limit on the Windows laptop we tested, and some passing cases were reported as
+  timed out. If passing cases show as timed out on any machine, rerun with 1 worker.
 
 ### 3. Use the instructor window
 
@@ -121,6 +127,8 @@ run.bat
   - Stop interrupts grading: test processes are terminated and no scores are written.
     Closing the window during a run asks for confirmation first.
   - When the run ends, the scores are shown with one button per output that was written.
+    An empty Similarity or Sanity checks report says "No pairs reached the similarity
+    threshold." or "No sanity checks were flagged."
 - Results buttons: Dashboard, Scores, Case results, Submission decisions, Similarity,
   Starter code, Sanity checks, Feedback, Run folder and Export all...
   - The CSV reports and student feedback open inside the window.
@@ -136,6 +144,8 @@ run.bat
 ### 4. Read the outputs
 
 - See "Outputs" below. Start with the dashboard, then `submissions.csv`.
+- `scorereport.csv` holds totals only. Read per-question marks in a student's file under
+  `feedback/` (a table at the top) or in the dashboard (expand a submission).
 
 ### 5. Optional: run the automated tests
 
@@ -151,6 +161,7 @@ Windows:
 mvnw.cmd verify
 ```
 
+- This takes about a minute once the dependencies are downloaded.
 - The tests use temporary inputs. They include expected failures such as malformed archives
   and timed-out student programs.
 
@@ -189,7 +200,15 @@ Notes on these numbers:
 - `Project/IS442-ScoreSheet-graded.csv` gives Ping 20, Chee 12, David 10, Fen 10, Jing 0 and
   Xing 1. It counts only the 20 supplied cases.
 - The default run also grades the dynamic cases, so Chee, David, Fen and Xing differ.
-- To reproduce the supplied sheet, add this line to `config.properties` and run again:
+- To reproduce the supplied sheet, leave `config.properties` alone and run a copy with dynamic
+  tests off. Keep the copy in the same folder, because relative paths resolve against the
+  properties file. On Windows, use `copy` instead of `cp`.
+
+```sh
+cp config.properties fixed-only.properties
+```
+
+- Add this line to the copy, then run `sh run.sh fixed-only.properties`:
 
 ```properties
 grading.dynamic.enabled=false
@@ -208,7 +227,7 @@ archives plus 94 synthetic students.
 - A fixed seed makes every generation identical.
 - Nothing under `Project/` and neither properties file changes.
 - The cohort is written to `build/demo-cohort/`: `submissions/` (the ZIPs), a generated
-  `IS442-ScoreSheet.csv` and `donors.csv`. Generating again deletes and rebuilds that folder.
+  `IS442-ScoreSheet.csv` and `donors.csv`.
 - It is graded with `demo.properties`, which differs from `config.properties` only in its input,
   score sheet and output paths. Results go to `build/demo-run/grading/`.
 
@@ -233,8 +252,11 @@ demo.bat generate 24 7
 ```
 
 - `demo` grades the cohort, generating it first if `build/demo-cohort/submissions` is missing.
-- `demo 8` does the same with 8 workers.
+- `demo 8` does the same with 8 workers. If that is more than the machine's logical processors,
+  it is capped to that count with a warning.
 - `demo generate [count] [seed]` rebuilds the cohort without grading it.
+  - `generate` must be the first argument. `sh demo.sh 8 generate` prints the usage line.
+  - It replaces the existing cohort: `build/demo-cohort/` is deleted and rebuilt.
   - count is the number of synthetic students, 1 to 400, default 94.
   - seed is a whole number, default 102.
   - More than two arguments, or a count outside 1 to 400, prints a usage line and exits 1.
@@ -261,8 +283,8 @@ Timings and expected behaviour:
 
 ## Outputs
 
-The terminal prints the exact new `build/grading/run-*` folder for each run. Each run creates a
-fresh folder; supplied inputs are never changed.
+The last line of a command-line run, `Run folder:`, gives the new `build/grading/run-*` folder.
+Each run creates a fresh folder; supplied inputs are never changed.
 
 - `scorereport.csv`: scores in the required roster format. This is the file to upload.
 - `cases.csv`: one row per case with status, marks, duration and captured stdout/stderr.
@@ -272,10 +294,16 @@ fresh folder; supplied inputs are never changed.
   - One row per algorithm (n-gram and/or JPlag) with the matching line ranges.
   - Advisory only.
 - `starter-analysis.csv`: how each answer file differs from the starter code (advisory).
+  - `UNCHANGED_STARTER`: the answer's code matches the starter once comments and formatting are
+    ignored. Open the file and decide whether real work was done. Marks are not changed.
 - `starter-comparison/index.html`: method-level starter comparison, when starter analysis runs.
 - `sanity-checks.csv`: score sanity checks (advisory). Header-only means nothing was flagged.
 - `dashboard.html`: self-contained offline dashboard, when `grading.html.enabled=true`.
 - `feedback/`: one Markdown file per student, when `grading.feedback.enabled=true`.
+- `submission-1` to `submission-N`: working folders for each graded submission (compiled
+  classes, test sources and case files, one subfolder per question). N is the number of
+  archives, and `submission-k` is the k-th archive in file-name order, the `Grading k/N` line
+  on the console. A withheld submission has no folder, so a number can be missing.
 
 An analysis file appears only when that analysis is enabled and completes.
 
@@ -294,6 +322,8 @@ Open `dashboard.html` directly in a browser. It needs no server or internet conn
 
 - It contains student names and usernames, absolute file paths on the grading machine, and
   captured program output. Handle and share it with care.
+- `cases.csv` and `starter-analysis.csv` also hold absolute paths, and `cases.csv` holds
+  captured output. Treat them the same way.
 - Search by name, username or archive; filter by export decision and warnings; sort by name or
   score; expand a submission for question marks, preparation corrections and per-case output.
 - Question-score cells form a heatmap. Darker blue is a larger share of the configured marks.
@@ -447,7 +477,8 @@ Withholding:
 
 - A submission is withheld, with its reason in `submissions.csv`, when:
   - its identity cannot be resolved;
-  - it is a duplicate of another student's submission;
+  - another archive resolves to the same student: all of that student's archives are
+    withheld, including the original;
   - its preparation is unusable;
   - a grading infrastructure error occurs.
 - Name warnings alone do not withhold a uniquely matched student.
@@ -501,7 +532,7 @@ sh run.sh --randomized-grade-batch Q1a <folder-of-zips> config.properties 482910
   Q2 coverage depends mostly on the dynamic checks.
 - No operating-system sandbox; see "Security" above.
 - The GUI has been used on macOS only.
-- On Windows, use 1 worker.
+- On Windows, use 1 worker (see "Choosing the number of workers").
 - High worker counts on any machine can push slow but correct submissions past the case timeout.
 
 ## Folder directory by feature
@@ -668,7 +699,12 @@ Build tool:
   - Keep the supplied `Project/` folder and check the configured paths.
   - Paths inside a properties file resolve relative to that file.
 - Passing cases reported as timed out when using several workers
-  - Use 1 worker, especially on Windows.
+  - Rerun with `--workers 1` (see "Choosing the number of workers").
+- `could not complete grading: file not found: <path>`
+  - The configuration file or score sheet path is wrong. Check the path in the properties file.
+- `submission preparation failed: not a valid ZIP file: <name>` in a submission's issues
+  - That archive is corrupt or not a ZIP, so it fails preparation and is withheld. The other
+    archives are still graded. Ask the student to resubmit.
 - The window does not open
   - It needs a desktop session. On a headless machine use the command line instead.
 
